@@ -1,0 +1,14 @@
+{
+  "status": "UNKLAR",
+  "primary_code": "UNKLAR",
+  "primary_evidence": [],
+  "primary_confidence": 0.0,
+  "secondary_features": [],
+  "visible_observations": [
+    "Mock-Antwort: Es wurde keine reale Bildauswertung durchgefuehrt."
+  ],
+  "uncertainty_reasons": [
+    "Lokaler Mock-Modus ohne Modellaufruf."
+  ],
+  "missing_views": []
+}

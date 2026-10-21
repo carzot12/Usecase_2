@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "checked_at": "2026-10-21",
+  "models": [
+    {
+      "model": "gpt-6.1-sol",
+      "responses_api": true,
+      "image_input": true,
+      "text_output": true,
+      "account_access": "not_verified_without_api_call",
+      "status": "documented_candidate"
+    }
+  ],
+  "sources": [
+    "https://developers.openai.com/api/docs/models",
+    "https://developers.openai.com/api/docs/guides/images-vision",
+    "https://developers.openai.com/api/reference/resources/responses/methods/create"
+  ],
+  "note": "Die Dokumentation bestaetigt Responses-API und Bildinput. Der konkrete Kontozugriff wird erst beim ausdruecklich freigegebenen Live-Test festgestellt."
+}

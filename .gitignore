@@ -28,6 +28,13 @@ tmp/
 
 # Umfangreiche lokale Versuchs- und Rohdaten
 Pruefdaten/
+!Pruefdaten/
+Pruefdaten/*
+!Pruefdaten/Neue_Analysen/
+Pruefdaten/Neue_Analysen/*
+!Pruefdaten/Neue_Analysen/Test_001/
+Pruefdaten/Neue_Analysen/Test_001/*
+!Pruefdaten/Neue_Analysen/Test_001/.gitkeep
 xxx/
 Datenbank/Alte_Versuche/Zugversuch%202/
 Datenbank/Alte_Versuche/**/*.asc
@@ -49,3 +56,6 @@ Output/*
 !Output/Referenzbilddatenbank_Gesamt/
 Output/Referenzbilddatenbank_Gesamt/*
 !Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json
+!Output/KI_Klassifikation/
+Output/KI_Klassifikation/*
+!Output/KI_Klassifikation/.gitkeep
