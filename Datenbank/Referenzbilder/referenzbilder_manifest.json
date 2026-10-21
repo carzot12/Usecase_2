@@ -1,0 +1,1468 @@
+{
+  "meta": {
+    "schema_version": "2.0",
+    "aktualisiert_am": "2026-10-21",
+    "klassifikationsregeln_version": "1.0",
+    "context_images_default_for_inference": false
+  },
+  "reference_sets": [
+    {
+      "id": "KA|Z-B-29|DSC01881.JPG",
+      "failure_mode": "KA",
+      "class_name": "Kantenast",
+      "specimen": "Z-B-29",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01881.JPG",
+        "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-B-29/reference_image/DSC01881.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01878.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-B-29/context_images/DSC01878.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01879.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-B-29/context_images/DSC01879.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01880.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-B-29/context_images/DSC01880.JPG"
+        }
+      ]
+    },
+    {
+      "id": "KA|Z-D-12|DSC01389.JPG",
+      "failure_mode": "KA",
+      "class_name": "Kantenast",
+      "specimen": "Z-D-12",
+      "series": "Z-D",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-D/Bilder/DSC01389.JPG",
+        "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-D-12/reference_image/DSC01389.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-D/Bilder/DSC01387.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-D-12/context_images/DSC01387.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-D/Bilder/DSC01388.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-D-12/context_images/DSC01388.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-D/Bilder/DSC01390.JPG",
+          "copied_path": "Datenbank/Referenzbilder/KA_Kantenast/Z-D-12/context_images/DSC01390.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SSA|Z-A-26|DSC01470.JPG",
+      "failure_mode": "SSA",
+      "class_name": "Schmalseitenast",
+      "specimen": "Z-A-26",
+      "series": "Z-A",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01470.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-A-26/reference_image/DSC01470.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01468.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-A-26/context_images/DSC01468.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01469.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-A-26/context_images/DSC01469.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01471.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-A-26/context_images/DSC01471.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SSA|Z-B-03|DSC01989.JPG",
+      "failure_mode": "SSA",
+      "class_name": "Schmalseitenast",
+      "specimen": "Z-B-03",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01989.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-B-03/reference_image/DSC01989.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01987.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-B-03/context_images/DSC01987.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01988.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-B-03/context_images/DSC01988.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01990.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-B-03/context_images/DSC01990.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SSA|Z-E-35|DSC01153.JPG",
+      "failure_mode": "SSA",
+      "class_name": "Schmalseitenast",
+      "specimen": "Z-E-35",
+      "series": "Z-E",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01153.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-E-35/reference_image/DSC01153.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01151.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-E-35/context_images/DSC01151.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01152.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-E-35/context_images/DSC01152.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01154.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SSA_Schmalseitenast/Z-E-35/context_images/DSC01154.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SA|Z-C-24|DSC01757.JPG",
+      "failure_mode": "SA",
+      "class_name": "Seitenast",
+      "specimen": "Z-C-24",
+      "series": "Z-C",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01757.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-C-24/reference_image/DSC01757.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01755.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-C-24/context_images/DSC01755.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01756.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-C-24/context_images/DSC01756.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01758.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-C-24/context_images/DSC01758.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SA|Z-A-32|DSC01447.JPG",
+      "failure_mode": "SA",
+      "class_name": "Seitenast",
+      "specimen": "Z-A-32",
+      "series": "Z-A",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01447.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-A-32/reference_image/DSC01447.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01445.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-A-32/context_images/DSC01445.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01446.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-A-32/context_images/DSC01446.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01448.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-A-32/context_images/DSC01448.JPG"
+        }
+      ]
+    },
+    {
+      "id": "SA|Z-G-35|DSC00998.JPG",
+      "failure_mode": "SA",
+      "class_name": "Seitenast",
+      "specimen": "Z-G-35",
+      "series": "Z-G",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-G/Bilder/DSC00998.JPG",
+        "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-G-35/reference_image/DSC00998.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-G/Bilder/DSC00997.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-G-35/context_images/DSC00997.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-G/Bilder/DSC00999.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-G-35/context_images/DSC00999.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-G/Bilder/DSC01000.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-G-35/context_images/DSC01000.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-G/Bilder/DSC01001.JPG",
+          "copied_path": "Datenbank/Referenzbilder/SA_Seitenast/Z-G-35/context_images/DSC01001.JPG"
+        }
+      ]
+    },
+    {
+      "id": "AA|Z-A-16|DSC01510.JPG",
+      "failure_mode": "AA",
+      "class_name": "Astansammlung",
+      "specimen": "Z-A-16",
+      "series": "Z-A",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01510.JPG",
+        "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-A-16/reference_image/DSC01510.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01508.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-A-16/context_images/DSC01508.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01509.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-A-16/context_images/DSC01509.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01511.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-A-16/context_images/DSC01511.JPG"
+        }
+      ]
+    },
+    {
+      "id": "AA|Z-C-21|DSC01770.JPG",
+      "failure_mode": "AA",
+      "class_name": "Astansammlung",
+      "specimen": "Z-C-21",
+      "series": "Z-C",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01770.JPG",
+        "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-C-21/reference_image/DSC01770.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01767.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-C-21/context_images/DSC01767.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01768.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-C-21/context_images/DSC01768.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01769.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-C-21/context_images/DSC01769.JPG"
+        }
+      ]
+    },
+    {
+      "id": "AA|Z-B-01|DSC01996.JPG",
+      "failure_mode": "AA",
+      "class_name": "Astansammlung",
+      "specimen": "Z-B-01",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01996.JPG",
+        "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-B-01/reference_image/DSC01996.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01994.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-B-01/context_images/DSC01994.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01995.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-B-01/context_images/DSC01995.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01997.JPG",
+          "copied_path": "Datenbank/Referenzbilder/AA_Astansammlung/Z-B-01/context_images/DSC01997.JPG"
+        }
+      ]
+    },
+    {
+      "id": "Bu|Z-B-25|DSC01900.JPG",
+      "failure_mode": "Bu",
+      "class_name": "Buchs",
+      "specimen": "Z-B-25",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01900.JPG",
+        "copied_path": "Datenbank/Referenzbilder/Bu_Buchs/Z-B-25/reference_image/DSC01900.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01898.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Bu_Buchs/Z-B-25/context_images/DSC01898.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01899.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Bu_Buchs/Z-B-25/context_images/DSC01899.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01901.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Bu_Buchs/Z-B-25/context_images/DSC01901.JPG"
+        }
+      ]
+    },
+    {
+      "id": "LSF|Z-B-35|DSC01857.JPG",
+      "failure_mode": "LSF",
+      "class_name": "Lokale Schrägfaser",
+      "specimen": "Z-B-35",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01857.JPG",
+        "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-B-35/reference_image/DSC01857.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01854.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-B-35/context_images/DSC01854.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01855.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-B-35/context_images/DSC01855.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01856.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-B-35/context_images/DSC01856.JPG"
+        }
+      ]
+    },
+    {
+      "id": "LSF|Z-C-13|DSC01803.JPG",
+      "failure_mode": "LSF",
+      "class_name": "Lokale Schrägfaser",
+      "specimen": "Z-C-13",
+      "series": "Z-C",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01803.JPG",
+        "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-C-13/reference_image/DSC01803.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01800.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-C-13/context_images/DSC01800.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01801.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-C-13/context_images/DSC01801.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01802.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-C-13/context_images/DSC01802.JPG"
+        }
+      ]
+    },
+    {
+      "id": "LSF|Z-F-22|DSC01626.JPG",
+      "failure_mode": "LSF",
+      "class_name": "Lokale Schrägfaser",
+      "specimen": "Z-F-22",
+      "series": "Z-F",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01626.JPG",
+        "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-F-22/reference_image/DSC01626.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01625.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-F-22/context_images/DSC01625.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01627.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-F-22/context_images/DSC01627.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01628.JPG",
+          "copied_path": "Datenbank/Referenzbilder/LSF_Lokale_Schraegfaser/Z-F-22/context_images/DSC01628.JPG"
+        }
+      ]
+    },
+    {
+      "id": "GSF|Z-B-10|DSC01960.JPG",
+      "failure_mode": "GSF",
+      "class_name": "Globale Schrägfaser",
+      "specimen": "Z-B-10",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01960.JPG",
+        "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-B-10/reference_image/DSC01960.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01958.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-B-10/context_images/DSC01958.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01959.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-B-10/context_images/DSC01959.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01961.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-B-10/context_images/DSC01961.JPG"
+        }
+      ]
+    },
+    {
+      "id": "GSF|Z-F-13|DSC01663.JPG",
+      "failure_mode": "GSF",
+      "class_name": "Globale Schrägfaser",
+      "specimen": "Z-F-13",
+      "series": "Z-F",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01663.JPG",
+        "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-F-13/reference_image/DSC01663.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01661.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-F-13/context_images/DSC01661.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01662.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-F-13/context_images/DSC01662.JPG"
+        }
+      ]
+    },
+    {
+      "id": "GSF|Z-C-22|DSC01765.JPG",
+      "failure_mode": "GSF",
+      "class_name": "Globale Schrägfaser",
+      "specimen": "Z-C-22",
+      "series": "Z-C",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01765.JPG",
+        "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-C-22/reference_image/DSC01765.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01763.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-C-22/context_images/DSC01763.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01764.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-C-22/context_images/DSC01764.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-C/Bilder/DSC01766.JPG",
+          "copied_path": "Datenbank/Referenzbilder/GSF_Globale_Schraegfaser/Z-C-22/context_images/DSC01766.JPG"
+        }
+      ]
+    },
+    {
+      "id": "HB|Z-E-21|DSC01209.JPG",
+      "failure_mode": "HB",
+      "class_name": "Holzbruch",
+      "specimen": "Z-E-21",
+      "series": "Z-E",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01209.JPG",
+        "copied_path": "Datenbank/Referenzbilder/HB_Holzbruch/Z-E-21/reference_image/DSC01209.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01207.JPG",
+          "copied_path": "Datenbank/Referenzbilder/HB_Holzbruch/Z-E-21/context_images/DSC01207.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01208.JPG",
+          "copied_path": "Datenbank/Referenzbilder/HB_Holzbruch/Z-E-21/context_images/DSC01208.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01210.JPG",
+          "copied_path": "Datenbank/Referenzbilder/HB_Holzbruch/Z-E-21/context_images/DSC01210.JPG"
+        }
+      ]
+    },
+    {
+      "id": "sp HB|Z-F-30|DSC01595.JPG",
+      "failure_mode": "sp HB",
+      "class_name": "Spröder Holzbruch",
+      "specimen": "Z-F-30",
+      "series": "Z-F",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01595.JPG",
+        "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-F-30/reference_image/DSC01595.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01593.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-F-30/context_images/DSC01593.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01594.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-F-30/context_images/DSC01594.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01596.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-F-30/context_images/DSC01596.JPG"
+        }
+      ]
+    },
+    {
+      "id": "sp HB|Z-B-28|DSC01884.JPG",
+      "failure_mode": "sp HB",
+      "class_name": "Spröder Holzbruch",
+      "specimen": "Z-B-28",
+      "series": "Z-B",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01884.JPG",
+        "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-B-28/reference_image/DSC01884.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01882.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-B-28/context_images/DSC01882.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01883.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-B-28/context_images/DSC01883.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-B/Bilder/DSC01885.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-B-28/context_images/DSC01885.JPG"
+        }
+      ]
+    },
+    {
+      "id": "sp HB|Z-A-14|DSC01518.JPG",
+      "failure_mode": "sp HB",
+      "class_name": "Spröder Holzbruch",
+      "specimen": "Z-A-14",
+      "series": "Z-A",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01518.JPG",
+        "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-A-14/reference_image/DSC01518.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01516.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-A-14/context_images/DSC01516.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01517.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-A-14/context_images/DSC01517.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01519.JPG",
+          "copied_path": "Datenbank/Referenzbilder/sp_HB_Sproeder_Holzbruch/Z-A-14/context_images/DSC01519.JPG"
+        }
+      ]
+    },
+    {
+      "id": "RiSch|Z-F-09|DSC01678.JPG",
+      "failure_mode": "RiSch",
+      "class_name": "Ringschäle",
+      "specimen": "Z-F-09",
+      "series": "Z-F",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01678.JPG",
+        "copied_path": "Datenbank/Referenzbilder/RiSch_Ringschaele/Z-F-09/reference_image/DSC01678.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01676.JPG",
+          "copied_path": "Datenbank/Referenzbilder/RiSch_Ringschaele/Z-F-09/context_images/DSC01676.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01677.JPG",
+          "copied_path": "Datenbank/Referenzbilder/RiSch_Ringschaele/Z-F-09/context_images/DSC01677.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01679.JPG",
+          "copied_path": "Datenbank/Referenzbilder/RiSch_Ringschaele/Z-F-09/context_images/DSC01679.JPG"
+        }
+      ]
+    },
+    {
+      "id": "Spl HB|Z-F-31|DSC01592.JPG",
+      "failure_mode": "Spl HB",
+      "class_name": "Splitterholzbruch",
+      "specimen": "Z-F-31",
+      "series": "Z-F",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01592.JPG",
+        "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-F-31/reference_image/DSC01592.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01589.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-F-31/context_images/DSC01589.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01590.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-F-31/context_images/DSC01590.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-F/Bilder/DSC01591.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-F-31/context_images/DSC01591.JPG"
+        }
+      ]
+    },
+    {
+      "id": "Spl HB|Z-A-35|DSC01436.JPG",
+      "failure_mode": "Spl HB",
+      "class_name": "Splitterholzbruch",
+      "specimen": "Z-A-35",
+      "series": "Z-A",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01436.JPG",
+        "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-A-35/reference_image/DSC01436.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01433.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-A-35/context_images/DSC01433.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01434.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-A-35/context_images/DSC01434.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-A/Bilder/DSC01435.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-A-35/context_images/DSC01435.JPG"
+        }
+      ]
+    },
+    {
+      "id": "Spl HB|Z-E-23|DSC01202.JPG",
+      "failure_mode": "Spl HB",
+      "class_name": "Splitterholzbruch",
+      "specimen": "Z-E-23",
+      "series": "Z-E",
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "classification_rules_version": "1.0",
+      "confirmation_source": "Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json",
+      "reference_image": {
+        "image_role": "reference_image",
+        "confirmed": true,
+        "default_for_inference": true,
+        "confirmed_by": "CZ",
+        "confirmed_at": "2026-10-21",
+        "visibility": "SICHTBAR_BESTAETIGT",
+        "review_comment": "",
+        "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01202.JPG",
+        "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-E-23/reference_image/DSC01202.JPG"
+      },
+      "context_images": [
+        {
+          "image_role": "context_image",
+          "context_kind": "identification_photo",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_NUMMERNFOTO",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01198.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-E-23/context_images/DSC01198.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01200.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-E-23/context_images/DSC01200.JPG"
+        },
+        {
+          "image_role": "context_image",
+          "context_kind": "specimen_view",
+          "confirmed": false,
+          "default_for_inference": false,
+          "assignment_status": "OK_ZUGEORDNET",
+          "original_path": "Datenbank/Alte_Versuche/Zugversuch 2/Serie Z-E/Bilder/DSC01201.JPG",
+          "copied_path": "Datenbank/Referenzbilder/Spl_HB_Splitterholzbruch/Z-E-23/context_images/DSC01201.JPG"
+        }
+      ]
+    }
+  ],
+  "dataset_assignments": {
+    "Z-B-29": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-D-12": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-A-26": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-03": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-E-35": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-C-24": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-A-32": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-G-35": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-A-16": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-C-21": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-01": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-25": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-35": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-C-13": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-F-22": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-10": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-F-13": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-C-22": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-E-21": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-F-30": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-B-28": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-A-14": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-F-09": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-F-31": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-A-35": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    },
+    "Z-E-23": {
+      "dataset_role": "reference",
+      "excluded_from_independent_test": true,
+      "assigned_at": "2026-10-21"
+    }
+  }
+}

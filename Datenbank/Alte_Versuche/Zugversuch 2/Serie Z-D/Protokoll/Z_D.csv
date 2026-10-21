@@ -1,0 +1,36 @@
+﻿Lfd. Nr.;Prüfkörper;Maximalkraft [kN];Bruchursache;Anmerkungen
+1;Z-D-01;172,2;;"0,4·Fmax = 75 kN; 2 Bretter verleimt: Decklage: UNKLAR; untere Lage: ~26 mm; Σ ~40 mm"
+2;Z-D-02;170,7;GSF, sp HB / KA, SA;Durchgestrichene Bruchursache: UNKLAR
+3;Z-D-03;114,2;KA, SSA / AA, sp HB;
+4;Z-D-04;168,3;SA, LSF / sp HB, Bu;
+5;Z-D-05;156,8;2× SA / 2× SA;
+6;Z-D-06;118,4;2× KA, HB / RiSch, sp HB;
+7;Z-D-07;118,8;Abscheren / RiSch, sp HB;Durchgestrichener Eintrag: UNKLAR
+8;Z-D-08;103,9;GSF / GSF;Durchgestrichene Anmerkung: UNKLAR
+9;Z-D-09;181,9;2× KA, SA / 2× KA, SA;
+10;Z-D-10;113,7;KA, sp HB / KA, SA, LSF;Durchgestrichene Bruchursache: UNKLAR
+11;Z-D-11;142,4;2× SA / SA, sp HB;Anm.: Versagen direkt bei KB (siehe Fotos)
+12;Z-D-12;164,9;2× KA /;
+13;Z-D-13;118,6;SA / SA, KA;
+14;Z-D-14;154,5;SA, HB / sp HB;
+15;Z-D-15;123,2;SA, FA / 2× KA, AA;
+16;Z-D-16;184,9;SA, SSA / KA, SSA;
+17;Z-D-17;170,3;2× SA / KA, RiSch, sp HB;
+18;Z-D-18;184,2;FA, SA / KA, SA, LSF;
+19;Z-D-19;194,2;2× SA / 2× SSA bzw. KA, 2× SA;
+20;Z-D-20;126,8;SA / 2× SA;
+21;Z-D-21;149,7;2× SA / sp HB;
+22;Z-D-22;117,9;SA, sp HB / sp HB;
+23;Z-D-23;104,6;LSF, HB / HB;
+24;Z-D-24;103,1;SA / sp HB;
+25;Z-D-25;135,4;SA, HB / sp HB, Bu;Durchgestrichene Bruchursache: UNKLAR
+26;Z-D-26;170,8;KA, SA / KA, SA, RiSch;
+27;Z-D-27;136,8;2× KA / sp HB;
+28;Z-D-28;101,7;SA, KA / sp HB;
+29;Z-D-29;129,3;sp HB / 2× KA, SA;
+30;Z-D-30;153,6;SA, KA / SA, LSF;Durchgestrichene Bruchursache: UNKLAR
+31;Z-D-31;133,3;UNKLAR, SA / KA;Multiplikator vor SA: UNKLAR
+32;Z-D-32;201,2;sp HB / GSF, KA;Anm.: Versagen im Bereich d. KB
+33;Z-D-33;145,2;sp HB / SA, HB;
+34;Z-D-34;161,2;2× SA, sp HB / 2× SA;
+35;Z-D-35;90,8;2× SA / 2× SA;Anm.: Prüfzeit zu kurz, t = 152 s < 180 s

@@ -1,0 +1,36 @@
+﻿Lfd. Nr.;Prüfkörper;Maximalkraft [kN];Bruchursache;Anmerkungen
+1;Z-F-01;60,8;KA, AA;
+2;Z-F-02;44,4;FA, sp HB;
+3;Z-F-03;57,8;SA, GSF;
+4;Z-F-04;77,2;2× SA, LSF;
+5;Z-F-05;92,1;SA, sp HB;
+6;Z-F-06;69,3;KA, sp HB;Anm.: Versagen direkt vor KB
+7;Z-F-07;98,0;KA, SA, RiSch;
+8;Z-F-08;116,8;2× SA, sp HB;
+9;Z-F-09;134,9;RiSch, HB;
+10;Z-F-10;105,6;SA, KA, Spl HB;
+11;Z-F-11;134,8;GSF;
+12;Z-F-12;91,8;KA, GSF;
+13;Z-F-13;121,8;GSF;
+14;Z-F-14;212,8;sp HB;Anm.: Versagen direkt bei KB (knapp davor)
+15;Z-F-15;32,3;KA, GSF;
+16;Z-F-16;100,7;sp HB;
+17;Z-F-17;33,5;2× KA, sp HB;
+18;Z-F-18;48,1;SA, SSA, sp HB;
+19;Z-F-19;129,6;GSF;
+20;Z-F-20;117,9;GSF;
+21;Z-F-21;101,4;GSF;
+22;Z-F-22;42,5;2× LSF, 2× SA;
+23;Z-F-23;90,2;sp HB;
+24;Z-F-24;76,1;KA, SA, sp HB;
+25;Z-F-25;112,5;GSF;
+26;Z-F-26;56,8;LSF, sp HB;
+27;Z-F-27;85,0;KA, SA, GSF;
+28;Z-F-28;84,4;GSF, sp HB;
+29;Z-F-29;57,1;KA, SA;
+30;Z-F-30;88,92;sp HB;
+31;Z-F-31;199,5;Spl HB;Anm.: sehr wenig Äste im Brett, komplettes Brett versagt → aufgerissen → zersplittert
+32;Z-F-32;43,7;KA, GSF;
+33;Z-F-33;32,8;sp HB, KA;
+34;Z-F-34;98,31;GSF;
+35;Z-F-35;66,21;GSF, KA;

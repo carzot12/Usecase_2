@@ -1,0 +1,36 @@
+﻿Lfd. Nr.;Prüfkörper;Maximalkraft [kN];Bruchursache;Anmerkungen
+1;Z-E-01;114,9;2× SA, FA / KA, SA, LSF;"F0,4·Fmax = 75 kN; 2 Bretter verleimt: Decklage: ~6 mm; Unterlage: ~34 mm; Σ ~40 mm"
+2;Z-E-02;105,2;SA, sp HB / Bu, RiSch, sp HB;
+3;Z-E-03;124,3;KA, 3× SA / KA;
+4;Z-E-04;85,1;2× SA / KA, sp HB;
+5;Z-E-05;170,2;SA / 2× SA;Anm.: Versagen im nahen Bereich d. KB
+6;Z-E-06;151,2;KA, SA / 3× SA, SSA;
+7;Z-E-07;190,1;3× FA / KA, KA, SA;
+8;Z-E-08;109,0;LSF, HB / SSA, 2SA, KA;
+9;Z-E-09;121,7;2× SA / RiSch,SA, sp HB;Durchgestrichene Bruchursache: UNKLAR
+10;Z-E-10;116,8;SA / SA, LSF;Anm.: Versagen im Bereich d. Klemmbalken
+11;Z-E-11;129,6;2× SA / sp HB;Anmerk.: unteres Brett: breite Jahresringe
+12;Z-E-12;170,5;2× SA / sp HB;
+13;Z-E-13;139,3;LSF, HB / LSF, AA;
+14;Z-E-14;214,5;AA, HB / sp HB, SA;Anm.: unteres Brett: starke Holzbläue
+15;Z-E-15;107,3;HB / sp HB, Bu;
+16;Z-E-16;150,3;FA, SA / SA, sp HB;
+17;Z-E-17;158,0;KA, 2× SA, SSA / Bu, SA;
+18;Z-E-18;196,7;SA, KB, KA / SSA, HB;Anm.: Versagen im nahen Bereich der KB
+19;Z-E-19;135,4;HB / SA, KA;
+20;Z-E-20;105,4;FA, SA / HB;
+21;Z-E-21;98,1;FA / HB;
+22;Z-E-22;216,5;2× SA / SA;
+23;Z-E-23;233,2;Spl HB, SA / Spl HB;
+24;Z-E-24;172,9;HB / 3× SA;"Anm.: sehr lange aufgerissen"
+25;Z-E-25;116,9;KA, sp HB / 2× SA;
+26;Z-E-26;94,6;AA / KA, LSF, sp HB;
+27;Z-E-27;107,4;KA / 2× SA;
+28;Z-E-28;144,1;KA, LSF / SA, sp HB;
+29;Z-E-29;162,3;KA,AA/2× SA;
+30;Z-E-30;144,4;"KA bzw. FA / KA, LSF; ";Anm.: Brett hatte vor dem Versuch schon einen Längsriss → siehe Fotos
+31;Z-E-31;118,8;KA, 3× SA / KA, HB;Anm.: Versagen im Bereich der Klemmbalken (Teil in Backen hängend?)
+32;Z-E-32;162,8;FA, SA / Bu, sp HB;Anm.: unteres Brett große Jahresringe
+33;Z-E-33;83,6;2× SA, KA / sp HB, KA;
+34;Z-E-34;79,77;FA bzw. KA & SSA / sp HB, SA;
+35;Z-E-35;136,4;3× SA, SSA / GSF;

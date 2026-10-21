@@ -1,0 +1,36 @@
+﻿Lfd. Nr.;Prüfkörper;Maximalkraft [kN];Bruchursache;Anmerkungen
+1;Z-B-01;87,8;AA;
+2;Z-B-02;92,1;SA, GSF;
+3;Z-B-03;121,2;2× SA, (SSA), KA;
+4;Z-B-04;70,6;KA, sp HB;
+5;Z-B-05;68,9;LSF, sp HB;
+6;Z-B-06;105,8;GSF, KA, RiSch;
+7;Z-B-07;67,8;SA, KA, sp HB;
+8;Z-B-08;91,6;LSF, GSF;
+9;Z-B-09;45,3;GSF;
+10;Z-B-10;109,8;GSF;
+11;Z-B-11;70,3;KA, SA;
+12;Z-B-12;45,5;KA, GSF;
+13;Z-B-13;87,2;SA, sp HB;
+14;Z-B-14;173,8;SA, sp HB, RiSch;Anm.: sehr enge Jahresringe & kaum Äste
+15;Z-B-15;60,5;SA, KA;
+16;Z-B-16;78,3;SA, KA;
+17;Z-B-17;82,6;SA, sp HB;
+18;Z-B-18;70,9;SA, KA;
+19;Z-B-19;68,5;SA, HB;
+20;Z-B-20;51,3;AA, KA;
+21;Z-B-21;90,5;sp HB, LSF;
+22;Z-B-22;81,9;2× KA, GSF;
+23;Z-B-23;73,2;KA, RiSch;Anm.: Brett stark um Längsachse verdreht
+24;Z-B-24;44,9;KA, LSF, GSF;
+25;Z-B-25;93,7;sp HB, Bu;
+26;Z-B-26;54,9;sp HB, RiEi;
+27;Z-B-27;102,5;LSF, KA, sp HB;
+28;Z-B-28;90,6;sp HB;Anm.: Versagen direkt bei KB
+29;Z-B-29;83,2;2× KA;
+30;Z-B-30;92,7;RiSch, sp HB;
+31;Z-B-31;67,3;KA, LSF, 2× SA;
+32;Z-B-32;93,6;sp HB, RiSch, SA;0,4·Fmax auf 40 kN erhöht
+33;Z-B-33;112,7;KA, GSF;
+34;Z-B-34;111,5;2× KA, GSF;
+35;Z-B-35;53,2;KA, LSF;0,4·Fmax = 35 kN

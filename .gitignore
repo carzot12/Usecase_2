@@ -1,0 +1,51 @@
+# Betriebssystem- und Editor-Dateien
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+~$*
+
+# Lokale Umgebungen und Zugangsdaten
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python-Caches und lokale Laufzeitdateien
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.log
+tmp/
+
+# Umfangreiche lokale Versuchs- und Rohdaten
+Pruefdaten/
+xxx/
+Datenbank/Alte_Versuche/Zugversuch%202/
+Datenbank/Alte_Versuche/**/*.asc
+Datenbank/Alte_Versuche/**/*.db
+Datenbank/Alte_Versuche/**/*.pdf
+Datenbank/Alte_Versuche/**/*.xls
+Datenbank/Alte_Versuche/**/*.xlsx
+Datenbank/Alte_Versuche/**/*.xlsm
+
+# Originalfotos und automatisch erzeugte Bildkopien
+Datenbank/Alte_Versuche/**/Bilder/
+Datenbank/Referenzbilder/*/*/
+
+# Lokal vorgehaltene große Literatur-/Datendateien
+allgemein/
+
+# Generierte Prüfübersichten und Vorschaubilder; nur die manuelle Freigabe sichern
+Output/*
+!Output/Referenzbilddatenbank_Gesamt/
+Output/Referenzbilddatenbank_Gesamt/*
+!Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json

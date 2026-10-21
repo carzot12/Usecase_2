@@ -1,0 +1,837 @@
+{
+  "meta": {
+    "titel": "Versagensarten bei Zugversuchen parallel zur Faser an Holz – erweiterte Beschreibung für KI-Bildklassifikation",
+    "version": "1.0",
+    "stand": "2026-10-20",
+    "hinweise": [
+      "Kürzel (code) und Bezeichnung (name) sind unverändert aus versagensarten.json übernommen.",
+      "Ein Probekörper kann mehrere Klassen gleichzeitig aufweisen (Multi-Label-Klassifikation).",
+      "Ein sichtbares Merkmal im Bruchbereich ist nicht automatisch die Versagensursache; die KI soll Merkmale und Bruchbilder benennen, nicht Ursachen behaupten.",
+      "Einträge mit review_required=true enthalten laborspezifische oder nicht eindeutig normativ belegte Definitionen und sind fachlich zu überprüfen.",
+      "Normzitate sind sinngemäß; der genaue Wortlaut ist der jeweils gültigen Normfassung zu entnehmen."
+    ],
+    "feature_types": {
+      "wood_feature": "Holzmerkmal/Fehlstelle (Wuchsmerkmal oder Schädigung), vor dem Versuch vorhanden",
+      "fracture_pattern": "Morphologie der Bruchfläche (Bruchbild)",
+      "failure_mechanism": "Mechanischer Versagensmechanismus/Beanspruchungsart (aus Bruchbild abgeleitet)",
+      "finger_joint": "Versagen im Bereich einer Keilzinkenverbindung",
+      "test_artifact": "Prüftechnisch beeinflusstes Versagen (Einspannung, Auflager, Maschine)"
+    }
+  },
+  "failure_modes": [
+    {
+      "code": "KA",
+      "name": "Kantenast",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Ast, der eine Längskante des Probekörpers anschneidet und daher sowohl auf einer Breitseite als auch auf der angrenzenden Schmalseite sichtbar ist. Holzmerkmal (Wuchsmerkmal), das im Bruchbereich liegen kann. Die genaue Messregel (Astdurchmesser, Bezug auf Breit- oder Schmalseite) ist der jeweils verwendeten Sortiernorm zu entnehmen; die laborinterne Abgrenzung zu SA/SSA ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Astquerschnitt oder Astanschnitt (rund, oval oder angeschnitten-länglich, meist dunkler als das umgebende Holz) liegt an einer Längskante.",
+        "Derselbe Ast ist auf zwei aneinandergrenzenden Flächen (Breitseite und Schmalseite) sichtbar; an der Kante fehlt ggf. ein Teil der Kante (Ausbruch, Ast herausgefallen).",
+        "Im Bruchbereich: Bruchlinie läuft durch oder unmittelbar neben dem Ast; Faserverlauf um den Ast ist sichtbar umgelenkt (Augen-/Wirbelstruktur).",
+        "Bruchfläche zeigt im Astbereich häufig eine abweichende Textur (Hirnholzstruktur des Astes, harzige oder dunkle Zone)."
+      ],
+      "influence_on_failure": "Äste reduzieren den tragenden Netto-Querschnitt und verursachen lokale Faserabweichungen, Spannungskonzentrationen und Querzugspannungen. Liegt der Ast an der Kante, entsteht unter Zug zusätzlich eine exzentrische Schwächung, die zu Biegeanteilen im Restquerschnitt führen kann. Kantennahe Äste gelten in der Literatur als besonders festigkeitsmindernd unter Zug; quantitative Aussagen hängen von Astgröße, Lage und Faserverlauf ab.",
+      "distinguishing_features": [
+        "Gegenüber SA: SA liegt innerhalb einer Breitseite und berührt die Kante nicht; KA ist auf zwei Flächen gleichzeitig sichtbar.",
+        "Gegenüber SSA: SSA ist nur auf der Schmalseite sichtbar (bzw. durchdringt die Breitseite nicht nennenswert); KA reicht über die Kante auf die Breitseite.",
+        "Gegenüber FLA: Beim Flügelast ist der Ast längs angeschnitten und auf der Oberfläche stark gestreckt; KA zeigt einen überwiegend quer angeschnittenen Ast an der Kante.",
+        "Gegenüber AA: AA bezeichnet mehrere Äste in kurzem Längsabstand; ein einzelner Kantenast ist kein AA.",
+        "Gegenüber LSF: LSF beschreibt die Faserabweichung; ist diese durch einen Kantenast verursacht, können KA und LSF gemeinsam vergeben werden."
+      ],
+      "limitations": [
+        "Ob der Ast tatsächlich bruchauslösend war, ist aus einem Foto nicht nachweisbar; es ist nur die räumliche Nähe zur Bruchstelle feststellbar.",
+        "Bei nur einer abgebildeten Fläche ist nicht sicher erkennbar, ob der Ast über die Kante läuft.",
+        "Astausdehnung im Inneren (Astverlauf durch den Querschnitt) und damit die tatsächliche Querschnittsschwächung sind nicht bestimmbar.",
+        "Normgerechte Astmaße (z. B. nach EN 1309-3 / DIN 4074-1) benötigen eine Messung am Prüfkörper, nicht nur ein Foto."
+      ],
+      "sources": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel."
+      ]
+    },
+    {
+      "code": "SSA",
+      "name": "Schmalseitenast",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Ast, der auf der Schmalseite des Probekörpers sichtbar ist. In der Sortierung von Brettlamellen wird die Lage eines Astes auf der Schmalseite gesondert betrachtet, da Äste im Randbereich unter Zug besonders ungünstig wirken. Normative Messregel siehe DIN 4074-1; laborinterne Abgrenzung zu KA ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Astquerschnitt auf der Schmalseite (Kantenfläche geringer Breite), häufig als runder/ovaler dunkler Fleck über einen großen Teil der Schmalseitenbreite.",
+        "Auf der angrenzenden Breitseite ist der Ast nicht oder nur als schmaler Anschnitt sichtbar.",
+        "Bruchlinie verläuft bei Beteiligung typischerweise quer über die Schmalseite durch den Ast und setzt sich auf den Breitseiten mit Faserumlenkung fort."
+      ],
+      "influence_on_failure": "Ein Ast auf der Schmalseite kann einen großen Anteil der Randzone eines Brettquerschnitts einnehmen; unter Zug führt dies zu Querschnittsschwächung, exzentrischer Lastabtragung und lokalen Faserabweichungen. Die Wirkung hängt vom Verhältnis Astdurchmesser zu Schmalseitenbreite ab.",
+      "distinguishing_features": [
+        "Gegenüber KA: KA ist auf Schmal- UND Breitseite (über die Kante) sichtbar; SSA primär nur auf der Schmalseite.",
+        "Gegenüber SA: SA liegt auf der Breitseite; ein SSA ist von der Breitseite aus nicht oder kaum sichtbar.",
+        "Gegenüber FLA: Ein längs angeschnittener Ast auf der Schmalseite (gestreckt) eher FLA prüfen."
+      ],
+      "limitations": [
+        "Fotos zeigen die Schmalseite oft nur unter flachem Winkel oder gar nicht; ohne Schmalseitenansicht ist SSA nicht klassifizierbar.",
+        "Der Übergang zwischen SSA und KA ist geometrisch fließend und erfordert eine im Labor festgelegte Regel (z. B. Mindestanteil auf Breitseite).",
+        "Bruchauslösende Wirkung nicht aus dem Foto nachweisbar."
+      ],
+      "sources": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "SA",
+      "name": "Seitenast",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Ast, der auf einer Breitseite (Seitenfläche) des Probekörpers sichtbar ist und die Längskanten nicht anschneidet (Einzelast im Inneren der Breitseite). Begriffsverwendung im Labor ist FACHLICH ZU ÜBERPRÜFEN, da „Seitenast“ in der Normterminologie nicht eindeutig belegt ist.",
+      "visual_features": [
+        "Runder bis ovaler Astquerschnitt innerhalb der Breitseite mit Abstand zu beiden Kanten.",
+        "Konzentrische Faserumlenkung (Wirbel) um den Ast auf der Breitseite.",
+        "Bei Bruchbeteiligung: Bruchlinie auf der Breitseite läuft durch oder um den Ast, häufig mit stufenförmigem Verlauf entlang der umgelenkten Fasern.",
+        "Auf der Bruchfläche ggf. Astholz (dunkel, Hirnholzstruktur) oder ein Loch, falls der Ast herausgelöst wurde."
+      ],
+      "influence_on_failure": "Querschnittsschwächung und lokale Faserumlenkung um den Ast führen zu Spannungskonzentrationen. Ein zentral auf der Breitseite liegender Ast wirkt unter reinem Zug meist weniger exzentrisch als ein Kanten- oder Schmalseitenast gleicher Größe.",
+      "distinguishing_features": [
+        "Gegenüber KA: Kein Kontakt zur Kante, nicht auf der Schmalseite sichtbar.",
+        "Gegenüber SSA: Sichtbar auf der Breitseite, nicht auf der Schmalseite.",
+        "Gegenüber AA: Einzelner Ast; mehrere Äste in kurzem Abstand → AA.",
+        "Gegenüber HZ/RiEi: Ast hat Hirnholzstruktur mit eigenen Jahrringen; Harzgalle ist eine linsenförmige, harzgefüllte Lücke ohne Jahrringstruktur."
+      ],
+      "limitations": [
+        "Ob der Ast den Querschnitt durchdringt (auf der Gegenseite austritt) ist nur mit Bild der Gegenseite feststellbar.",
+        "Ursächlichkeit für den Bruch nicht nachweisbar; nur Lagebeziehung zur Bruchstelle."
+      ],
+      "sources": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "WB",
+      "name": "Wipfelbruch",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Holzbereich, der aus einem früheren Bruch des Baumwipfels und dem anschließenden Übernehmen der Führung durch einen Seitenast entstanden ist (engl. „top rupture“). Typisch sind lokale Faserablenkung, Druckholz, Astansammlung und ggf. versetzte Markröhre.",
+      "visual_features": [
+        "Ausgeprägte lokale Faserablenkung über eine größere Länge, häufig mit Druckholz (rötlich-braune, breite Spätholzzonen).",
+        "Gehäufte oder ungewöhnlich angeordnete Äste, teils eingewachsene Astreste.",
+        "Unregelmäßiger, gestörter Jahrringverlauf auf Hirnholz bzw. Bruchfläche.",
+        "Bruchfläche schräg und unregelmäßig im Bereich der Störung."
+      ],
+      "influence_on_failure": "Lokale Faserabweichungen aus Wipfelbrüchen können die Zugfestigkeit deutlich reduzieren und werden von Sortiermaschinen ohne Faserwinkelmessung nicht zuverlässig erkannt.",
+      "distinguishing_features": [
+        "Gegenüber LSF: LSF ist das allgemeine Merkmal; WB ist eine spezifische Ursache mit Kombination mehrerer Merkmale.",
+        "Gegenüber AA: AA ohne Druckholz und großräumige Faserablenkung → AA.",
+        "Gegenüber Bu: Druckholz kann im WB auftreten; Bu allein ohne Faserablenkung → Bu."
+      ],
+      "limitations": [
+        "Die Entstehungsgeschichte (Wipfelbruch des Baumes) ist am Brett nicht nachweisbar, nur ihr typisches Erscheinungsbild.",
+        "Hohe Verwechslungsgefahr mit LSF und AA; Vergabe sollte anhand von Referenzbildern kalibriert werden."
+      ],
+      "sources": [
+        "Hunger, F.; van de Kuilen, J.-W.G. (2018): Slope of grain measurement: a tool to improve machine strength grading by detecting top ruptures. Wood Science and Technology 52(3), 821–838. doi:10.1007/s00226-018-1000-7",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)",
+        "Timell, T.E. (1986): Compression Wood in Gymnosperms. Bd. 1–3. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "AA",
+      "name": "Astansammlung",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Mehrere Äste, die in kurzem Abstand in Faserrichtung liegen und sich in ihrer Wirkung überlagern (z. B. Astquirl). In DIN 4074-1 als eigenes Sortiermerkmal mit festgelegtem Bezugsbereich behandelt.",
+      "visual_features": [
+        "Zwei oder mehr Astquerschnitte innerhalb eines kurzen Längenabschnitts (Bezugslänge laut Sortiernorm).",
+        "Oft quirlartige Anordnung über den Umfang bzw. auf mehreren Flächen in gleicher Längsposition.",
+        "Stark gestörter Faserverlauf zwischen den Ästen; Bruchlinie verbindet häufig mehrere Äste."
+      ],
+      "influence_on_failure": "Die Querschnittsschwächungen der Einzeläste summieren sich, und die Faserumlenkungen überlagern sich; Astansammlungen bilden daher oft die Schwachstelle eines Brettes unter Zug.",
+      "distinguishing_features": [
+        "Gegenüber KA/SA/SSA: mehr als ein Ast im Bruchbereich; Einzelast-Klassen können zusätzlich vergeben werden.",
+        "Gegenüber WB: Wipfelbruch zeigt typischerweise eine Astansammlung zusammen mit Faserablenkung/Druckholz; AA allein ohne diese Begleitmerkmale."
+      ],
+      "limitations": [
+        "Die normative Bezugslänge kann ohne Maßstab im Bild nicht geprüft werden.",
+        "Welcher Ast primär versagt hat, ist meist nicht bestimmbar."
+      ],
+      "sources": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "Bu",
+      "name": "Buchs",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Regional verwendete Bezeichnung für Druckholz (Reaktionsholz der Nadelbäume, auch Rotholz). Druckholz bildet sich auf der Unterseite geneigter Stämme/Äste und weist dickwandige, rundliche Tracheiden, höheren Ligningehalt, größeren Mikrofibrillenwinkel und hohes Längsschwinden auf. Gleichsetzung „Buchs = Druckholz“ als regionaler Fachbegriff ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Rötlich-braune bis dunkelbraune, matte Zonen mit breit wirkenden Spätholzbereichen und unscharfem Früh-/Spätholzübergang.",
+        "Häufig exzentrisch auf einer Seite der Markröhre (Hirnholz), mit breiteren Jahrringen auf dieser Seite.",
+        "Bruchfläche im Druckholzbereich auffällig kurz, glatt und spröde (quer zur Faser abgebrochen).",
+        "Ggf. Längsverzug/Krümmung des Probekörpers."
+      ],
+      "influence_on_failure": "Druckholz hat trotz höherer Rohdichte meist eine geringere Zugfestigkeit und ein spröderes Bruchverhalten als Normalholz; zudem führen die abweichenden Schwindeigenschaften zu Eigenspannungen und Verformungen.",
+      "distinguishing_features": [
+        "Gegenüber sp HB: sp HB ist ein Bruchbild; Bu ist ein Holzmerkmal, das ein sprödes Bruchbild verursachen kann (beide vergebbar).",
+        "Gegenüber BF: Braunfäule zeigt Würfelbruch, Schwundrisse quer zur Faser, Masseverlust und Brüchigkeit; Druckholz ist strukturell intakt und eher fest/hart.",
+        "Gegenüber Spätholz in Normalholz: Druckholz-Spätholz wirkt matt und rötlich, nicht glänzend dunkel, und der Übergang ist unscharf."
+      ],
+      "limitations": [
+        "Leichtes Druckholz ist visuell schwer erkennbar; die sichere Bestimmung erfordert mikroskopische Untersuchung oder Durchlichtverfahren.",
+        "Farbwiedergabe auf Fotos (Beleuchtung, Weißabgleich) beeinflusst die Erkennbarkeit stark."
+      ],
+      "sources": [
+        "Timell, T.E. (1986): Compression Wood in Gymnosperms. Bd. 1–3. Springer, Berlin/Heidelberg.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)"
+      ]
+    },
+    {
+      "code": "LSF",
+      "name": "Lokale Schrägfaser",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Räumlich begrenzte Faserabweichung, typischerweise im Umfeld von Ästen, Astansammlungen, überwallten Verletzungen oder Wipfelbrüchen, während der Faserverlauf außerhalb dieser Zone weitgehend achsparallel ist.",
+      "visual_features": [
+        "Wellige, wirbelförmige oder S-förmige Faser-/Jahrringlinien in einem begrenzten Längenbereich.",
+        "Störungszentrum (Ast, Narbe, Wipfelbruchzone) meist innerhalb oder nahe der Zone sichtbar.",
+        "Bruchlinie wechselt lokal die Richtung, folgt dem gestörten Faserverlauf und kehrt außerhalb in Querrichtung zurück (Zickzack-/Stufenbruch).",
+        "Außerhalb der Zone gerader, achsparalleler Faserverlauf."
+      ],
+      "influence_on_failure": "Lokale Faserabweichungen erzeugen Querzug- und Schubspannungen und gelten als wesentlicher Grund dafür, dass Äste festigkeitsmindernd wirken. Lokale Faserneigung kann auch ohne sichtbaren Ast (z. B. bei Wipfelbrüchen) die Zugfestigkeit deutlich reduzieren und wird von maschinellen Sortierverfahren nicht immer erfasst.",
+      "distinguishing_features": [
+        "Gegenüber GSF: Faserabweichung begrenzt auf eine Zone; außerhalb gerade Faser.",
+        "Gegenüber KA/SA/SSA/AA: Diese Klassen benennen das Merkmal (Ast), LSF die resultierende Faserstörung; Mehrfachvergabe sinnvoll, wenn die Faserstörung deutlich über den Ast hinausreicht.",
+        "Gegenüber WB: WB umfasst eine charakteristische Kombination (Faserablenkung, Druckholz, ggf. Astansammlung, Markverlagerung); LSF ist allgemeiner."
+      ],
+      "limitations": [
+        "Größe und Winkel der lokalen Faserabweichung sind auf dem Foto nur qualitativ abschätzbar.",
+        "Faserabweichung im Probeninneren nicht sichtbar.",
+        "Ob die LSF oder der verursachende Ast für das Versagen maßgebend war, ist nicht trennbar."
+      ],
+      "sources": [
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)",
+        "Hunger, F.; van de Kuilen, J.-W.G. (2018): Slope of grain measurement: a tool to improve machine strength grading by detecting top ruptures. Wood Science and Technology 52(3), 821–838. doi:10.1007/s00226-018-1000-7",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
+    },
+    {
+      "code": "GSF",
+      "name": "Globale Schrägfaser",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Über die gesamte bzw. einen großen Teil der Probenlänge gleichmäßig von der Längsachse abweichender Faserverlauf (Faserneigung). Ursachen können Drehwuchs, Abholzigkeit/Einschnitt nicht parallel zur Stammachse oder Krümmung sein. Die Unterscheidung in globale und lokale Faserabweichung ist u. a. in Arbeiten der TU Graz zum Zug-Proof-Loading belegt.",
+      "visual_features": [
+        "Jahrringlinien, Harzkanäle, Trocknungsrisse oder Bruchfasern verlaufen über die gesamte sichtbare Länge unter einem annähernd konstanten Winkel zur Probenachse.",
+        "Bruchfläche ist lang und schräg; die Bruchlinie verläuft annähernd parallel zur Faser und damit schräg zur Probenachse, oft über eine Länge vom Mehrfachen der Probenbreite.",
+        "Glatte, wenig zerfaserte Gleitflächen entlang der Faser (Kombination aus Zug und Schub/Querzug).",
+        "Kein lokales Störungszentrum (Ast, Wipfelbruch) als Ursprung der Faserneigung erkennbar."
+      ],
+      "influence_on_failure": "Mit zunehmendem Winkel zwischen Faser und Last sinkt die Zugfestigkeit stark, da der Anteil der geringen Querzug- und Schubfestigkeit zunimmt (Abschätzung z. B. nach Hankinson-Formel). Bereits geringe Faserneigungen führen unter Zug zu messbaren Festigkeitsverlusten.",
+      "distinguishing_features": [
+        "Gegenüber LSF: Faserneigung ist über die Länge gleichförmig, nicht auf eine Zone um einen Ast/Wipfelbruch begrenzt.",
+        "Gegenüber DW: DW ist eine mögliche Ursache für GSF (spiraliger Faserverlauf am Stamm); im Brett zeigt sich DW als GSF. Eine Unterscheidung ist meist nur über Zusatzinformation (Stammlage, Faserneigung auf allen vier Seiten, Spaltprobe) möglich.",
+        "Gegenüber LR/Spl HB: Längsrisse und Splitter folgen der Faser – verlaufen sie schräg zur Probenachse, ist das ein Indiz für GSF, nicht selbst die Versagensart."
+      ],
+      "limitations": [
+        "Der Faserwinkel ist auf Fotos nur an der Oberfläche und nur bei sichtbaren Indikatoren (Risse, Harzkanäle, Bruchfasern) abschätzbar; Jahrringlinien auf Flächen geben nicht zwingend den Faserverlauf wieder.",
+        "Messung erfolgt üblicherweise mit Ritzgerät/Faserneigungsmesser oder Laserscatter (Tracheideffekt); ein Foto ersetzt dies nicht.",
+        "Faserneigung in der Dickenrichtung ist auf einer Breitseitenaufnahme nicht sichtbar."
+      ],
+      "sources": [
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)",
+        "Hunger, F.; van de Kuilen, J.-W.G. (2018): Slope of grain measurement: a tool to improve machine strength grading by detecting top ruptures. Wood Science and Technology 52(3), 821–838. doi:10.1007/s00226-018-1000-7",
+        "Hankinson, R.L. (1921): Investigation of crushing strength of spruce at varying angles of grain. Air Service Information Circular 3(259), U.S. Air Service.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel."
+      ]
+    },
+    {
+      "code": "KZ",
+      "name": "Keilzinken",
+      "feature_type": "finger_joint",
+      "review_required": true,
+      "definition": "Versagen im Bereich einer Keilzinkenverbindung, typischerweise entlang der Zinkenflanken (Klebfuge bzw. Grenzschicht Holz/Klebstoff) oder gemischt Fuge/Holz. Keilzinkungen sind häufige Schwachstellen in keilgezinkten Lamellen. Abgrenzung zu KZGB laborintern FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bruchfläche zeigt das charakteristische Zinkenprofil (sägezahnförmige Kontur) auf der Schmal- und Breitseite.",
+        "Zinkenflanken sichtbar, mit Klebstoffresten (Klebfuge erkennbar: dünne helle, dunkle oder glänzende Linie).",
+        "Anteil Holzbruch an den Flanken (Holzfasern auf der Klebfuge) vs. glatte Klebfugenflächen.",
+        "Bruch springt oft von Zinken zu Zinken."
+      ],
+      "influence_on_failure": "Die Festigkeit der Keilzinkung hängt von Geometrie, Klebung, Pressdruck, Holzqualität im Zinkenbereich und Nachbarschaft zu Ästen ab; keilgezinkte Lamellen versagen daher häufig in der Verbindung.",
+      "distinguishing_features": [
+        "Gegenüber KZGB: Bei KZ verläuft der Bruch entlang der Flanken; bei KZGB durch die Zinkengründe (quer, gerade Linie).",
+        "Gegenüber HB: Bruch außerhalb der Zinkung → HB bzw. Holzmerkmal.",
+        "Ast in Zinkennähe: KZ und Astklasse gemeinsam vergeben."
+      ],
+      "limitations": [
+        "Klebfugenqualität (Aushärtung, Klebstoffmenge) und Holzbruchanteil sind ohne Vergrößerung nur grob abschätzbar.",
+        "Die konkrete Bruchbildklassifikation von Keilzinken ist in den jeweils angewandten Produkt-/Prüfnormen nachzuschlagen."
+      ],
+      "sources": [
+        "EN 14080:2013 – Holzbauwerke – Brettschichtholz und Balkenschichtholz – Anforderungen. CEN, Brüssel.",
+        "EN 15497:2014 – Keilgezinktes Vollholz für tragende Zwecke – Leistungsanforderungen und Mindestanforderungen an die Herstellung. CEN, Brüssel.",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)",
+        "Brandner, R.; Schickhofer, G. (2014): Length effects on tensile strength in timber members with and without finger joints. In: Aicher, S.; Reinhardt, H.-W.; Garrecht, H. (Hrsg.): Materials and Joints in Timber Structures. RILEM Bookseries 9, Springer, Dordrecht.",
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel."
+      ]
+    },
+    {
+      "code": "KZGB",
+      "name": "Keilzinkengrundbruch",
+      "feature_type": "finger_joint",
+      "review_required": true,
+      "definition": "Versagen einer Keilzinkenverbindung durch die Zinkengründe, d. h. Bruch des Holzes im Querschnitt am Fuß der Zinken, wo der tragende Holzquerschnitt am geringsten ist. FACHLICH ZU ÜBERPRÜFEN (laborinterne Definition).",
+      "visual_features": [
+        "Bruchlinie verläuft annähernd gerade quer zur Probe auf Höhe der Zinkenspitzen/-gründe der Gegenseite.",
+        "Zinken auf einer Seite vollständig abgerissen (Zinkenspitzen stecken noch im Gegenstück).",
+        "Kurze, eher spröde Bruchfläche im Holz, Klebfugen der Flanken weitgehend intakt."
+      ],
+      "influence_on_failure": "Der Zinkengrund stellt eine Querschnittsschwächung und Kerbe dar; Versagen dort weist darauf hin, dass die Klebung tragfähiger war als der Restquerschnitt am Zinkengrund.",
+      "distinguishing_features": [
+        "Gegenüber KZ: Klebfuge bleibt weitgehend intakt, Bruch quer durch den Holzquerschnitt am Zinkenfuß.",
+        "Gegenüber sp HB: Ort des Bruchs exakt am Zinkengrund mit sichtbarem Zinkenprofil."
+      ],
+      "limitations": [
+        "Ohne Nahaufnahme ist die Unterscheidung KZ/KZGB unsicher; Bruchflächen beider Hälften sollten abgebildet sein."
+      ],
+      "sources": [
+        "EN 14080:2013 – Holzbauwerke – Brettschichtholz und Balkenschichtholz – Anforderungen. CEN, Brüssel.",
+        "EN 15497:2014 – Keilgezinktes Vollholz für tragende Zwecke – Leistungsanforderungen und Mindestanforderungen an die Herstellung. CEN, Brüssel.",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)",
+        "Brandner, R.; Schickhofer, G. (2014): Length effects on tensile strength in timber members with and without finger joints. In: Aicher, S.; Reinhardt, H.-W.; Garrecht, H. (Hrsg.): Materials and Joints in Timber Structures. RILEM Bookseries 9, Springer, Dordrecht."
+      ]
+    },
+    {
+      "code": "HB",
+      "name": "Holzbruch",
+      "feature_type": "fracture_pattern",
+      "review_required": true,
+      "definition": "Versagen im Holz selbst (im Gegensatz zu einem Versagen in der Klebfuge oder Verbindung), ohne dass ein bestimmtes Holzmerkmal als Ausgangspunkt erkennbar ist. Allgemeine Oberklasse für Bruchbilder im Holz. Laborverwendung (Oberklasse vs. „Bruch im fehlerfreien Holz“) ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bruchfläche liegt im Holz außerhalb von Keilzinkung, Klemmbereich und sichtbaren Holzmerkmalen.",
+        "Faserige bis stufenförmige Bruchfläche mit Faserauszug.",
+        "Kein Ast, keine auffällige Faserstörung, keine Fäule im Bruchbereich erkennbar."
+      ],
+      "influence_on_failure": "Beschreibt das Versagen des Holzwerkstoffs selbst; die Festigkeit wird dann von Rohdichte, Faserwinkel und nicht sichtbaren Merkmalen bestimmt.",
+      "distinguishing_features": [
+        "Gegenüber sp HB/Spl HB: Diese sind Unterklassen mit spezifischer Bruchflächenmorphologie.",
+        "Gegenüber KZ/KZGB: HB liegt außerhalb der Keilzinkung bzw. versagt im Holz statt in der Fuge.",
+        "Gegenüber BB (Gezu)/KB: Bruch nicht im Einspannbereich."
+      ],
+      "limitations": [
+        "Abwesenheit eines Merkmals auf dem Foto heißt nicht Abwesenheit im Inneren.",
+        "Ein Foto zeigt nur Oberflächen (Seitenflächen, Bruchflächen); innere Merkmale, Feuchtegehalt, Rohdichte und Belastungsgeschichte sind nicht ableitbar."
+      ],
+      "sources": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel.",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "sp HB",
+      "name": "Spröder Holzbruch",
+      "feature_type": "fracture_pattern",
+      "review_required": false,
+      "definition": "Bruchbild mit kurzer, relativ glatter und überwiegend quer zur Faser verlaufender Bruchfläche mit geringem Faserauszug (engl. „brash failure“). Bezeichnet die Morphologie der Bruchfläche; Holz versagt unter Zug parallel zur Faser grundsätzlich weitgehend linear-elastisch bis zum Bruch.",
+      "visual_features": [
+        "Bruchlinie annähernd rechtwinklig zur Probenachse, über kurze Länge (deutlich kleiner als die Probenbreite).",
+        "Bruchfläche relativ eben, matt oder körnig; kaum herausstehende Fasern, keine langen Splitter.",
+        "Beide Bruchhälften passen nahezu formschlüssig zusammen.",
+        "Häufig in Kombination mit sichtbarem Druckholz, Fäule, Druckfalten oder sehr leichtem Holz."
+      ],
+      "influence_on_failure": "Ein spröder, querverlaufender Bruch ist häufig Indiz für eine verringerte Zähigkeit des Holzes (z. B. Druckholz, Fäule, Stauchbrüche, geringe Rohdichte, thermische Schädigung); die Ursache muss getrennt beurteilt werden.",
+      "distinguishing_features": [
+        "Gegenüber Spl HB: Spl HB hat lange, zerfaserte Splitter und eine in Längsrichtung ausgedehnte Bruchzone; sp HB ist kurz, glatt, quer.",
+        "Gegenüber GSF: GSF zeigt lange schräge Gleitflächen entlang der Faser; sp HB verläuft quer.",
+        "Gegenüber KZGB: KZGB liegt exakt im Zinkengrund mit erkennbaren Zinkenspitzen/Klebfuge.",
+        "Gegenüber BF/Bu/DF: Diese sind mögliche Ursachen; sp HB ist das reine Bruchbild und kann zusätzlich vergeben werden."
+      ],
+      "limitations": [
+        "„Spröde“ bezieht sich auf das Bruchbild; das tatsächliche Last-Verformungsverhalten ist aus dem Foto nicht ableitbar.",
+        "Ursache der Sprödigkeit (Druckholz, Fäule, Stauchung, Rohdichte) nicht sicher aus dem Foto bestimmbar.",
+        "Die Grenze zu Spl HB ist kontinuierlich; empfohlen ist eine Kalibrierung mit Referenzbildern (z. B. Bruchlänge relativ zur Probenbreite)."
+      ],
+      "sources": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London.",
+        "Timell, T.E. (1986): Compression Wood in Gymnosperms. Bd. 1–3. Springer, Berlin/Heidelberg.",
+        "Schmidt, O. (2006): Wood and Tree Fungi – Biology, Damage, Protection, and Use. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "MR",
+      "name": "Markröhre",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Zentraler, weicher Gewebestrang im Stammzentrum (Mark), um den die Jahrringe konzentrisch angeordnet sind; in Schnittholz als Merkmal bei markhaltigem Einschnitt vorhanden.",
+      "visual_features": [
+        "Schmaler (wenige mm), dunkler oder bräunlicher, längs verlaufender Streifen auf einer Fläche bzw. kleiner Punkt im Zentrum konzentrischer Jahrringe auf dem Hirnholz/Bruchquerschnitt.",
+        "Umgebung mit sehr engen Kreisbögen der Jahrringe (Juvenilholz).",
+        "Häufig von Rissen begleitet (Markrisse, radial vom Mark ausgehend).",
+        "Bruch läuft ggf. entlang der Markröhre in Längsrichtung."
+      ],
+      "influence_on_failure": "Die Markröhre selbst ist mechanisch schwach; das umgebende juvenile Holz weist i. d. R. geringere Steifigkeit und Festigkeit sowie stärkere Faserneigung auf. Markröhre im Querschnitt geht häufig mit Rissen und Ästen einher.",
+      "distinguishing_features": [
+        "Gegenüber LR: LR ist ein Riss (Spalt); MR ist ein Gewebestreifen, der Risse auslösen kann.",
+        "Gegenüber RiSch: RiSch folgt einem Jahrring im Abstand zum Mark (Bogen), MR liegt im Zentrum der Jahrringe."
+      ],
+      "limitations": [
+        "Lage des Marks innerhalb des Querschnitts ist nur auf Hirnholz oder Bruchquerschnitt sicher bestimmbar.",
+        "Juvenilholzanteil ist auf Fotos nicht quantifizierbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "DF",
+      "name": "Druckfalte",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Stauchbruch der Zellwände durch Längsdruck (engl. „compression failure“/„compression crease“), z. B. durch Windlast oder Fällschaden am stehenden Baum, bzw. durch Druckbeanspruchung im Versuch. Laborbedeutung (vorhandenes Holzmerkmal vs. versuchsbedingter Stauchbruch) ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Feine, quer oder leicht schräg zur Faser verlaufende Linie(n) bzw. Falten auf der Oberfläche, oft nur bei Streiflicht sichtbar.",
+        "Mehrere parallele Knicklinien („Kink bands“) möglich.",
+        "Unter Zug: auffallend glatter, quer zur Faser verlaufender, spröder Bruch entlang der Druckfalte."
+      ],
+      "influence_on_failure": "Bereits vorhandene Stauchbrüche schädigen die Zellwände und können die Zugfestigkeit sowie die Bruchzähigkeit drastisch verringern; das Holz bricht dann ungewöhnlich spröde und quer.",
+      "distinguishing_features": [
+        "Gegenüber sp HB: sp HB ist das Bruchbild; DF ist eine mögliche Ursache und nur zu vergeben, wenn Knicklinien erkennbar sind.",
+        "Gegenüber LD: LD bezeichnet Längsdruckversagen im Versuch (z. B. in Biege- oder Druckversuchen); DF das Erscheinungsbild der Stauchlinie."
+      ],
+      "limitations": [
+        "Feine Stauchlinien sind auf Standardfotos ohne Streiflicht/Mikroskopie häufig nicht sichtbar.",
+        "Entstehungszeitpunkt (Baum, Transport, Versuch) nicht aus dem Foto bestimmbar."
+      ],
+      "sources": [
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)"
+      ]
+    },
+    {
+      "code": "RS",
+      "name": "Rollschub",
+      "feature_type": "failure_mechanism",
+      "review_required": true,
+      "definition": "Schubversagen in einer Ebene senkrecht zur Faser (Radial-Tangential-Ebene), bei dem die Fasern „gegeneinander abrollen“; relevant v. a. für Querlagen in Brettsperrholz. In Zugversuchen parallel zur Faser an Vollholz untypisch – Bedeutung im Labor FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bruchfläche parallel zur Faser mit aufgerauten, quer abgerollten bzw. abgerissenen Fasern.",
+        "Versagen zwischen Jahrringen/Holzstrahlen in Bauteilen mit Querlagen."
+      ],
+      "influence_on_failure": "Die Rollschubfestigkeit ist deutlich geringer als die Längsschubfestigkeit; in Zugversuchen an Vollholz nur denkbar bei Querlagen im Einspannbereich oder besonderen Probengeometrien.",
+      "distinguishing_features": [
+        "Gegenüber QZ: Schub- statt Normalspannungsversagen; Fasern zeigen Rollspuren.",
+        "Gegenüber Spl HB: Keine langen Längssplitter."
+      ],
+      "limitations": [
+        "Mechanismus aus einem Foto kaum sicher identifizierbar.",
+        "Kontext der Probenart (CLT, Vollholz) erforderlich."
+      ],
+      "sources": [
+        "Ehrhart, T.; Brandner, R. (2018): Rolling shear: Test configurations and properties of some European soft- and hardwood species. Engineering Structures 172, 554–572.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München."
+      ]
+    },
+    {
+      "code": "BB (Zwick)",
+      "name": "Biegebruch",
+      "feature_type": "failure_mechanism",
+      "review_required": true,
+      "definition": "Bruchbild mit Merkmalen eines Biegeversagens (Zugbruch auf einer Seite, ggf. Stauchzone auf der Gegenseite). Der Zusatz „(Zwick)“ verweist vermutlich auf die verwendete Prüfmaschine bzw. Prüfkonfiguration. Laborspezifische Klasse – FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bruch beginnt auf einer Seite (Zugseite) und läuft schräg oder stufig zur Gegenseite.",
+        "Auf der Gegenseite ggf. Stauchfalten oder ein abgeknickter Rest (Druckzone).",
+        "Bei Zugversuchen: Hinweis auf exzentrische Lasteinleitung oder Verkrümmung des Probekörpers."
+      ],
+      "influence_on_failure": "Biegeanteile im Zugversuch (durch Exzentrizität, Krümmung, einseitige Äste) erhöhen die Randspannung und senken die gemessene Zugtragfähigkeit; EN 408 fordert eine möglichst zentrische Lasteinleitung.",
+      "distinguishing_features": [
+        "Gegenüber BB (Gezu): Trotz gleichem Kürzel „BB“ unterschiedliche Bedeutung (Biegebruch vs. Backenbruch) – Klassen nie nur über „BB“ zuordnen.",
+        "Gegenüber Spl HB/sp HB: Bruchmorphologie kann zusätzlich vergeben werden."
+      ],
+      "limitations": [
+        "Ob tatsächlich Biegeanteile wirkten, ist ohne Mess- oder Videodaten nicht nachweisbar."
+      ],
+      "sources": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "RiSch",
+      "name": "Ringschäle",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Riss bzw. Trennung, die entlang eines Jahrrings (meist an der Grenze Spätholz/Frühholz) verläuft; auf dem Hirnholz als Kreisbogen sichtbar. Entstehung im stehenden Baum durch Wachstumsspannungen; Holzmerkmal, kein Prüfversagen.",
+      "visual_features": [
+        "Auf Hirnholz bzw. Bruchquerschnitt: bogenförmiger Spalt, der exakt einem Jahrring folgt.",
+        "Auf Längsflächen: Längsspalt bzw. Ablösung einer Holzlage entlang einer Jahrringgrenze; bei Bretttafeln teils schalenförmig abgelöste Schicht.",
+        "Trennflächen glatt, entlang der Jahrringgrenze; bei Vorschädigung ggf. verfärbt, verschmutzt oder mit Pilzbefall.",
+        "Bruchfläche im Versuch kann stufenartig entlang der Ringschäle verlaufen (Ablösen einer Lage)."
+      ],
+      "influence_on_failure": "Ringschäle stellt eine innere Trennfläche dar, die den wirksamen Querschnitt verringert und Schub- bzw. Querzugversagen entlang der Jahrringgrenze begünstigt. In der visuellen Sortierung ist sie ein Ausschlusskriterium (Wortlaut der jeweils angewendeten Norm prüfen).",
+      "distinguishing_features": [
+        "Gegenüber LR: LR verläuft auf dem Hirnholz radial bzw. unabhängig vom Jahrring; RiSch folgt einem Jahrring (tangential).",
+        "Gegenüber QZ/Spl HB (während des Versuchs entstandene Trennungen entlang Jahrringen): Vorschädigung erkennbar an verfärbten, verwitterten oder verschmutzten Trennflächen; frische Trennflächen sind hell und sauber.",
+        "Gegenüber HZ: kein Harz; meist längere Ausdehnung."
+      ],
+      "limitations": [
+        "Ohne Hirnholz- oder Querschnittsansicht ist die Jahrringbindung des Risses nicht nachweisbar.",
+        "Feine Ringschälen sind in frischem Holz oft erst nach Trocknung sichtbar.",
+        "Ob die Trennung vor oder während des Versuchs entstand, ist nur über Verfärbung oder Vorher-Fotos abschätzbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "QZ",
+      "name": "Querzug",
+      "feature_type": "failure_mechanism",
+      "review_required": true,
+      "definition": "Versagen durch Zugspannungen rechtwinklig zur Faser, d. h. Trennung des Holzes in Faserrichtung. Bei Zugversuchen parallel zur Faser tritt Querzug als Teilmechanismus auf (z. B. an Ästen, bei Faserneigung, in Spannbacken). Laborbedeutung ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Trennfläche parallel zur Faser, relativ glatt, mit geringem Faserauszug.",
+        "Aufgespaltene Probe mit langen, ebenen Trennflächen entlang Jahrringen oder Holzstrahlen.",
+        "Häufig ausgehend von Ästen, Rissen oder den Einspannenden."
+      ],
+      "influence_on_failure": "Die Querzugfestigkeit von Holz ist um ein Vielfaches geringer als die Längszugfestigkeit; daher können bereits kleine Querzugspannungen (Faserneigung, Astumlenkung, Klemmdruck) zu Längsaufspaltungen führen.",
+      "distinguishing_features": [
+        "Gegenüber LR: LR = Riss als Merkmal; QZ = Mechanismus.",
+        "Gegenüber RiSch: RiSch ist eine vorhandene Trennung entlang eines Jahrrings; QZ entsteht im Versuch.",
+        "Gegenüber RS: Rollschub ist Schubversagen, bei dem die Fasern quer zueinander abrollen; QZ ist Trennung durch Normalspannung."
+      ],
+      "limitations": [
+        "Spannungszustand (Querzug vs. Schub) ist aus der Bruchfläche nur eingeschränkt ableitbar.",
+        "Ein Foto zeigt nur Oberflächen (Seitenflächen, Bruchflächen); innere Merkmale, Feuchtegehalt, Rohdichte und Belastungsgeschichte sind nicht ableitbar."
+      ],
+      "sources": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
+    },
+    {
+      "code": "QD",
+      "name": "Querdruck (Auflager)",
+      "feature_type": "test_artifact",
+      "review_required": true,
+      "definition": "Schädigung durch Druck rechtwinklig zur Faser an Auflagern oder Einspannungen (Eindrückung, Zellkollaps). Im Zugversuch v. a. durch Klemmdruck der Backen. FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bleibende Eindrückungen, Abdrücke, verdichtete oder gequetschte Oberflächenschicht.",
+        "Wulstbildung an den Rändern der Eindrückung."
+      ],
+      "influence_on_failure": "Lokale Querdruckschädigung erzeugt Querzug-/Schubspannungen in der Umgebung und kann Einspannbrüche begünstigen.",
+      "distinguishing_features": [
+        "Gegenüber LD: Druck quer statt parallel zur Faser.",
+        "Gegenüber KB/BB (Gezu): QD beschreibt die Eindrückung; diese kann ohne Bruch vorliegen."
+      ],
+      "limitations": [
+        "Eindrücktiefe auf Fotos nicht messbar; Streiflicht erforderlich."
+      ],
+      "sources": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München."
+      ]
+    },
+    {
+      "code": "LD",
+      "name": "Längsdruck",
+      "feature_type": "failure_mechanism",
+      "review_required": true,
+      "definition": "Versagen unter Druck parallel zur Faser (Stauchung, Knickbänder). In reinen Zugversuchen nicht direkt zu erwarten; möglich in Biegeversuchen (Druckzone) oder bei Rückprall/Stoß nach dem Bruch. Laborbedeutung FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Querverlaufende Stauch- bzw. Knicklinien, Aufwölbungen, Faserknicken.",
+        "In Biegeversuchen: Stauchzone auf der Druckseite gegenüber der Zugbruchseite."
+      ],
+      "influence_on_failure": "Längsdruckversagen ist im Zugversuch nicht maßgebend; sichtbare Stauchungen deuten auf Vorschädigung (siehe DF) oder auf Effekte nach dem Bruch hin.",
+      "distinguishing_features": [
+        "Gegenüber DF: DF als vorhandenes Holzmerkmal; LD als im Versuch auftretender Mechanismus.",
+        "Gegenüber QD: QD = Druck quer zur Faser (Eindrückung durch Auflager/Backen)."
+      ],
+      "limitations": [
+        "Zeitpunkt der Stauchung (vor, während, nach Bruch) ist nicht feststellbar."
+      ],
+      "sources": [
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "FLA",
+      "name": "Flügelast",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Ast, der beim Einschnitt längs oder sehr schräg angeschnitten wurde und auf der Oberfläche als lang gestreckte, flügel- bzw. zungenförmige Fläche erscheint (sinngemäß engl. „splay knot“/„spike knot“). Die Bezeichnung ist in den geprüften Normen nicht eindeutig belegt – Definition FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Stark in Längsrichtung gestreckter, dunkler Astanschnitt, deutlich länger als breit.",
+        "Häufig über Kante und Breitseite verlaufend; teilweise beidseits der Kante „flügelartig“ sichtbar.",
+        "Ausgeprägte, langgezogene Faserumlenkung entlang des Astes.",
+        "Bei Bruchbeteiligung: schräg verlaufende Bruchfläche entlang des Astes."
+      ],
+      "influence_on_failure": "Ein längs angeschnittener Ast schwächt den Querschnitt über eine größere Länge und erzeugt eine ausgedehnte Zone mit Faserabweichung; dies kann Versagen entlang des Astes (Schub-/Querzuganteil) begünstigen.",
+      "distinguishing_features": [
+        "Gegenüber KA/SA/SSA: Ast nicht quer, sondern längs angeschnitten (Länge ≫ Breite).",
+        "Gegenüber RiEi: Rindeneinschluss zeigt dunkle Rindensubstanz, keine Astholzstruktur.",
+        "Gegenüber LSF: LSF ist die Faserabweichung selbst; FLA ist das verursachende Merkmal."
+      ],
+      "limitations": [
+        "Definition laborabhängig; Klassengrenzen müssen anhand von Referenzbildern festgelegt werden.",
+        "Astverlauf im Inneren nicht erkennbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "Spl HB",
+      "name": "Splitterholzbruch",
+      "feature_type": "fracture_pattern",
+      "review_required": false,
+      "definition": "Bruchbild mit stark zerfaserter, splitteriger Bruchfläche, bei der sich der Bruch über eine größere Länge in Faserrichtung erstreckt (engl. „splintering“/„fibrous failure“). Typisch für zähes, fehlerarmes Holz mit geradem Faserverlauf.",
+      "visual_features": [
+        "Lange, spitz auslaufende Splitter und herausgezogene Faserbündel auf beiden Bruchhälften.",
+        "Bruchzone in Längsrichtung ausgedehnt (oft mehrfache Probenbreite), mit zahlreichen Längsaufspaltungen.",
+        "Unregelmäßige, verzahnte Bruchkante, die nicht formschlüssig zusammenpasst.",
+        "Teilweise abgelöste Faserlamellen auf den Seitenflächen."
+      ],
+      "influence_on_failure": "Splitterbrüche treten häufig bei Holz mit hoher Zähigkeit auf, bei dem die Längsfasern erst nach Rissumlenkungen entlang schwacher Längsflächen versagen; sie gelten in der Literatur als Hinweis auf ein vergleichsweise ungestörtes Holzgefüge, ohne eine hohe Festigkeit zu beweisen.",
+      "distinguishing_features": [
+        "Gegenüber sp HB: lange Splitter, große Bruchlänge, starker Faserauszug.",
+        "Gegenüber GSF: Splitter folgen der Faser; bei GSF verlaufen sie gleichmäßig schräg über die Länge und die Bruchfläche wirkt eher glatt-gleitend.",
+        "Gegenüber LR: LR ist ein einzelner, definierter Riss; Spl HB besteht aus vielen Aufspaltungen im Bruchbereich.",
+        "Gegenüber RiSch: Trennflächen bei Spl HB sind frisch und hell, nicht dem einzelnen Jahrring folgend."
+      ],
+      "limitations": [
+        "Splitter können beim Ausbau oder Transport nachträglich beschädigt sein.",
+        "Schwer von einem gemischten Bruch (zunächst spröde, dann splitternd) zu trennen; Mehrfachklassifikation zulassen."
+      ],
+      "sources": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
+    },
+    {
+      "code": "RiEi",
+      "name": "Rindeneinschluss",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Ganz oder teilweise vom Holz eingeschlossene Rinde, z. B. durch Überwallung von Verletzungen oder in Astgabelungen (eingewachsene Rinde).",
+      "visual_features": [
+        "Dunkelbraune bis schwarze, schuppige oder faserige Einlagerung mit Rindenstruktur.",
+        "Häufig in Verbindung mit gestörtem Faserverlauf (Überwallung) oder Ästen.",
+        "Trennfuge zwischen Rinde und Holz; Bruchfläche ggf. entlang der Rinde."
+      ],
+      "influence_on_failure": "Rinde hat keinen Faserverbund mit dem umgebenden Holz; es entsteht eine innere Trennfläche mit Querschnittsverlust und gestörtem Faserverlauf.",
+      "distinguishing_features": [
+        "Gegenüber HZ: Rindensubstanz statt Harz.",
+        "Gegenüber Ast: Keine Hirnholzstruktur; keine Jahrringe.",
+        "Gegenüber BF: Keine würfelförmige Rissbildung, keine Holzzerstörung."
+      ],
+      "limitations": [
+        "Ausmaß des Einschlusses im Inneren nicht sichtbar.",
+        "Bei dunklen Ästen bzw. Verfärbungen auf Fotos verwechselbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "LR",
+      "name": "Längsriss",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Riss in Faserrichtung, z. B. Schwind-/Trocknungsriss, Markriss oder Riss aus der Probenherstellung. Sofern der Riss erst während des Versuchs entstanden ist, handelt es sich um ein Bruchmerkmal (Längsaufspaltung). Ob LR im Labor als vorhandenes Merkmal oder als Bruchbild gemeint ist, ist FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Schmaler, in Faserrichtung verlaufender Spalt auf Breit- oder Schmalseite, keilförmig zum Ende hin auslaufend.",
+        "Auf Hirnholz/Querschnitt: Riss etwa radial (vom Mark ausgehend) bzw. quer zu den Jahrringen.",
+        "Vorhandene Risse: Rissufer dunkler, verschmutzt oder verwittert; Rissenden gerundet.",
+        "Versuchsbedingte Risse: frische, helle Rissufer, oft mit der Hauptbruchfläche verbunden."
+      ],
+      "influence_on_failure": "Längsrisse verringern den Querschnitt unter Zug parallel zur Faser nur geringfügig, können jedoch bei Faserneigung, an Ästen oder in Spannbacken Schub-/Querzugversagen einleiten und den Bruch in Längsrichtung führen.",
+      "distinguishing_features": [
+        "Gegenüber RiSch: RiSch folgt dem Jahrring (auf Hirnholz bogenförmig); LR verläuft radial bzw. unabhängig vom Jahrring.",
+        "Gegenüber Spl HB: Spl HB ist ein faseriges Bruchbild mit vielen Splittern; LR ist ein einzelner, definierter Spalt.",
+        "Gegenüber QZ: QZ beschreibt den Versagensmechanismus (Querzugversagen), LR das Merkmal Riss.",
+        "Gegenüber MR: Markröhre ist ein Gewebestreifen, Markrisse gehen von ihr aus (dann MR + LR)."
+      ],
+      "limitations": [
+        "Risstiefe ist auf Fotos nicht messbar.",
+        "Zeitpunkt der Rissentstehung (vor/während Versuch) nur indirekt aus Verfärbung bzw. Vorher-Fotos ableitbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche)."
+      ]
+    },
+    {
+      "code": "BF",
+      "name": "Braunfäule",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Holzabbau durch Braunfäulepilze, die vorwiegend Cellulose und Hemicellulosen abbauen; das Lignin verbleibt weitgehend. Führt bereits in frühen Stadien zu erheblichem Festigkeitsverlust.",
+      "visual_features": [
+        "Braune bis rotbraune Verfärbung, im fortgeschrittenen Stadium würfelförmige Rissbildung (Würfelbruch) mit Rissen längs und quer zur Faser.",
+        "Bröckelige, pulvrige oder schwammige Oberflächen im befallenen Bereich.",
+        "Bruchfläche auffallend kurz und quer zur Faser abgebrochen (spröder „Karottenbruch“), wenige oder keine Fasern."
+      ],
+      "influence_on_failure": "Durch den Celluloseabbau sinken Zugfestigkeit und Zähigkeit stark, teils bereits bei geringem Masseverlust; das Holz versagt sehr spröde.",
+      "distinguishing_features": [
+        "Gegenüber sp HB: sp HB beschreibt das Bruchbild; BF ist eine mögliche Ursache. Nur mit sichtbaren Fäulemerkmalen (Verfärbung, Würfelbruch) BF vergeben.",
+        "Gegenüber Bu: Druckholz ist strukturell intakt, ohne Würfelbruch.",
+        "Gegenüber Verfärbungen ohne Abbau (z. B. Bläue): Bläue verfärbt blau-grau ohne wesentlichen Festigkeitsverlust."
+      ],
+      "limitations": [
+        "Frühstadien der Fäule sind visuell nicht erkennbar, wirken sich aber bereits mechanisch aus.",
+        "Nachweis erfordert Laboranalyse (Pilzbestimmung, Masseverlust, Mikroskopie)."
+      ],
+      "sources": [
+        "Schmidt, O. (2006): Wood and Tree Fungi – Biology, Damage, Protection, and Use. Springer, Berlin/Heidelberg.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. FPL-GTR-282, Kapitel Biodeterioration of Wood. USDA Forest Service, Madison, WI.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München."
+      ]
+    },
+    {
+      "code": "BB (Gezu)",
+      "name": "Backenbruch",
+      "feature_type": "test_artifact",
+      "review_required": true,
+      "definition": "Bruch im Bereich bzw. am Rand der Spannbacken der Zugprüfmaschine. Der Zusatz „(Gezu)“ verweist vermutlich auf die verwendete Prüfmaschine/Prüfeinrichtung. Ein solches Versagen ist primär prüftechnisch beeinflusst und für die Ermittlung der Zugfestigkeit gesondert zu bewerten. Laborspezifische Klasse – FACHLICH ZU ÜBERPRÜFEN.",
+      "visual_features": [
+        "Bruchlinie unmittelbar an oder innerhalb der Einspannlänge.",
+        "Klemmspuren (Abdrücke von Backenprofil/Riffelung) auf den Flächen im Bruchbereich.",
+        "Häufig Längsaufspaltungen, die aus der Einspannung herauslaufen."
+      ],
+      "influence_on_failure": "Querdruck und Schubspannungen in der Einspannung überlagern sich mit der Längszugspannung; der Bruch kann daher vorzeitig auftreten und ist für die Holzfestigkeit nicht repräsentativ.",
+      "distinguishing_features": [
+        "Gegenüber KB: Laborabgrenzung prüfen – möglicherweise KB = Versagen innerhalb der Klemmbacken, BB (Gezu) = Bruch am Backenrand.",
+        "Gegenüber QD: QD beschreibt die Querdruckschädigung (Eindrückung), nicht zwingend den Bruch.",
+        "Gegenüber BB (Zwick): siehe dort."
+      ],
+      "limitations": [
+        "Lage der Backen muss im Bild erkennbar oder bekannt sein (z. B. Markierungen der Einspannlänge)."
+      ],
+      "sources": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel."
+      ]
+    },
+    {
+      "code": "KB",
+      "name": "Klemmbacken",
+      "feature_type": "test_artifact",
+      "review_required": true,
+      "definition": "Versagen, das durch die Klemmbacken der Prüfeinrichtung beeinflusst ist (Bruch in oder an der Einspannung). FACHLICH ZU ÜBERPRÜFEN: Abgrenzung zu BB (Gezu) laborintern festlegen.",
+      "visual_features": [
+        "Bruch innerhalb der Einspannlänge.",
+        "Deutliche Abdrücke, Quetschungen oder Abscherungen durch die Backenprofilierung.",
+        "Ausgerissene oder abgescherte Oberflächenschichten im Klemmbereich."
+      ],
+      "influence_on_failure": "Wie BB (Gezu): prüftechnisch bedingtes, nicht repräsentatives Versagen.",
+      "distinguishing_features": [
+        "Gegenüber BB (Gezu) und QD: siehe dort."
+      ],
+      "limitations": [
+        "Einspannbereich muss im Bild sichtbar sein."
+      ],
+      "sources": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel."
+      ]
+    },
+    {
+      "code": "HZ",
+      "name": "Harzgalle",
+      "feature_type": "wood_feature",
+      "review_required": false,
+      "definition": "Linsenförmiger, mit Harz gefüllter Hohlraum zwischen bzw. innerhalb von Jahrringen, typisch für Fichte (Picea).",
+      "visual_features": [
+        "Auf Längsflächen: schmaler, länglicher, linsenförmiger Spalt parallel zur Faser, mit gelblichem bis braunem Harz gefüllt oder verschmiert.",
+        "Auf Hirnholz/Bruchquerschnitt: bogenförmiger Spalt entlang eines Jahrrings.",
+        "Glänzende, klebrige oder harzverschmierte Oberfläche auf der Bruchfläche."
+      ],
+      "influence_on_failure": "Lokaler Querschnittsverlust und Trennfläche in Faserrichtung; Einfluss auf die Längszugfestigkeit meist begrenzt, kann jedoch Ausgangspunkt eines Längs- oder Querzugversagens sein.",
+      "distinguishing_features": [
+        "Gegenüber RiEi: Rindeneinschluss enthält dunkle Rindensubstanz statt Harz.",
+        "Gegenüber RiSch: RiSch ist ein leerer, meist längerer Ringspalt ohne Harzfüllung.",
+        "Gegenüber Ast: Keine Hirnholzstruktur mit eigenen Jahrringen."
+      ],
+      "limitations": [
+        "Kleine Harzgallen sind auf Übersichtsfotos kaum erkennbar.",
+        "Ausdehnung in die Tiefe nicht feststellbar."
+      ],
+      "sources": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie. CEN, Brüssel.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München."
+      ]
+    },
+    {
+      "code": "DW",
+      "name": "Drehwuchs",
+      "feature_type": "wood_feature",
+      "review_required": true,
+      "definition": "Wuchseigenschaft des Baumes, bei der die Fasern spiralig um die Stammachse verlaufen. Im Schnittholz äußert sich Drehwuchs als Faserneigung (Schrägfaser) und kann Verdrehen beim Trocknen begünstigen.",
+      "visual_features": [
+        "Gleichsinnige Faserneigung auf mehreren Flächen des Probekörpers.",
+        "Schräg verlaufende Trocknungsrisse auf den Flächen.",
+        "Lange, schräg zur Achse verlaufende Bruchfläche (wie GSF).",
+        "Ggf. sichtbare Verdrehung (Windschiefe) des Probekörpers."
+      ],
+      "influence_on_failure": "Wirkung entspricht derjenigen der globalen Faserneigung (siehe GSF): Abminderung der Zugfestigkeit mit zunehmendem Faserwinkel.",
+      "distinguishing_features": [
+        "Gegenüber GSF: DW benennt die wuchsbedingte Ursache, GSF das am Prüfkörper beobachtbare Merkmal. Ohne Zusatzinformation ist DW auf einem Foto meist nicht von einer einschnittbedingten GSF unterscheidbar.",
+        "Gegenüber LSF: DW wirkt über die ganze Länge."
+      ],
+      "limitations": [
+        "Drehwuchs ist ein Merkmal des Stammes; am Einzelbrett ist er nur indirekt über die Faserneigung erkennbar.",
+        "Empfehlung: DW nur vergeben, wenn Zusatzinformationen vorliegen; Klassentrennung DW/GSF ist FACHLICH ZU ÜBERPRÜFEN."
+      ],
+      "sources": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Hankinson, R.L. (1921): Investigation of crushing strength of spruce at varying angles of grain. Air Service Information Circular 3(259), U.S. Air Service."
+      ]
+    }
+  ]
+}

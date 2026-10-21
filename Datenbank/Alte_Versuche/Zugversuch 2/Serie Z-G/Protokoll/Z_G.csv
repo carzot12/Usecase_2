@@ -1,0 +1,36 @@
+﻿Lfd. Nr.;Prüfkörper;Maximalkraft [kN];Bruchursache;Anmerkungen
+1;Z-G-01;118,0;LSF / sp HB / sp HB;"F0,4·Fmax = 50 kN; 3 Bretter verleimt: Decklage ~7 mm, Mittellage ~20 mm, untere Lage ~13 mm; Σ ~40 mm; Pressdruck 2,5 N/mm²; Bruchursachen jeweils von oben nach unten für jedes Brett einzeln"
+2;Z-G-02;151,6;sp HB / sp HB / SA;
+3;Z-G-03;UNKLAR;2× KA, SA / SSA, GSF / 2× SA, sp HB;
+4;Z-G-04;141,5;FA, GSF / RiSch, SA / sp HB;
+5;Z-G-05;141,1;2× FA, SA / sp HB / sp HB;Anm.: Versagen im Bereich der Klemmbalken
+6;Z-G-06;177,9;sp HB, LSF / sp HB / sp HB;
+7;Z-G-07;174,7;KA, LSF / GSF, sp HB / 2× KA, SA;"Anm.: nahe Klemmbalken versagt; "
+8;Z-G-08;209,5;SSA, sp HB / 2× SSA / Spl HB;
+9;Z-G-09;126,7;FA, AA / SSA, sp HB / SA, LSF, Spl HB;
+10;Z-G-10;165,5;sp HB / sp HB / SA, sp HB;"Anm.: Klemmbalken einseitig nur belastet → siehe Fotos; dadurch hohe Kraft"
+11;Z-G-21;88,98;2× SA, SSA / SA, SSA, FA / KA, sp HB;"Anmerk.: Prüfzeit mit 176 s < 180 s; große Jahresringe"
+12;Z-G-12;189,3;2× SA / SA, sp HB / sp HB;
+13;Z-G-13;150,2;2xSA, FA, SSA / sp HB / SA, SSA;
+14;Z-G-14;136,7;FA, sp HB / FA, SSA / KA, LSF, SA;
+15;Z-G-15;265,0;AA / KA, sp HB / SA, LSF;Anm.: Versagen im Bereich der Klemmbalken
+16;Z-G-16;202,5;KA, 3× SA, SSA / Spl HB /;
+17;Z-G-17;150,2;sp HB / sp HB / FA, SSA, SA;Anm.: Versagen nahe bei Klemmbalken
+18;Z-G-18;221,6;Kein Versagen;"Erster Versuch Z-G-18-1: Klemmbalken/Brett durchgerutscht; weitere Versuche: Z-G-18-2 = 171,30 kN und Z-G-18-3 = 207,72 kN; jeweils kein Versagen, Brett herausgerutscht"
+19;Z-G-19;130,6;FA, SA / Bu, sp HB / sp HB;
+20;Z-G-20;138,3;AA / SA, FA / FA, SA;
+21;Z-G-11;168,1;2× KA, 3× SA / SSA, LSF / HB / SA, FA, HB;Prüfkörperbezeichnung im Original von Z-G-21 auf Z-G-11 korrigiert
+22;Z-G-22;182,7;SA / Bu, SA / sp HB;Durchgestrichene Bruchursache: UNKLAR
+23;Z-G-23;239,0;Kein Versagen;Klemmbalken/Brett gerutscht
+24;Z-G-24;211,65;2× SA, KA / SA, sp HB / AA;
+25;Z-G-25;84;2× SA, KA / sp HB / KA, 2× SA, LSF;Maximalkraft nur als „84,“ dokumentiert: UNKLAR
+26;Z-G-26;134,4;SA, HB / sp HB / FA, SA, LSF;
+27;Z-G-27;151,95;FA, HB / 2× FA / Bu;
+28;Z-G-28;195,1;KA, 2× SA / KA, FA / HB;
+29;Z-G-29;233,9;Kein Versagen;Brett aus KB gerutscht
+30;Z-G-30;199,5;3× SA, FA / FA, sp HB / HB;
+31;Z-G-31;133,2;FA, sp HB / SSA, 2× SA / SA, sp HB;
+32;Z-G-32;147,9;SA, HB / SA, SSA / sp HB;
+33;Z-G-33;179,1;SA, sp HB / SA / SA, KA;
+34;Z-G-34;138,9;HB / SA / AA, SSA;Anm.: Mittelbrett große Jahresringe
+35;Z-G-35;94,5;FA, SA, sp HB;
