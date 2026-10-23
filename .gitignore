@@ -66,14 +66,7 @@ Evaluation/ground_truth_manifest.json
 # Alte lokale Branding-Kopie; veröffentlichte Assets liegen unter assets/
 /widget.png
 
-# Generierte Prüfübersichten und Vorschaubilder; nur die manuelle Freigabe sichern
-Output/*
-!Output/Referenzbilddatenbank_Gesamt/
-Output/Referenzbilddatenbank_Gesamt/*
-!Output/Referenzbilddatenbank_Gesamt/Bestaetigung_Gesamt.json
-!Output/KI_Klassifikation/
-Output/KI_Klassifikation/*
-!Output/KI_Klassifikation/.gitkeep
+# Generierte Prüfübersichten, KI-Ergebnisse und interne Bestätigungsdaten
+/Output/
 
 /Pruefdaten/
-/Output/KI_Klassifikation/
