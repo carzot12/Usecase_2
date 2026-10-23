@@ -25,6 +25,15 @@ __pycache__/
 venv/
 *.log
 tmp/
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+build/
+dist/
+*.app/
+backups/
 
 # Umfangreiche lokale Versuchs- und Rohdaten
 Pruefdaten/
@@ -50,6 +59,12 @@ Datenbank/Referenzbilder/*/*/
 
 # Lokal vorgehaltene große Literatur-/Datendateien
 allgemein/
+
+# Interne Ground-Truth-Fälle enthalten vertrauliche Prüfkörperzuordnungen
+Evaluation/ground_truth_manifest.json
+
+# Alte lokale Branding-Kopie; veröffentlichte Assets liegen unter assets/
+/widget.png
 
 # Generierte Prüfübersichten und Vorschaubilder; nur die manuelle Freigabe sichern
 Output/*

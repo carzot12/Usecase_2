@@ -1,0 +1,19 @@
+.gallery button {
+  position: relative;
+}
+
+.gallery button.analysis-image {
+  border-color: #2b8296;
+}
+
+.gallery button > b {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: rgba(6, 61, 84, 0.9);
+  color: #fff;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}

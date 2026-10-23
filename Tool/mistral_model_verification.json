@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "checked_at": "2026-10-22",
+  "models": [
+    {
+      "model": "ministral-3b-2512",
+      "chat_completions_api": true,
+      "image_input": true,
+      "structured_output": true,
+      "context_tokens": 256000,
+      "account_access": "not_verified_without_api_call",
+      "status": "documented_candidate"
+    }
+  ],
+  "sources": [
+    "https://docs.mistral.ai/models/ministral-3-3b-25-12",
+    "https://docs.mistral.ai/studio/conversations/vision",
+    "https://docs.mistral.ai/studio/conversations/structured-output/custom",
+    "https://docs.mistral.ai/api"
+  ],
+  "note": "Modell und Fähigkeiten sind dokumentiert; Kontozugriff und Abrechnung werden erst nach ausdrücklicher Freigabe in einem Live-Test geprüft."
+}

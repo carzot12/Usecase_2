@@ -1,0 +1,2 @@
+-r Tool/requirements.txt
+pywebview>=6.1
