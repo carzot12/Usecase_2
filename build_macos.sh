@@ -52,10 +52,10 @@ done
 
 find frontend/dist assets -name '._*' -type f -delete
 if command -v xattr >/dev/null 2>&1; then
-    xattr -cr frontend/dist assets
+    xattr -cr frontend/dist
 fi
 
-"$BUILD_PYTHON" -m PyInstaller --noconfirm --clean KI-Bildanalyse.spec
+"$BUILD_PYTHON" -m PyInstaller --noconfirm --clean --log-level WARN KI-Bildanalyse.spec
 
 APP_PATH="$PROJECT_DIR/dist/KI-Bildanalyse.app"
 [[ -d "$APP_PATH" ]] || { print -u2 "App-Bundle fehlt: $APP_PATH"; exit 1; }

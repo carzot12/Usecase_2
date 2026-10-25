@@ -12,11 +12,12 @@ import os
 import re
 import sys
 import time
+import uuid
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -51,16 +52,19 @@ DEFAULT_MOCK_PATH = Path(__file__).with_name("mock_response.json")
 DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "Output" / "KI_Klassifikation"
 ALLOWED_INPUT_ROOT = PROJECT_ROOT / "Pruefdaten" / "Neue_Analysen"
 SUPPORTED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
-MAX_TEST_IMAGES = 3
+MAX_MISTRAL_IMAGES_PER_REQUEST = 8
 MAX_TRANSMITTED_LONG_EDGE = 2048
 DEFAULT_OLLAMA_MAX_IMAGE_EDGE = 768
 DEFAULT_REFERENCES_PER_CLASS = 1
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
 DEFAULT_OLLAMA_TIMEOUT_SECONDS = 900
-DEFAULT_OLLAMA_NUM_CTX = 16384
+DEFAULT_OLLAMA_MODEL = "qwen3-vl:4b"
+DEFAULT_OLLAMA_NUM_CTX = 24576
+DEFAULT_OLLAMA_NUM_PREDICT = 4096
 DEFAULT_MISTRAL_MODEL = "ministral-3b-2512"
 DEFAULT_MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
 DEFAULT_MISTRAL_TIMEOUT_SECONDS = 900
+PROMPT_VERSION = "2.0"
 SYSTEM_INSTRUCTIONS = (
     "Du sichtest ausschliesslich sichtbare Merkmale von Holz-Zugproben. "
     "Du gibst keine nachgewiesene Bruchursache aus und haeltst dich strikt an das JSON-Schema."
@@ -202,8 +206,9 @@ def collect_test_images(
     catalog: Catalog,
     *,
     allowed_input_root: Path = ALLOWED_INPUT_ROOT,
+    selected_image_names: Sequence[str] | None = None,
 ) -> list[Path]:
-    """Liest 1-3 Bilder und verhindert bekannte Referenzproben im Testdatensatz."""
+    """Liest die ausgewählten Fotos und verhindert bekannte Referenzproben im Testdatensatz."""
 
     resolved_dir = input_dir.expanduser().resolve()
     allowed_root = allowed_input_root.expanduser().resolve()
@@ -212,19 +217,37 @@ def collect_test_images(
     if not resolved_dir.is_dir():
         raise AnalysisError(f"Eingabeordner fehlt: {resolved_dir}")
 
-    # Automatisch sortierte Prüfkörper enthalten alle Originalansichten und
-    # zusätzlich eine lokale Auswahl von maximal drei Bruchbildern. So kann der
-    # Prüfkörperordner direkt übergeben werden, ohne das Nummernfoto zu senden.
-    selection_dir = resolved_dir / "Analyseauswahl"
-    image_dir = selection_dir if selection_dir.is_dir() else resolved_dir
-
-    images = sorted(
-        path.resolve()
-        for path in image_dir.iterdir()
-        if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES
-    )
-    if not 1 <= len(images) <= MAX_TEST_IMAGES:
-        raise AnalysisError("Der Eingabeordner muss genau 1 bis 3 unterstuetzte Fotos enthalten.")
+    source_images = {
+        path.name: path.resolve()
+        for path in resolved_dir.iterdir()
+        if path.is_file()
+        and path.suffix.lower() in SUPPORTED_SUFFIXES
+        and not path.name.startswith("Nummer_")
+    }
+    if selected_image_names is not None:
+        names = list(selected_image_names)
+        if not names:
+            raise AnalysisError("Mindestens ein Analysebild muss ausgewählt sein.")
+        if len(names) != len(set(names)) or any(Path(name).name != name for name in names):
+            raise AnalysisError("Die Bildauswahl enthält ungültige oder doppelte Dateinamen.")
+        missing = [name for name in names if name not in source_images]
+        if missing:
+            raise AnalysisError(
+                "Ausgewählte Analysebilder wurden im Prüfkörperordner nicht gefunden: "
+                + ", ".join(missing)
+            )
+        images = [source_images[name] for name in names]
+    else:
+        # Backwards-compatible CLI support for older projects using this sidecar folder.
+        selection_dir = resolved_dir / "Analyseauswahl"
+        image_dir = selection_dir if selection_dir.is_dir() else resolved_dir
+        images = sorted(
+            path.resolve()
+            for path in image_dir.iterdir()
+            if path.is_file() and path.suffix.lower() in SUPPORTED_SUFFIXES
+        )
+    if not images:
+        raise AnalysisError("Der Eingabeordner enthält keine Analysebilder.")
 
     known_paths = set(catalog.known_dataset_paths)
     for path in images:
@@ -276,6 +299,18 @@ def select_references(catalog: Catalog, max_per_class: int) -> tuple[ReferenceIm
         selected.append(reference)
         counts[reference.code] += 1
     return tuple(selected)
+
+
+def limit_mistral_references(
+    test_images: Sequence[Path],
+    references: Sequence[ReferenceImage],
+) -> tuple[ReferenceImage, ...]:
+    """Hält mindestens einen Bildplatz für den Prüfkörper im Mistral-Limit frei."""
+
+    if not test_images:
+        raise AnalysisError("Mindestens ein Analysebild muss ausgewählt sein.")
+    available_slots = MAX_MISTRAL_IMAGES_PER_REQUEST - 1
+    return tuple(references[:available_slots])
 
 
 def _prompt_catalog(catalog: Catalog) -> list[dict[str, Any]]:
@@ -350,7 +385,7 @@ def build_request_content(
         ))
     content.append({
         "type": "input_text",
-        "text": "Ab hier folgen ausschliesslich die 1 bis 3 Bilder des unbekannten Testpruefkoerpers.",
+        "text": "Ab hier folgen ausschliesslich ausgewaehlte Bilder des unbekannten Testpruefkoerpers.",
     })
     for index, path in enumerate(test_images, start=1):
         content.extend((
@@ -360,8 +395,8 @@ def build_request_content(
     content.append({
         "type": "input_text",
         "text": (
-            "Erzeuge jetzt ausschliesslich die knappe JSON-Klassifikation der unbekannten "
-            "Testbilder 1 bis 3. Beschreibe keine Referenzbilder."
+            "Erzeuge jetzt ausschliesslich die knappe JSON-Klassifikation aller bereitgestellten "
+            "Testbilder. Beschreibe keine Referenzbilder."
         ),
     })
     return content
@@ -505,6 +540,13 @@ def build_mistral_messages(
 ) -> list[dict[str, Any]]:
     """Überträgt den gemeinsamen OpenAI-Bildinhalt verlustfrei ins Mistral-Format."""
 
+    image_count = len(test_images) + len(references)
+    if image_count > MAX_MISTRAL_IMAGES_PER_REQUEST:
+        raise AnalysisError(
+            "Mistral-Anfrage enthaelt "
+            f"{image_count} Bilder; erlaubt sind maximal {MAX_MISTRAL_IMAGES_PER_REQUEST}."
+        )
+
     content = []
     for item in build_request_content(test_images, catalog, references):
         if item["type"] == "input_text":
@@ -549,6 +591,17 @@ def call_mistral(
         raise AnalysisError("Mistral-Endpunkt muss aus Sicherheitsgründen die offizielle HTTPS-API sein.")
     if not api_key.strip():
         raise AnalysisError("Der Mistral-Schlüsselbundwert ist leer.")
+    image_count = sum(
+        1
+        for message in messages
+        for item in (message.get("content") if isinstance(message.get("content"), list) else [])
+        if isinstance(item, Mapping) and item.get("type") == "image_url"
+    )
+    if image_count > MAX_MISTRAL_IMAGES_PER_REQUEST:
+        raise AnalysisError(
+            "Mistral-Anfrage enthaelt "
+            f"{image_count} Bilder; erlaubt sind maximal {MAX_MISTRAL_IMAGES_PER_REQUEST}."
+        )
     payload = {
         "model": model,
         "messages": messages,
@@ -608,6 +661,8 @@ def call_mistral(
             "temperature": 0,
             "max_tokens": 4096,
             "response_format": "json_schema",
+            "image_count": image_count,
+            "max_images_per_request": MAX_MISTRAL_IMAGES_PER_REQUEST,
         },
     }
     return raw, metadata
@@ -640,7 +695,7 @@ def build_ollama_messages(
         })
     messages.append({
         "role": "user",
-        "content": "Ab hier folgen ausschliesslich die 1 bis 3 Bilder des unbekannten Testpruefkoerpers.",
+        "content": "Ab hier folgen ausschliesslich ausgewaehlte Bilder des unbekannten Testpruefkoerpers.",
     })
     for index, path in enumerate(test_images, start=1):
         messages.append({
@@ -651,8 +706,8 @@ def build_ollama_messages(
     messages.append({
         "role": "user",
         "content": (
-            "Erzeuge jetzt ausschliesslich die knappe JSON-Klassifikation der unbekannten "
-            "Testbilder 1 bis 3. Beschreibe keine Referenzbilder."
+            "Erzeuge jetzt ausschliesslich die knappe JSON-Klassifikation aller bereitgestellten "
+            "Testbilder. Beschreibe keine Referenzbilder."
         ),
     })
     return messages
@@ -691,6 +746,7 @@ def call_ollama(
     endpoint: str = DEFAULT_OLLAMA_URL,
     timeout_seconds: int = DEFAULT_OLLAMA_TIMEOUT_SECONDS,
     num_ctx: int = DEFAULT_OLLAMA_NUM_CTX,
+    num_predict: int = DEFAULT_OLLAMA_NUM_PREDICT,
     opener: Any = urlopen,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Ruft ausschliesslich die lokale Ollama-Chat-API auf."""
@@ -699,9 +755,11 @@ def call_ollama(
         raise AnalysisError("Ollama-Endpunkt muss aus Sicherheitsgruenden http://localhost:11434 sein.")
     if isinstance(num_ctx, bool) or not isinstance(num_ctx, int) or num_ctx <= 0:
         raise AnalysisError("ollama_num_ctx muss eine positive Ganzzahl sein.")
+    if isinstance(num_predict, bool) or not isinstance(num_predict, int) or num_predict <= 0:
+        raise AnalysisError("ollama_num_predict muss eine positive Ganzzahl sein.")
     ollama_options = {
         "temperature": 0,
-        "num_predict": 4096,
+        "num_predict": num_predict,
         "num_ctx": num_ctx,
     }
     payload = {
@@ -728,11 +786,22 @@ def call_ollama(
             detail = ""
         raise AnalysisError(f"Ollama-HTTP-Fehler {exc.code}: {detail[:500]}") from exc
     except URLError as exc:
+        if isinstance(exc.reason, TimeoutError):
+            raise AnalysisError(
+                f"Zeitüberschreitung: Ollama hat innerhalb von {timeout_seconds} Sekunden "
+                "nicht geantwortet. Prüfen Sie die Modellauslastung und versuchen Sie es erneut."
+            ) from exc
         raise AnalysisError(
-            "Lokales Ollama ist unter http://localhost:11434 nicht erreichbar."
+            "Lokales Ollama ist unter http://localhost:11434/api/chat nicht erreichbar: "
+            f"{exc.reason}"
+        ) from exc
+    except TimeoutError as exc:
+        raise AnalysisError(
+            f"Zeitüberschreitung: Ollama hat innerhalb von {timeout_seconds} Sekunden "
+            "nicht geantwortet. Prüfen Sie die Modellauslastung und versuchen Sie es erneut."
         ) from exc
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise AnalysisError("Ollama-Antwort kann nicht gelesen werden.") from exc
+        raise AnalysisError(f"Ollama-Antwort kann nicht gelesen werden: {exc}") from exc
 
     try:
         content = envelope["message"]["content"]
@@ -756,7 +825,10 @@ def call_ollama(
         )
         if key in envelope
     }
+    metadata["response_model"] = envelope.get("model", model)
     metadata["request_options"] = dict(ollama_options)
+    metadata["think"] = False
+    metadata["stream"] = False
     return raw, metadata
 
 
@@ -853,6 +925,54 @@ def _enrich_feature(
     }
 
 
+def _merge_batch_results(results: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Combine validated batch classifications without discarding any batch evidence."""
+
+    primary_candidates = [
+        result["primary_feature"]
+        for result in results
+        if result.get("primary_feature") is not None
+    ]
+    primary = max(primary_candidates, key=lambda item: item["confidence"]) if primary_candidates else None
+    candidates = [
+        feature
+        for result in results
+        for feature in (
+            ([result["primary_feature"]] if result.get("primary_feature") is not None else [])
+            + result.get("secondary_features", [])
+        )
+        if primary is None or feature["code"] != primary["code"]
+    ]
+    best_by_code: dict[str, dict[str, Any]] = {}
+    for feature in candidates:
+        existing = best_by_code.get(feature["code"])
+        if existing is None:
+            best_by_code[feature["code"]] = dict(feature)
+            continue
+        best = feature if feature["confidence"] > existing["confidence"] else existing
+        evidence = list(dict.fromkeys(
+            existing["image_based_reasoning"] + feature["image_based_reasoning"]
+        ))
+        best_by_code[feature["code"]] = {**best, "image_based_reasoning": evidence[:3]}
+    secondary = sorted(
+        best_by_code.values(), key=lambda item: item["confidence"], reverse=True
+    )[:4]
+
+    def combine(field: str, limit: int) -> list[str]:
+        return list(dict.fromkeys(
+            text for result in results for text in result.get(field, [])
+        ))[:limit]
+
+    return {
+        "status": "KLASSIFIZIERT" if primary else "UNKLAR",
+        "primary_feature": primary,
+        "secondary_features": secondary,
+        "visible_observations": combine("visible_observations", 6),
+        "uncertainty_reasons": combine("uncertainty_reasons", 4),
+        "missing_views": combine("missing_views", 4),
+    }
+
+
 def build_result_document(
     *,
     input_dir: Path,
@@ -866,18 +986,31 @@ def build_result_document(
     validated_result: dict[str, Any],
     model_verification: dict[str, Any] | None,
     provider_metadata: Mapping[str, Any] | None = None,
+    excluded_image_names: Sequence[str] = (),
+    run_id: str | None = None,
+    project_id: str | None = None,
+    prompt_hash: str | None = None,
+    reference_records: Sequence[Mapping[str, Any]] = (),
+    settings: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
+    resolved_run_id = run_id or uuid.uuid4().hex
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
+        "run_id": resolved_run_id,
+        "project_id": project_id,
+        "specimen_id": input_dir.resolve().name,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "analysis_id": input_dir.resolve().name,
         "execution": {
             "mode": mode,
             "provider": provider,
             "model": model,
+            "requested_model": model,
+            "actual_model": (provider_metadata or {}).get("response_model") or model,
             "model_verification": model_verification,
             "duration_seconds": round(duration_seconds, 3),
             "provider_metadata": dict(provider_metadata or {}),
+            "settings": dict(settings or {}),
             "paid_api_request_performed": provider in {"openai", "mistral"} and mode == "live",
             "images_transmitted_to_openai": provider == "openai" and mode == "live",
             "images_transmitted_to_mistral": provider == "mistral" and mode == "live",
@@ -887,13 +1020,20 @@ def build_result_document(
             {"filename": path.name, "sha256": _sha256(path)}
             for path in test_images
         ],
+        "image_selection": {
+            "included": [path.name for path in test_images],
+            "excluded": list(excluded_image_names),
+        },
         "classification_basis": {
+            "prompt_version": PROMPT_VERSION,
+            "prompt_hash_sha256": prompt_hash,
             "allowed_class_count": len(catalog.codes),
             "classification_rules_version": catalog.rule_version,
             "confirmed_main_reference_count_available": len(catalog.references),
             "confirmed_main_reference_count_used": used_reference_count,
             "protocol_failure_cause_transmitted": False,
             "only_confirmed_main_references_used": True,
+            "references": [dict(item) for item in reference_records],
         },
         "classes_without_confirmed_references": [
             {"code": code, "name": catalog.definitions[code]["name"]}
@@ -915,7 +1055,8 @@ def save_result(document: Mapping[str, Any], output_dir: Path = DEFAULT_OUTPUT_D
     execution = document.get("execution", {})
     provider = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(execution.get("provider", "unknown")))
     model = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(execution.get("model", "unknown")))
-    destination = output_dir / f"{analysis_id}_{provider}_{model}_{timestamp}.json"
+    run_id = re.sub(r"[^A-Za-z0-9_.-]+", "_", str(document.get("run_id", uuid.uuid4().hex)))
+    destination = output_dir / f"{analysis_id}_{provider}_{model}_{timestamp}_{run_id}.json"
     destination.write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -928,18 +1069,23 @@ def run_analysis(
     *,
     live: bool = False,
     confirm_paid_request: bool = False,
-    provider: str = "openai",
+    provider: str = "ollama",
     model: str | None = None,
     mock_response_path: Path = DEFAULT_MOCK_PATH,
     output_dir: Path = DEFAULT_OUTPUT_DIR,
     max_references_per_class: int = DEFAULT_REFERENCES_PER_CLASS,
     ollama_num_ctx: int = DEFAULT_OLLAMA_NUM_CTX,
+    ollama_num_predict: int = DEFAULT_OLLAMA_NUM_PREDICT,
     ollama_max_image_edge: int = DEFAULT_OLLAMA_MAX_IMAGE_EDGE,
     allowed_input_root: Path = ALLOWED_INPUT_ROOT,
+    selected_image_names: Sequence[str] | None = None,
     client: Any = None,
     ollama_opener: Any = urlopen,
     mistral_opener: Any = urlopen,
     mistral_key_resolver: Any = resolve_mistral_api_key,
+    progress_callback: Callable[[str], None] | None = None,
+    run_id: str | None = None,
+    project_id: str | None = None,
 ) -> Path:
     started_at = time.perf_counter()
     catalog = load_catalog()
@@ -947,11 +1093,20 @@ def run_analysis(
         input_dir,
         catalog,
         allowed_input_root=allowed_input_root,
+        selected_image_names=selected_image_names,
     )
+    available_image_names = {
+        path.name
+        for path in input_dir.iterdir()
+        if path.is_file()
+        and path.suffix.lower() in SUPPORTED_SUFFIXES
+        and not path.name.startswith("Nummer_")
+    }
+    excluded_image_names = sorted(available_image_names - {path.name for path in test_images})
     if provider not in {"openai", "ollama", "mistral"}:
         raise AnalysisError("Provider muss 'openai', 'ollama' oder 'mistral' sein.")
     default_models = {
-        "ollama": os.getenv("USECASE2_OLLAMA_MODEL", "llava:latest"),
+        "ollama": os.getenv("USECASE2_OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
         "openai": os.getenv("USECASE2_OPENAI_MODEL", "gpt-6.1-sol"),
         "mistral": DEFAULT_MISTRAL_MODEL,
     }
@@ -960,20 +1115,30 @@ def run_analysis(
     if not selected_model:
         raise AnalysisError(f"Keine Modellkennung fuer Provider {provider!r} konfiguriert.")
 
+    def report_progress(status: str) -> None:
+        if progress_callback is not None:
+            progress_callback(status)
+
+    report_progress("Modell wird geladen")
+
     provider_metadata: dict[str, Any] = {}
+    validated_result: dict[str, Any] | None = None
     if provider == "ollama":
         verification = None
         selected_references = select_references(catalog, max_references_per_class)
+        messages = build_ollama_messages(
+            test_images,
+            catalog,
+            selected_references,
+            max_image_edge=ollama_max_image_edge,
+        )
+        report_progress("Bilder werden analysiert")
         raw, provider_metadata = call_ollama(
             model=selected_model,
-            messages=build_ollama_messages(
-                test_images,
-                catalog,
-                selected_references,
-                max_image_edge=ollama_max_image_edge,
-            ),
+            messages=messages,
             catalog=catalog,
             num_ctx=ollama_num_ctx,
+            num_predict=ollama_num_predict,
             opener=ollama_opener,
         )
         mode = "local"
@@ -984,15 +1149,39 @@ def run_analysis(
                 "Live-Aufruf gesperrt: Zusätzlich zu --live ist --confirm-paid-request erforderlich."
             )
         verification = load_verified_mistral_model(selected_model)
-        selected_references = select_references(catalog, max_references_per_class)
-        resolution = mistral_key_resolver()
-        raw, provider_metadata = call_mistral(
-            model=selected_model,
-            messages=build_mistral_messages(test_images, catalog, selected_references),
-            catalog=catalog,
-            api_key=resolution.value,
-            opener=mistral_opener,
+        selected_references = limit_mistral_references(
+            test_images, select_references(catalog, max_references_per_class)
         )
+        resolution = mistral_key_resolver()
+        batch_size = MAX_MISTRAL_IMAGES_PER_REQUEST - len(selected_references)
+        result_batches: list[dict[str, Any]] = []
+        batch_metadata: list[dict[str, Any]] = []
+        for offset in range(0, len(test_images), batch_size):
+            batch = test_images[offset:offset + batch_size]
+            raw, metadata = call_mistral(
+                model=selected_model,
+                messages=build_mistral_messages(batch, catalog, selected_references),
+                catalog=catalog,
+                api_key=resolution.value,
+                opener=mistral_opener,
+            )
+            validated_batch = validate_and_enrich(raw, catalog)
+            result_batches.append(validated_batch)
+            batch_metadata.append({
+                "batch": len(batch_metadata) + 1,
+                "images": [path.name for path in batch],
+                "primary_code": (
+                    validated_batch["primary_feature"]["code"]
+                    if validated_batch["primary_feature"] else "UNKLAR"
+                ),
+                "provider_metadata": metadata,
+            })
+        validated_result = _merge_batch_results(result_batches)
+        provider_metadata = {
+            **(batch_metadata[0]["provider_metadata"] if len(batch_metadata) == 1 else {}),
+            "multi_stage": len(batch_metadata) > 1,
+            "image_batches": batch_metadata,
+        }
         provider_metadata["credential_source"] = resolution.source
         provider_metadata["keychain_service"] = resolution.service
         mode = "live"
@@ -1007,7 +1196,7 @@ def run_analysis(
             resolution = resolve_api_key()
             client = create_openai_client(resolution)
         selected_references = select_references(catalog, max_references_per_class)
-        raw = call_openai(
+        raw, provider_metadata = call_openai_with_metadata(
             model=selected_model,
             content=build_request_content(test_images, catalog, selected_references),
             catalog=catalog,
@@ -1017,7 +1206,10 @@ def run_analysis(
         result_provider = "openai"
     elif provider == "mistral":
         verification = load_verified_mistral_model(selected_model)
-        selected_references = select_references(catalog, max_references_per_class)
+        selected_references = limit_mistral_references(
+            test_images,
+            select_references(catalog, max_references_per_class),
+        )
         raw = _read_json(mock_response_path)
         provider_metadata = {
             "network_request_performed": False,
@@ -1038,8 +1230,42 @@ def run_analysis(
         mode = "mock"
         result_provider = "mock"
 
-    validated = validate_and_enrich(raw, catalog)
+    report_progress("Ergebnis wird verarbeitet")
+    validated = validated_result or validate_and_enrich(raw, catalog)
     duration_seconds = time.perf_counter() - started_at
+    reference_records = [
+        {
+            "id": f"{reference.code}:{reference.path.name}",
+            "code": reference.code,
+            "filename": reference.path.name,
+            "sha256": _sha256(reference.path),
+        }
+        for reference in selected_references
+    ]
+    prompt_manifest = {
+        "prompt_version": PROMPT_VERSION,
+        "system_instructions": SYSTEM_INSTRUCTIONS,
+        "analysis_instructions": _analysis_instructions(catalog),
+        "response_schema": response_schema(catalog.codes),
+        "test_images": [
+            {"filename": path.name, "sha256": _sha256(path)} for path in test_images
+        ],
+        "references": reference_records,
+    }
+    prompt_hash = hashlib.sha256(
+        json.dumps(
+            prompt_manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    ).hexdigest()
+    settings = {
+        "max_references_per_class": max_references_per_class,
+        "ollama_num_ctx": ollama_num_ctx if provider == "ollama" else None,
+        "ollama_num_predict": ollama_num_predict if provider == "ollama" else None,
+        "ollama_max_image_edge": ollama_max_image_edge if provider == "ollama" else None,
+        "ollama_timeout_seconds": (
+            DEFAULT_OLLAMA_TIMEOUT_SECONDS if provider == "ollama" else None
+        ),
+    }
     document = build_result_document(
         input_dir=input_dir,
         test_images=test_images,
@@ -1052,6 +1278,12 @@ def run_analysis(
         validated_result=validated,
         model_verification=verification,
         provider_metadata=provider_metadata,
+        excluded_image_names=excluded_image_names,
+        run_id=run_id,
+        project_id=project_id,
+        prompt_hash=prompt_hash,
+        reference_records=reference_records,
+        settings=settings,
     )
     return save_result(document, output_dir)
 
@@ -1060,11 +1292,11 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Multi-Label-Bildanalyse von Holz-Zugproben (standardmaessig kostenfreier Mock-Modus)."
     )
-    parser.add_argument("input_dir", type=Path, help="Ordner mit genau 1 bis 3 Fotos")
+    parser.add_argument("input_dir", type=Path, help="Ordner mit einem oder mehreren Fotos")
     parser.add_argument(
         "--provider",
         choices=("openai", "ollama", "mistral"),
-        default="openai",
+        default="ollama",
         help="Analyseanbieter (openai und mistral bleiben ohne --live im Mock-Modus)",
     )
     parser.add_argument(
@@ -1084,7 +1316,13 @@ def _parser() -> argparse.ArgumentParser:
         type=int,
         default=DEFAULT_OLLAMA_NUM_CTX,
         metavar="TOKENS",
-        help="Ollama-Kontextgroesse in Tokens (Standard: 16384)",
+        help="Ollama-Kontextgroesse in Tokens (Standard: 24576)",
+    )
+    parser.add_argument(
+        "--ollama-num-predict",
+        type=int,
+        default=DEFAULT_OLLAMA_NUM_PREDICT,
+        help="Maximales lokales Generationsbudget (Standard: 4096)",
     )
     parser.add_argument(
         "--ollama-max-image-edge",
@@ -1119,6 +1357,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=args.output_dir,
             max_references_per_class=args.max_references_per_class,
             ollama_num_ctx=args.ollama_num_ctx,
+            ollama_num_predict=args.ollama_num_predict,
             ollama_max_image_edge=args.ollama_max_image_edge,
         )
     except (AnalysisError, OpenAIConfigurationError, RuntimeError) as exc:
@@ -1130,4 +1369,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

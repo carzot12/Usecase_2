@@ -1,19 +1,70 @@
-.gallery button {
+.gallery .image-tile {
   position: relative;
+  border: 1px solid #ccd5dd;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
 }
 
-.gallery button.analysis-image {
+.gallery .image-tile.analysis-image {
   border-color: #2b8296;
+  border-width: 2px;
 }
 
-.gallery button > b {
-  position: absolute;
-  top: 9px;
-  left: 9px;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: rgba(6, 61, 84, 0.9);
-  color: #fff;
+.gallery .image-tile.excluded-image {
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.gallery .image-preview {
+  display: block;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: #fff;
+}
+
+.gallery .image-tile-meta {
+  display: grid;
+  gap: 5px;
+  padding: 8px 10px 10px;
+}
+
+.gallery .image-tile-meta label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.gallery .image-tile-meta input {
+  accent-color: #2b8296;
+}
+
+.gallery .image-tile-meta b {
+  color: #2b8296;
   font-size: 9px;
   letter-spacing: 0.08em;
+}
+
+.gallery .excluded-image .image-tile-meta b {
+  color: var(--muted);
+}
+
+.gallery .image-tile-meta span {
+  padding: 0;
+  overflow-wrap: anywhere;
+}
+
+.toolbar button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.gallery .image-preview:focus-visible,
+.image-tile:focus-visible {
+  outline: 3px solid #2b8296;
+  outline-offset: 2px;
 }

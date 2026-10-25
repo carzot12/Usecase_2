@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 from PIL import Image
 
@@ -15,6 +15,8 @@ from Tool.ki_bildanalyse import (
     ALLOWED_INPUT_ROOT,
     AnalysisError,
     DEFAULT_OLLAMA_NUM_CTX,
+    DEFAULT_OLLAMA_NUM_PREDICT,
+    MAX_MISTRAL_IMAGES_PER_REQUEST,
     _parser,
     build_mistral_messages,
     build_ollama_messages,
@@ -22,6 +24,7 @@ from Tool.ki_bildanalyse import (
     _parse_ollama_json,
     collect_test_images,
     call_mistral,
+    call_ollama,
     load_catalog,
     run_analysis,
     select_references,
@@ -122,14 +125,19 @@ class CatalogTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp:
             (Path(temp) / "test.png").write_bytes(TINY_PNG)
             with self.assertRaisesRegex(AnalysisError, "confirm-paid-request"):
-                run_analysis(Path(temp), live=True, confirm_paid_request=False)
+                run_analysis(
+                    Path(temp), provider="openai", live=True,
+                    confirm_paid_request=False,
+                )
 
     def test_mock_pipeline_writes_validated_json_without_api(self) -> None:
         ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, tempfile.TemporaryDirectory() as output:
             input_dir = Path(temp)
             (input_dir / "test.png").write_bytes(TINY_PNG)
-            destination = run_analysis(input_dir, output_dir=Path(output))
+            destination = run_analysis(
+                input_dir, provider="openai", output_dir=Path(output)
+            )
             document = json.loads(destination.read_text(encoding="utf-8"))
         self.assertEqual(document["execution"]["mode"], "mock")
         self.assertFalse(document["execution"]["paid_api_request_performed"])
@@ -139,13 +147,34 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(document["execution"]["provider"], "mock")
         self.assertIn("duration_seconds", document["execution"])
 
+    def test_mock_pipeline_uses_every_explicitly_selected_image_and_records_exclusions(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            names = [f"damage_{index}.jpg" for index in range(5)]
+            for index, name in enumerate(names):
+                Image.new("RGB", (24, 18), (index * 31, index * 17, index * 9)).save(input_dir / name)
+            selected = names[:4]
+            destination = run_analysis(
+                input_dir,
+                provider="openai",
+                output_dir=Path(output),
+                allowed_input_root=ALLOWED_INPUT_ROOT,
+                selected_image_names=selected,
+            )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        self.assertEqual(document["image_selection"]["included"], selected)
+        self.assertEqual(document["image_selection"]["excluded"], names[4:])
+        self.assertEqual([item["filename"] for item in document["inputs"]], selected)
+
     def test_openai_and_ollama_share_the_same_factual_prompt(self) -> None:
         openai_content = build_request_content([], self.catalog, [])
         ollama_messages = build_ollama_messages([], self.catalog, [])
         self.assertEqual(openai_content[0]["text"], ollama_messages[1]["content"])
 
     def test_mistral_uses_the_same_factual_prompt_and_content_order(self) -> None:
-        references = select_references(self.catalog, 1)
+        references = select_references(self.catalog, 1)[:MAX_MISTRAL_IMAGES_PER_REQUEST]
         openai_content = build_request_content([], self.catalog, references)
         mistral_messages = build_mistral_messages([], self.catalog, references)
         mistral_content = mistral_messages[1]["content"]
@@ -155,6 +184,11 @@ class CatalogTests(unittest.TestCase):
             [item["type"] for item in mistral_content],
             ["text" if item["type"] == "input_text" else "image_url" for item in openai_content],
         )
+
+    def test_mistral_rejects_more_than_eight_images_before_transport(self) -> None:
+        references = select_references(self.catalog, 1)[:MAX_MISTRAL_IMAGES_PER_REQUEST]
+        with self.assertRaisesRegex(AnalysisError, "maximal 8"):
+            build_mistral_messages([Path("test.png")], self.catalog, references)
 
     def test_mistral_live_mode_needs_explicit_cost_confirmation(self) -> None:
         ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
@@ -186,7 +220,7 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(document["execution"]["paid_api_request_performed"])
         self.assertFalse(document["execution"]["images_transmitted_to_mistral"])
         self.assertFalse(document["execution"]["images_transmitted_to_cloud"])
-        self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 11)
+        self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 7)
         self.assertEqual(document["execution"]["provider_metadata"]["cost"]["reported_amount"], 0)
 
     def test_mistral_live_payload_and_usage_are_recorded_with_fake_transport(self) -> None:
@@ -240,10 +274,79 @@ class CatalogTests(unittest.TestCase):
             item["type"] == "image_url"
             for item in captured["payload"]["messages"][1]["content"]
         )
-        self.assertEqual(image_count, 12)
+        self.assertEqual(image_count, 8)
+        self.assertEqual(
+            captured["payload"]["messages"][1]["content"][-2]["type"],
+            "image_url",
+        )
+        self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 7)
         self.assertEqual(document["execution"]["provider_metadata"]["usage"]["total_tokens"], 168)
+        self.assertEqual(
+            document["execution"]["provider_metadata"]["request_options"]["image_count"],
+            8,
+        )
         self.assertTrue(document["execution"]["paid_api_request_performed"])
         self.assertTrue(document["execution"]["images_transmitted_to_mistral"])
+
+    def test_mistral_fake_transport_processes_all_selected_images_in_batches(self) -> None:
+        captured_batches = []
+        response_body = {
+            "id": "fake-request",
+            "model": "ministral-3b-2512",
+            "choices": [{
+                "finish_reason": "stop",
+                "message": {"content": json.dumps({
+                    "status": "UNKLAR", "primary_code": "UNKLAR", "primary_evidence": [],
+                    "primary_confidence": 0.0, "secondary_features": [],
+                    "visible_observations": [], "uncertainty_reasons": ["Batch unsicher."],
+                    "missing_views": [],
+                })},
+            }],
+            "usage": {},
+        }
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps(response_body).encode("utf-8")
+
+        def fake_opener(request, timeout):
+            payload = json.loads(request.data.decode("utf-8"))
+            captured_batches.append(payload)
+            return FakeResponse()
+
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            names = [f"damage_{index}.jpg" for index in range(10)]
+            for index, name in enumerate(names):
+                Image.new("RGB", (24, 18), (index * 20, index * 11, index * 7)).save(input_dir / name)
+            destination = run_analysis(
+                input_dir,
+                provider="mistral",
+                live=True,
+                confirm_paid_request=True,
+                output_dir=Path(output),
+                max_references_per_class=0,
+                selected_image_names=names,
+                mistral_opener=fake_opener,
+                mistral_key_resolver=lambda: MistralAPIKeyResolution("fake-secret"),
+            )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        self.assertEqual(len(captured_batches), 2)
+        counts = [
+            sum(item.get("type") == "image_url" for item in payload["messages"][1]["content"])
+            for payload in captured_batches
+        ]
+        self.assertEqual(counts, [8, 2])
+        self.assertEqual(document["image_selection"]["included"], names)
+        self.assertEqual(document["execution"]["provider_metadata"]["multi_stage"], True)
+        self.assertEqual(
+            [name for batch in document["execution"]["provider_metadata"]["image_batches"]
+             for name in batch["images"]],
+            names,
+        )
 
     def test_mistral_422_reports_validation_body_safely_without_retry(self) -> None:
         calls = 0
@@ -308,6 +411,45 @@ class CatalogTests(unittest.TestCase):
         parsed = _parse_ollama_json('{"visible_observations":["Zeile 1\nZeile 2"]}')
         self.assertEqual(parsed["visible_observations"], ["Zeile 1\nZeile 2"])
 
+    def test_ollama_empty_answer_reports_exhausted_thinking_budget(self) -> None:
+        response_body = {
+            "message": {"content": "", "thinking": "interne Analyse"},
+            "done_reason": "length",
+            "prompt_eval_count": 12000,
+            "eval_count": 4096,
+        }
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps(response_body).encode("utf-8")
+
+        with self.assertRaises(AnalysisError) as raised:
+            call_ollama(
+                model="qwen3-vl:4b",
+                messages=[{"role": "user", "content": "JSON"}],
+                catalog=self.catalog,
+                opener=lambda request, timeout: FakeResponse(),
+            )
+        message = str(raised.exception)
+        self.assertIn("Ollama-Antwort enthaelt keinen Text", message)
+        self.assertIn("Thinking-Zeichen: 15", message)
+        self.assertIn("eval_count: 4096", message)
+        self.assertIn("done_reason: length", message)
+
+    def test_ollama_timeout_has_actionable_message(self) -> None:
+        with self.assertRaisesRegex(
+            AnalysisError, "Zeitüberschreitung.*900 Sekunden.*Modellauslastung"
+        ):
+            call_ollama(
+                model="qwen3-vl:4b",
+                messages=[{"role": "user", "content": "JSON"}],
+                catalog=self.catalog,
+                opener=lambda request, timeout: (_ for _ in ()).throw(
+                    URLError(TimeoutError("timed out"))
+                ),
+            )
+
     def test_ollama_pipeline_is_local_and_uses_eleven_references(self) -> None:
         captured = {}
         response_body = {
@@ -365,7 +507,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(captured["payload"]["model"], "llava:latest")
         self.assertIs(captured["payload"]["think"], False)
         self.assertEqual(captured["payload"]["options"]["num_predict"], 4096)
-        self.assertEqual(captured["payload"]["options"]["num_ctx"], 16384)
+        self.assertEqual(captured["payload"]["options"]["num_ctx"], 24576)
         image_count = sum(len(message.get("images", [])) for message in captured["payload"]["messages"])
         self.assertEqual(image_count, 12)  # elf Referenzen plus ein Testbild
         first_image = next(message["images"][0] for message in captured["payload"]["messages"] if message.get("images"))
@@ -376,12 +518,75 @@ class CatalogTests(unittest.TestCase):
         self.assertFalse(document["execution"]["paid_api_request_performed"])
         self.assertFalse(document["execution"]["images_transmitted_to_openai"])
         self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 11)
-        self.assertEqual(document["execution"]["provider_metadata"]["request_options"]["num_ctx"], 16384)
+        self.assertEqual(document["execution"]["provider_metadata"]["request_options"]["num_ctx"], 24576)
+        self.assertFalse(document["execution"]["provider_metadata"]["think"])
+        self.assertFalse(document["execution"]["provider_metadata"]["stream"])
+        self.assertEqual(document["execution"]["settings"]["ollama_num_ctx"], 24576)
+        self.assertEqual(document["execution"]["settings"]["ollama_num_predict"], 4096)
+        self.assertEqual(document["execution"]["settings"]["ollama_timeout_seconds"], 900)
+        self.assertEqual(len(document["classification_basis"]["references"]), 11)
+        self.assertEqual(document["inputs"][0]["filename"], "test.png")
 
     def test_ollama_context_cli_parameter_is_flexible(self) -> None:
-        args = _parser().parse_args(["input", "--provider", "ollama", "--ollama-num-ctx", "24576"])
-        self.assertEqual(DEFAULT_OLLAMA_NUM_CTX, 16384)
+        args = _parser().parse_args([
+            "input", "--provider", "ollama", "--ollama-num-ctx", "24576",
+            "--ollama-num-predict", "8192",
+        ])
+        self.assertEqual(DEFAULT_OLLAMA_NUM_CTX, 24576)
+        self.assertEqual(DEFAULT_OLLAMA_NUM_PREDICT, 4096)
         self.assertEqual(args.ollama_num_ctx, 24576)
+        self.assertEqual(args.ollama_num_predict, 8192)
+
+    def test_repeated_runs_are_independent_and_log_reproducible_inputs(self) -> None:
+        sentinels = ["PREVIOUS_MODEL_RESULT_MUST_NOT_LEAK", "MANUAL_CORRECTION_MUST_NOT_LEAK"]
+        captured_payloads = []
+        response_body = {
+            "message": {"content": json.dumps({
+                "status": "UNKLAR", "primary_code": "UNKLAR", "primary_evidence": [],
+                "primary_confidence": 0.0, "secondary_features": [],
+                "visible_observations": [], "uncertainty_reasons": ["Mock"],
+                "missing_views": [],
+            })},
+            "prompt_eval_count": 10, "eval_count": 5,
+        }
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps(response_body).encode("utf-8")
+
+        def fake_opener(request, timeout):
+            captured_payloads.append(json.loads(request.data.decode("utf-8")))
+            return FakeResponse()
+
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, \
+                tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            output_dir = Path(output)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            (output_dir / "previous.json").write_text(json.dumps({"result": sentinels[0]}))
+            correction_dir = output_dir / "Korrekturen"
+            correction_dir.mkdir()
+            (correction_dir / "manual.json").write_text(json.dumps({"note": sentinels[1]}))
+            paths = [
+                run_analysis(
+                    input_dir, provider="ollama", model="qwen3-vl:4b",
+                    output_dir=output_dir, ollama_opener=fake_opener,
+                    run_id=run_id, project_id="Independent-Test",
+                )
+                for run_id in ("run-a", "run-b")
+            ]
+            documents = [json.loads(path.read_text(encoding="utf-8")) for path in paths]
+
+        serialized_requests = json.dumps(captured_payloads, ensure_ascii=False)
+        self.assertTrue(all(sentinel not in serialized_requests for sentinel in sentinels))
+        self.assertEqual([document["run_id"] for document in documents], ["run-a", "run-b"])
+        self.assertEqual(documents[0]["classification_basis"]["prompt_hash_sha256"],
+                         documents[1]["classification_basis"]["prompt_hash_sha256"])
+        self.assertEqual(len(documents[0]["classification_basis"]["references"]), 11)
+        self.assertTrue(all(item["sha256"] for item in documents[0]["classification_basis"]["references"]))
+        self.assertEqual(documents[0]["project_id"], "Independent-Test")
 
     def test_reference_copy_is_rejected_as_independent_test(self) -> None:
         ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
@@ -408,4 +613,3 @@ class CatalogTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

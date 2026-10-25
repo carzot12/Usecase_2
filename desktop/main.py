@@ -95,8 +95,14 @@ def launch(dev_url: str | None = None) -> None:
                 app_ready = False
             if app_ready or time.monotonic() >= deadline:
                 if not app_ready:
+                    try:
+                        startup_error = main_window.evaluate_js("window.__EKI_ERROR__ || ''")
+                    except Exception:
+                        startup_error = ""
                     print("Warnung: React-Bereitschaft nicht rechtzeitig bestätigt.",
                           file=sys.stderr, flush=True)
+                    if startup_error:
+                        print(f"Frontend-Fehler: {startup_error}", file=sys.stderr, flush=True)
                 break
             time.sleep(0.05)
         time.sleep(max(0, SPLASH_MINIMUM_SECONDS - (time.monotonic() - shown)))
