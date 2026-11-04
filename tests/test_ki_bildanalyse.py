@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
 from PIL import Image
@@ -16,6 +18,7 @@ from Tool.ki_bildanalyse import (
     AnalysisError,
     DEFAULT_OLLAMA_NUM_CTX,
     DEFAULT_OLLAMA_NUM_PREDICT,
+    OllamaOutputError,
     MAX_MISTRAL_IMAGES_PER_REQUEST,
     _parser,
     build_mistral_messages,
@@ -26,6 +29,8 @@ from Tool.ki_bildanalyse import (
     call_mistral,
     call_ollama,
     load_catalog,
+    merge_partial_classifications,
+    response_schema,
     run_analysis,
     select_references,
     validate_and_enrich,
@@ -37,6 +42,7 @@ from Tool.mistral_config import (
     resolve_mistral_api_key,
 )
 from Tool.openai_config import resolve_api_key
+from Tool.evaluation_variants import ACTIVE_CLASS_CODES
 
 
 TINY_PNG = base64.b64decode(
@@ -82,6 +88,10 @@ class CatalogTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.catalog = load_catalog()
+        cls.validated_codes = tuple(code for code, definition in sorted(
+            cls.catalog.definitions.items(),
+            key=lambda item: item[1].get("validated_classification_rule_order", 10**9),
+        ) if "validated_classification_rule" in definition)
 
     def test_catalog_and_confirmed_main_references(self) -> None:
         self.assertEqual(len(self.catalog.codes), 29)
@@ -91,6 +101,352 @@ class CatalogTests(unittest.TestCase):
         selected = select_references(self.catalog, 1)
         self.assertEqual(len(selected), 11)
         self.assertEqual(len({reference.code for reference in selected}), 11)
+
+    def test_version_1_4_has_twelve_uniform_rules_and_archives_1_3(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        rules = json.loads(
+            (root / "Datenbank/klassifikationsregeln.json").read_text(encoding="utf-8")
+        )
+        required = {
+            "code", "name", "klassentyp", "klassifikationsziel",
+            "positive_bildmerkmale", "abgrenzung_zu_aehnlichen_klassen",
+            "nicht_vergeben_wenn", "unklar_wenn",
+            "einschraenkungen_visuelle_erkennung",
+            "nicht_zulaessige_ursachenaussage", "fachlicher_pruefstatus",
+            "literaturquellen",
+        }
+        self.assertEqual(rules["meta"]["version"], "1.4")
+        self.assertEqual(
+            [item["code"] for item in rules["classes"]],
+            ["GSF", "LSF", "KA", "SA", "sp HB", "Spl HB", "RiSch", "LR", "Bu", "AA", "SSA", "KB"],
+        )
+        self.assertTrue(all(set(item) == required for item in rules["classes"]))
+        archive = root / "Datenbank/Archiv/klassifikationsregeln_v1.3.json"
+        self.assertEqual(
+            hashlib.sha256(archive.read_bytes()).hexdigest(),
+            "7b7f8ad3fe390e17dc14768215dc2ea893e56af180d538477268e2c0f68ea2a2",
+        )
+
+    def test_reference_selection_excludes_same_specimen_and_matching_image_hash(self) -> None:
+        first = self.catalog.references[0]
+        specimen_id = first.path.parents[1].name
+        digest = hashlib.sha256(first.path.read_bytes()).hexdigest()
+        selected = select_references(
+            self.catalog,
+            10,
+            excluded_specimen_id=specimen_id,
+            excluded_hashes={digest},
+        )
+        self.assertTrue(selected)
+        self.assertTrue(all(item.path.parents[1].name != specimen_id for item in selected))
+        self.assertTrue(all(
+            hashlib.sha256(item.path.read_bytes()).hexdigest() != digest
+            for item in selected
+        ))
+
+    def test_variant_one_catalog_does_not_open_reference_manifest(self) -> None:
+        allowed = self.validated_codes
+        from Tool import ki_bildanalyse as module
+        original = module._read_json
+        opened: list[str] = []
+
+        def recording_read(path: Path):
+            opened.append(path.name)
+            return original(path)
+
+        with patch.object(module, "_read_json", side_effect=recording_read):
+            catalog = load_catalog(include_references=False, allowed_codes=allowed)
+        self.assertEqual(catalog.codes, allowed)
+        self.assertFalse(catalog.reference_database_accessed)
+        self.assertEqual(catalog.references, ())
+        self.assertNotIn("referenzbilder_manifest.json", opened)
+
+    def test_variant_one_rejects_a_class_list_different_from_documented_rules(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp:
+            (Path(temp) / "test.png").write_bytes(TINY_PNG)
+            with self.assertRaisesRegex(AnalysisError, "Merkmalskatalog"):
+                run_analysis(
+                    Path(temp), provider="openai", evaluation_variant="1",
+                    allowed_class_codes=ACTIVE_CLASS_CODES[:-1],
+                )
+
+    def test_variant_one_mock_records_reference_free_execution(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        allowed = ACTIVE_CLASS_CODES
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, \
+                tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            destination = run_analysis(
+                input_dir,
+                provider="openai",
+                output_dir=Path(output),
+                evaluation_variant="1",
+                allowed_class_codes=allowed,
+                test_series={
+                    "series_id": "scientific-1",
+                    "name": "Erste wissenschaftliche Testreihe",
+                    "category": "scientific_evaluation",
+                    "classification_rules_version": "1.4",
+                    "active_class_codes": list(allowed),
+                },
+            )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+        basis = document["classification_basis"]
+        self.assertEqual(basis["evaluation_variant"], "1")
+        self.assertFalse(basis["reference_database_accessed"])
+        self.assertEqual(basis["confirmed_main_reference_count_available"], 0)
+        self.assertEqual(basis["confirmed_main_reference_count_used"], 0)
+        self.assertEqual(basis["allowed_class_codes"], list(allowed))
+        self.assertEqual(basis["references"], [])
+        self.assertEqual(basis["active_class_set_version"], "klassifikationsregeln/1.4")
+        self.assertEqual(len(basis["active_class_descriptions_sha256"]), 64)
+        self.assertFalse(basis["ground_truth_transmitted"])
+        self.assertFalse(basis["previous_results_transmitted"])
+        self.assertFalse(basis["expert_assessments_transmitted"])
+        self.assertEqual(document["test_series"]["series_id"], "scientific-1")
+        self.assertEqual(document["specimen_id"], input_dir.name)
+        self.assertEqual(document["execution"]["provider"], "mock")
+        self.assertTrue(document["execution"]["model"])
+        self.assertEqual(basis["classification_rules_version"], "1.4")
+        self.assertEqual(basis["allowed_class_count"], 12)
+        self.assertEqual(len(basis["prompt_hash_sha256"]), 64)
+        self.assertEqual(len(document["inputs"][0]["sha256"]), 64)
+        self.assertTrue(document["created_at"])
+        self.assertIsInstance(document["execution"]["duration_seconds"], float)
+
+    def test_all_twelve_reference_features_are_structured_multilabel_codes(self) -> None:
+        catalog = load_catalog(
+            include_references=False,
+            allowed_codes=ACTIVE_CLASS_CODES,
+        )
+        self.assertEqual(catalog.active_class_codes, ACTIVE_CLASS_CODES)
+        self.assertEqual(catalog.additional_visible_codes, ())
+        self.assertEqual(catalog.codes, ACTIVE_CLASS_CODES)
+        result = validate_and_enrich({
+            "status": "KLASSIFIZIERT",
+            "observations_short": ["Kantenast und Riss sichtbar"],
+            "visible_features": ["Mehrere Äste nahe beieinander"],
+            "class_suggestions": [
+                {"code": "KA", "confidence": "hoch", "evidence_status": "sicher_sichtbar"},
+                {"code": "RiSch", "confidence": "mittel", "evidence_status": "vermutet"},
+                {"code": "AA", "confidence": "mittel", "evidence_status": "sicher_sichtbar"},
+            ],
+            "uncertain_points": [],
+        }, catalog)
+        self.assertEqual(
+            [item["code"] for item in result["class_suggestions"]],
+            ["KA", "RiSch", "AA"],
+        )
+
+    def test_variant_one_prompt_contains_twelve_compact_descriptions_and_test_images(self) -> None:
+        catalog = load_catalog(
+            include_references=False,
+            allowed_codes=ACTIVE_CLASS_CODES,
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            image = Path(temp) / "bruch.png"
+            image.write_bytes(TINY_PNG)
+            content = build_request_content([image], catalog, [])
+        instructions = json.loads(content[0]["text"])
+        self.assertEqual(
+            [item["code"] for item in instructions["classes"]],
+            list(ACTIVE_CLASS_CODES),
+        )
+        self.assertEqual(len(instructions["classes"]), 12)
+        self.assertEqual(instructions["classes"][-1]["code"], "KB")
+        image_items = [item for item in content if item["type"] == "input_image"]
+        self.assertEqual(len(image_items), 1)
+        self.assertTrue(image_items[0]["image_url"].startswith("data:image/jpeg;base64,"))
+        serialized = json.dumps(instructions, ensure_ascii=False)
+        self.assertNotIn("confirmed_reference_count", serialized)
+        self.assertNotIn("Ground Truth", serialized)
+        self.assertNotIn("fachliche Korrektur", serialized)
+        self.assertNotIn("fachlicher_pruefstatus", serialized)
+        self.assertNotIn("literaturquellen", serialized)
+        self.assertNotIn("offene_punkte", serialized)
+        self.assertNotIn("http", serialized)
+        self.assertTrue(all(
+            set(item) == {
+                "code", "name", "definition", "positive_image_features",
+                "distinguishing_features", "uncertainty_rules",
+            }
+            for item in instructions["classes"]
+        ))
+        example = json.loads(
+            (Path(__file__).resolve().parents[1]
+             / "Datenbank/klassifikationsprompt_v1.4_beispiel.json").read_text(
+                 encoding="utf-8"
+             )
+        )
+        self.assertEqual(example["prompt"], instructions)
+        self.assertEqual(example["reference_images"], 0)
+        self.assertFalse(example["ground_truth_included"])
+
+    def test_prompt_requires_visible_observations_before_candidates(self) -> None:
+        content = build_request_content([], self.catalog, [])
+        instructions = json.loads(content[0]["text"])
+        self.assertIn("zwei strikt getrennten Phasen", instructions["rules"][0])
+        self.assertIn("sichtbare Beobachtungen", instructions["rules"][0])
+        serialized = json.dumps(instructions, ensure_ascii=False)
+        self.assertIn("keine Absätze", serialized)
+        self.assertIn("alle ausgewählten Testbilder gemeinsam", serialized)
+        self.assertIn("vollständig und gleichberechtigt", serialized)
+        self.assertIn("keine Rangfolge", serialized)
+        self.assertIn("keine Hauptversagensursache", serialized)
+
+    def test_compact_response_schema_has_equal_weight_suggestions_without_ranking(self) -> None:
+        schema = response_schema(self.catalog.codes)
+        self.assertEqual(
+            set(schema["required"]),
+            {
+                "status", "observations_short", "visible_features",
+                "class_suggestions", "uncertain_points",
+            },
+        )
+        serialized = json.dumps(schema, ensure_ascii=False)
+        self.assertNotIn('"priority"', serialized)
+        self.assertNotIn('"primary"', serialized)
+        suggestion_schema = schema["properties"]["class_suggestions"]["items"]
+        self.assertIn("evidence_status", suggestion_schema["required"])
+        self.assertEqual(
+            suggestion_schema["properties"]["evidence_status"]["enum"],
+            ["sicher_sichtbar", "vermutet"],
+        )
+        self.assertNotIn("reasoning", serialized)
+        self.assertEqual(
+            schema["properties"]["observations_short"]["items"]["maxLength"], 120
+        )
+        self.assertEqual(schema["properties"]["observations_short"]["minItems"], 1)
+
+    def test_compact_output_requires_valid_evidence_status(self) -> None:
+        base = {
+            "status": "KLASSIFIZIERT",
+            "observations_short": ["Kantenast sichtbar"],
+            "visible_features": ["Astanschnitt berührt Längskante"],
+            "uncertain_points": [],
+        }
+        for evidence_status in (None, "unklar"):
+            with self.subTest(evidence_status=evidence_status), self.assertRaisesRegex(
+                AnalysisError, "Evidenzstatus"
+            ):
+                validate_and_enrich({
+                    **base,
+                    "class_suggestions": [{
+                        "code": "KA", "confidence": "hoch",
+                        "evidence_status": evidence_status,
+                    }],
+                }, self.catalog)
+
+    def test_compact_output_lists_all_suggestions_without_roles(self) -> None:
+        result = validate_and_enrich({
+            "status": "KLASSIFIZIERT",
+            "observations_short": ["Zwei Merkmale sichtbar"],
+            "visible_features": ["Astanschnitt", "lokale Faserumlenkung"],
+            "class_suggestions": [
+                {"code": "KA", "confidence": "hoch", "evidence_status": "sicher_sichtbar"},
+                {"code": "LSF", "confidence": "mittel", "evidence_status": "sicher_sichtbar"},
+            ],
+            "uncertain_points": [],
+        }, self.catalog)
+        self.assertEqual(result["suggested_feature_codes"], ["KA", "LSF"])
+        self.assertNotIn("primary_suggestion_code", result)
+        self.assertTrue(all("suggestion_role" not in item for item in result["class_suggestions"]))
+
+    def test_compact_output_is_enriched_without_causal_or_ranking_fields(self) -> None:
+        result = validate_and_enrich({
+            "status": "KLASSIFIZIERT",
+            "observations_short": ["Bruch überwiegend quer", "Bruch überwiegend quer"],
+            "visible_features": ["lokale Splitterbildung"],
+            "class_suggestions": [
+                {"code": "KA", "confidence": "hoch", "evidence_status": "sicher_sichtbar"},
+                {"code": "LSF", "confidence": "unsicher", "evidence_status": "vermutet"},
+            ],
+            "uncertain_points": ["GSF/LSF nicht sicher unterscheidbar"],
+        }, self.catalog)
+        self.assertEqual(result["observations_short"], ["Bruch überwiegend quer"])
+        self.assertEqual(
+            [(item["code"], item["confidence_label"]) for item in result["class_suggestions"]],
+            [("KA", "hoch"), ("LSF", "unsicher")],
+        )
+        self.assertEqual(
+            [item["confidence"] for item in result["class_suggestions"]],
+            [0.85, 0.35],
+        )
+        self.assertEqual(result["suggested_feature_codes"], ["KA", "LSF"])
+        self.assertEqual(
+            [item["evidence_status"] for item in result["class_suggestions"]],
+            ["sicher_sichtbar", "vermutet"],
+        )
+        self.assertFalse(any(item["proven_failure_cause"] for item in result["class_suggestions"]))
+        self.assertEqual(result["analysis_outcome"], "merkmale_erkannt")
+
+    def test_partial_merge_preserves_all_codes_and_documents_conflicts(self) -> None:
+        first = validate_and_enrich({
+            "status": "KLASSIFIZIERT", "observations_short": ["Ast an Kante"],
+            "visible_features": ["Astanschnitt"], "uncertain_points": [],
+            "class_suggestions": [
+                {"code": "KA", "confidence": "hoch", "evidence_status": "sicher_sichtbar"},
+            ],
+        }, self.catalog)
+        second = validate_and_enrich({
+            "status": "KLASSIFIZIERT", "observations_short": ["Faser lokal schräg"],
+            "visible_features": ["Faserumlenkung"], "uncertain_points": [],
+            "class_suggestions": [
+                {"code": "KA", "confidence": "unsicher", "evidence_status": "vermutet"},
+                {"code": "LSF", "confidence": "mittel", "evidence_status": "sicher_sichtbar"},
+            ],
+        }, self.catalog)
+        merged = merge_partial_classifications([first, second], complete=True)
+        self.assertEqual([item["code"] for item in merged["class_suggestions"]], ["KA", "LSF"])
+        self.assertEqual(merged["merge_status"], "vollstaendig")
+        self.assertEqual(merged["partial_request_count"], 2)
+        self.assertEqual(merged["partial_evidence_by_code"]["KA"][0]["confidence_label"], "hoch")
+        self.assertEqual(merged["merge_conflicts"][0]["type"], "suggestion_disagreement")
+
+    def test_compact_unclear_output_rejects_empty_and_keeps_factual_uncertainty(self) -> None:
+        with self.assertRaisesRegex(AnalysisError, "vollständig leere Sichtauswertung"):
+            validate_and_enrich({
+                "status": "UNKLAR", "observations_short": [], "visible_features": [],
+                "class_suggestions": [], "uncertain_points": [],
+            }, self.catalog)
+        uncertain = validate_and_enrich({
+            "status": "UNKLAR", "observations_short": ["Bruchbereich teilweise verdeckt"],
+            "visible_features": [], "class_suggestions": [],
+            "uncertain_points": ["Zuordnung nicht sicher"],
+        }, self.catalog)
+        self.assertEqual(uncertain["analysis_outcome"], "fachlich_unklar")
+
+    def test_compact_output_distinguishes_no_features_from_unclear(self) -> None:
+        no_features = validate_and_enrich({
+            "status": "KEINE_MERKMALE",
+            "observations_short": ["Prüfkörper vollständig sichtbar"],
+            "visible_features": [],
+            "class_suggestions": [],
+            "uncertain_points": [],
+        }, self.catalog)
+        self.assertEqual(no_features["analysis_outcome"], "keine_merkmale_erkennbar")
+        with self.assertRaisesRegex(AnalysisError, "Unsicherheitspunkt"):
+            validate_and_enrich({
+                "status": "UNKLAR",
+                "observations_short": ["Bruchbereich nur teilweise sichtbar"],
+                "visible_features": [],
+                "class_suggestions": [],
+                "uncertain_points": [],
+            }, self.catalog)
+
+    def test_compact_output_rejects_long_or_causal_observations(self) -> None:
+        base = {
+            "status": "UNKLAR", "visible_features": [], "class_suggestions": [],
+            "uncertain_points": [],
+        }
+        with self.assertRaisesRegex(AnalysisError, "mehr als 120 Zeichen"):
+            validate_and_enrich({**base, "observations_short": ["x" * 121]}, self.catalog)
+        with self.assertRaisesRegex(AnalysisError, "Ursachenaussage"):
+            validate_and_enrich({
+                **base, "observations_short": ["Der Ast verursachte den Bruch"]
+            }, self.catalog)
 
     def test_unknown_class_is_rejected(self) -> None:
         raw = {
@@ -142,9 +498,11 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(document["execution"]["mode"], "mock")
         self.assertFalse(document["execution"]["paid_api_request_performed"])
         self.assertEqual(document["result"]["status"], "UNKLAR")
-        self.assertEqual(document["classification_basis"]["allowed_class_count"], 29)
+        self.assertEqual(document["classification_basis"]["allowed_class_count"], 12)
         self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 0)
         self.assertEqual(document["execution"]["provider"], "mock")
+        self.assertEqual(document["schema_version"], "4.2")
+        self.assertEqual(document["result"]["observations_short"], ["Keine reale Bildauswertung"])
         self.assertIn("duration_seconds", document["execution"])
 
     def test_mock_pipeline_uses_every_explicitly_selected_image_and_records_exclusions(self) -> None:
@@ -411,7 +769,7 @@ class CatalogTests(unittest.TestCase):
         parsed = _parse_ollama_json('{"visible_observations":["Zeile 1\nZeile 2"]}')
         self.assertEqual(parsed["visible_observations"], ["Zeile 1\nZeile 2"])
 
-    def test_ollama_empty_answer_reports_exhausted_thinking_budget(self) -> None:
+    def test_ollama_thinking_only_answer_reports_exhausted_output_budget(self) -> None:
         response_body = {
             "message": {"content": "", "thinking": "interne Analyse"},
             "done_reason": "length",
@@ -424,25 +782,87 @@ class CatalogTests(unittest.TestCase):
             def __exit__(self, *args): return False
             def read(self): return json.dumps(response_body).encode("utf-8")
 
-        with self.assertRaises(AnalysisError) as raised:
+        with self.assertRaises(OllamaOutputError) as raised:
             call_ollama(
-                model="qwen3-vl:4b",
+                model="qwen3-vl:4b-instruct",
                 messages=[{"role": "user", "content": "JSON"}],
                 catalog=self.catalog,
                 opener=lambda request, timeout: FakeResponse(),
             )
         message = str(raised.exception)
-        self.assertIn("Ollama-Antwort enthaelt keinen Text", message)
+        self.assertIn("ausschließlich internes Thinking", message)
+        self.assertIn("Thinking war angefordert: nein", message)
         self.assertIn("Thinking-Zeichen: 15", message)
         self.assertIn("eval_count: 4096", message)
         self.assertIn("done_reason: length", message)
+        self.assertEqual(raised.exception.failure_type, "technical_model_output")
+        self.assertEqual(raised.exception.diagnostics["reason"], "thinking_only_output_limit")
+
+    def test_ollama_empty_answer_without_thinking_is_a_technical_failure(self) -> None:
+        response_body = {"message": {"content": "", "thinking": ""}, "done_reason": "stop"}
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps(response_body).encode("utf-8")
+
+        with self.assertRaises(OllamaOutputError) as raised:
+            call_ollama(
+                model="qwen3-vl:4b-instruct",
+                messages=[{"role": "user", "content": "JSON"}],
+                catalog=self.catalog,
+                opener=lambda request, timeout: FakeResponse(),
+            )
+        self.assertIn("keinen Text", str(raised.exception))
+        self.assertEqual(raised.exception.diagnostics["reason"], "invalid_content")
+
+    def test_ollama_invalid_json_and_plain_unclear_are_not_silent_fallbacks(self) -> None:
+        for content in ("{ungueltig", "UNKLAR"):
+            response_body = {"message": {"content": content, "thinking": ""}, "done_reason": "stop"}
+
+            class FakeResponse:
+                def __enter__(self): return self
+                def __exit__(self, *args): return False
+                def read(self): return json.dumps(response_body).encode("utf-8")
+
+            with self.subTest(content=content), self.assertRaises(OllamaOutputError) as raised:
+                call_ollama(
+                    model="qwen3-vl:4b-instruct",
+                    messages=[{"role": "user", "content": "JSON"}],
+                    catalog=self.catalog,
+                    opener=lambda request, timeout: FakeResponse(),
+                )
+            self.assertEqual(raised.exception.diagnostics["reason"], "invalid_content")
+            self.assertEqual(raised.exception.diagnostics["original_response_text"], content)
+
+    def test_ollama_rejects_content_when_done_reason_is_length(self) -> None:
+        response_body = {
+            "message": {"content": '{"status":"UNKLAR"}', "thinking": ""},
+            "done_reason": "length",
+            "eval_count": 4096,
+        }
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self): return json.dumps(response_body).encode("utf-8")
+
+        with self.assertRaises(OllamaOutputError) as raised:
+            call_ollama(
+                model="qwen3-vl:4b-instruct",
+                messages=[{"role": "user", "content": "JSON"}],
+                catalog=self.catalog,
+                opener=lambda request, timeout: FakeResponse(),
+            )
+        self.assertIn("Ausgabelimit", str(raised.exception))
+        self.assertEqual(raised.exception.diagnostics["reason"], "output_limit")
 
     def test_ollama_timeout_has_actionable_message(self) -> None:
         with self.assertRaisesRegex(
             AnalysisError, "Zeitüberschreitung.*900 Sekunden.*Modellauslastung"
         ):
             call_ollama(
-                model="qwen3-vl:4b",
+                model="qwen3-vl:4b-instruct",
                 messages=[{"role": "user", "content": "JSON"}],
                 catalog=self.catalog,
                 opener=lambda request, timeout: (_ for _ in ()).throw(
@@ -450,7 +870,7 @@ class CatalogTests(unittest.TestCase):
                 ),
             )
 
-    def test_ollama_pipeline_is_local_and_uses_eleven_references(self) -> None:
+    def test_ollama_pipeline_is_local_and_uses_active_class_references(self) -> None:
         captured = {}
         response_body = {
             "message": {
@@ -496,7 +916,7 @@ class CatalogTests(unittest.TestCase):
             destination = run_analysis(
                 input_dir,
                 provider="ollama",
-                model="llava:latest",
+                model="qwen3-vl:4b-instruct",
                 output_dir=Path(output),
                 client=ForbiddenOpenAIClient(),
                 ollama_opener=fake_opener,
@@ -504,12 +924,12 @@ class CatalogTests(unittest.TestCase):
             document = json.loads(destination.read_text(encoding="utf-8"))
 
         self.assertEqual(captured["url"], "http://localhost:11434/api/chat")
-        self.assertEqual(captured["payload"]["model"], "llava:latest")
+        self.assertEqual(captured["payload"]["model"], "qwen3-vl:4b-instruct")
         self.assertIs(captured["payload"]["think"], False)
         self.assertEqual(captured["payload"]["options"]["num_predict"], 4096)
         self.assertEqual(captured["payload"]["options"]["num_ctx"], 24576)
         image_count = sum(len(message.get("images", [])) for message in captured["payload"]["messages"])
-        self.assertEqual(image_count, 12)  # elf Referenzen plus ein Testbild
+        self.assertEqual(image_count, 11)  # zehn aktive Referenzen plus ein Testbild
         first_image = next(message["images"][0] for message in captured["payload"]["messages"] if message.get("images"))
         with Image.open(io.BytesIO(base64.b64decode(first_image))) as image:
             self.assertLessEqual(max(image.size), 768)
@@ -517,14 +937,24 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(document["execution"]["mode"], "local")
         self.assertFalse(document["execution"]["paid_api_request_performed"])
         self.assertFalse(document["execution"]["images_transmitted_to_openai"])
-        self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 11)
+        self.assertEqual(document["classification_basis"]["confirmed_main_reference_count_used"], 10)
         self.assertEqual(document["execution"]["provider_metadata"]["request_options"]["num_ctx"], 24576)
+        self.assertEqual(document["execution"]["provider_metadata"]["request_options"]["image_count"], 11)
         self.assertFalse(document["execution"]["provider_metadata"]["think"])
         self.assertFalse(document["execution"]["provider_metadata"]["stream"])
         self.assertEqual(document["execution"]["settings"]["ollama_num_ctx"], 24576)
         self.assertEqual(document["execution"]["settings"]["ollama_num_predict"], 4096)
         self.assertEqual(document["execution"]["settings"]["ollama_timeout_seconds"], 900)
-        self.assertEqual(len(document["classification_basis"]["references"]), 11)
+        self.assertFalse(document["execution"]["settings"]["ollama_think"])
+        self.assertFalse(document["execution"]["settings"]["ollama_stream"])
+        self.assertEqual(document["execution"]["settings"]["ollama_temperature"], 0)
+        self.assertEqual(document["model_output"]["validation_status"], "valid")
+        self.assertEqual(
+            json.loads(document["model_output"]["original_response_text"]),
+            json.loads(response_body["message"]["content"]),
+        )
+        self.assertEqual(document["model_output"]["parsed_response"], json.loads(response_body["message"]["content"]))
+        self.assertEqual(len(document["classification_basis"]["references"]), 10)
         self.assertEqual(document["inputs"][0]["filename"], "test.png")
 
     def test_ollama_context_cli_parameter_is_flexible(self) -> None:
@@ -571,7 +1001,7 @@ class CatalogTests(unittest.TestCase):
             (correction_dir / "manual.json").write_text(json.dumps({"note": sentinels[1]}))
             paths = [
                 run_analysis(
-                    input_dir, provider="ollama", model="qwen3-vl:4b",
+                    input_dir, provider="ollama", model="qwen3-vl:4b-instruct",
                     output_dir=output_dir, ollama_opener=fake_opener,
                     run_id=run_id, project_id="Independent-Test",
                 )
@@ -584,7 +1014,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual([document["run_id"] for document in documents], ["run-a", "run-b"])
         self.assertEqual(documents[0]["classification_basis"]["prompt_hash_sha256"],
                          documents[1]["classification_basis"]["prompt_hash_sha256"])
-        self.assertEqual(len(documents[0]["classification_basis"]["references"]), 11)
+        self.assertEqual(len(documents[0]["classification_basis"]["references"]), 10)
         self.assertTrue(all(item["sha256"] for item in documents[0]["classification_basis"]["references"]))
         self.assertEqual(documents[0]["project_id"], "Independent-Test")
 

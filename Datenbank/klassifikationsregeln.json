@@ -1,18 +1,39 @@
 {
   "meta": {
-    "titel": "Vorläufige visuelle Klassifikationsregeln für sechs Versagensklassen",
-    "version": "1.0",
-    "stand": "2026-10-21",
+    "titel": "Visuelle Klassifikationsregeln für zwölf aktive Merkmale",
+    "version": "1.4",
+    "stand": "2026-11-04",
+    "active_class_codes": [
+      "GSF", "LSF", "KA", "SA", "sp HB", "Spl HB", "RiSch", "LR", "Bu", "AA", "SSA", "KB"
+    ],
     "gueltigkeitsbereich": "Zugversuche an Holz parallel zur Faserrichtung",
+    "archiv_vorversion": {
+      "datei": "Datenbank/Archiv/klassifikationsregeln_v1.3.json",
+      "sha256": "7b7f8ad3fe390e17dc14768215dc2ea893e56af180d538477268e2c0f68ea2a2"
+    },
+    "fotodokumentation": [
+      "Der zerstörte Prüfkörper liegt auf dem Boden; die beiden Bruchstücke werden von oben fotografiert.",
+      "Danach werden die Bruchstücke umgedreht und von der gegenüberliegenden Breitseite fotografiert.",
+      "Es liegen keine planmäßig aufgenommenen Stirnholz-, Querschnitts- oder Schmalseitenansichten vor.",
+      "Mehrere Übersichts- oder Detailaufnahmen derselben Bruchstücke können vorhanden sein.",
+      "Keine Klasse darf zusätzliche Perspektiven als zwingende Voraussetzung verlangen. Nicht sicher erkennbare Merkmale sind als nicht beurteilbar zu kennzeichnen."
+    ],
     "grundprinzip": [
-      "Holzmerkmal, Bruchbild und nachgewiesene Versagensursache sind getrennt zu behandeln.",
-      "Die Regeln erlauben ausschließlich eine visuelle Merkmals- oder Bruchbildklassifikation. Eine tatsächliche Versagensursache wird durch Fotos allein nicht nachgewiesen.",
-      "Mehrfachklassifikation ist zulässig, beispielsweise KA zusammen mit LSF oder sp HB zusammen mit einem sichtbaren Holzmerkmal.",
-      "Fehlt eine benötigte Ansicht oder ist ein Kriterium nicht sicher sichtbar, lautet das Ergebnis UNKLAR beziehungsweise manuelle Prüfung. Es darf nicht aus der Protokollklasse in das Bild hineininterpretiert werden."
+      "Alle zwölf aktiven Merkmale sind gleichberechtigt; sp HB oder Spl HB müssen nicht zwingend vergeben werden.",
+      "Holzmerkmal, Bruchbild, Prüfspur und nachgewiesene Versagensursache sind getrennt zu behandeln.",
+      "KB bezeichnet neutral eine sichtbare Prüfspur der Klemmbacken und darf nicht unkritisch als Versagensmerkmal oder nachgewiesene Ursache bezeichnet werden.",
+      "Jeder Klassifikationsvorschlag ist als sicher_sichtbar oder vermutet zu kennzeichnen. Vermutet ist nur bei einer in der jeweiligen Klassenregel zugelassenen indirekten Evidenz zulässig.",
+      "Zuerst sind objektiv sichtbare Merkmale zu beschreiben; erst danach dürfen unverbindliche Klassen vorgeschlagen werden.",
+      "Mehrfachklassifikation bleibt vollständig erhalten. Zulässig sind insbesondere GSF zusammen mit LSF, KA oder SA zusammen mit LSF sowie Spl HB zusammen mit sp HB, wenn jeweils getrennt erkennbare Kriterien vorliegen.",
+      "Die KI zählt alle erkennbaren Merkmale gleichberechtigt auf und vergibt weder Rangfolge noch Primär- oder Sekundärrollen.",
+      "Merkmale in und außerhalb der Bruchzone werden dokumentiert; ihre Lage beweist keine Bruchursache.",
+      "Nicht sichtbar bedeutet, dass ein Merkmal in den vorhandenen Ansichten nicht erkennbar ist. Nicht beurteilbar bedeutet, dass Bildqualität, Bildausschnitt oder Perspektive keine verlässliche Entscheidung erlauben.",
+      "Fehlt ausreichende visuelle Evidenz, lautet das Ergebnis UNKLAR beziehungsweise nicht beurteilbar.",
+      "Es dürfen keine Winkel-, Längen- oder sonstigen Schwellenwerte erfunden werden."
     ],
     "pruefstatus_werte": {
       "vorlaeufig_bestaetigt": "Die Grundregel ist durch eingesehene Fachquellen nachvollziehbar; laborspezifische Schwellen können noch fehlen.",
-      "bedingt_geeignet": "Visuell nutzbar, aber nur mit mehreren Ansichten oder einer noch festzulegenden Kalibrierregel.",
+      "bedingt_geeignet": "Visuell nutzbar, aber nur unter ausdrücklicher Berücksichtigung der verfügbaren Ansichten oder einer noch festzulegenden Kalibrierregel.",
       "fachlich_offen": "Begriff, Schwelle oder Übertragbarkeit auf den vorliegenden Zugversuch muss fachlich bestätigt werden."
     },
     "quellenpruefung": [
@@ -53,234 +74,573 @@
       "code": "GSF",
       "name": "Globale Schrägfaser",
       "klassentyp": "sichtbares_holzmerkmal",
-      "klassifikationsziel": "Über einen großen sichtbaren Längenbereich annähernd gleichgerichtete Abweichung belastbarer Faserindikatoren von der Probenlängsachse.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Trocknungsrisse, Harzkanäle, Poren, Holzstrahlen oder freiliegende Bruchfasern verlaufen über einen großen Teil der sichtbaren Probenlänge unter annähernd gleichbleibendem Winkel zur Längsachse.",
-        "Die Abweichung ist nicht nur auf eine kurze Zone um einen Ast oder eine andere lokale Störung begrenzt.",
-        "Ein schräger Bruchverlauf darf nur als zusätzliches Indiz dienen, nicht als alleiniger Nachweis einer globalen Faserneigung."
+      "klassifikationsziel": "Globale Schrägfaser liegt vor, wenn über einen größeren sichtbaren Bereich ein gleichgerichtet schräger Verlauf erkennbar ist. Ist der tatsächliche Faserverlauf nicht eindeutig sichtbar, kann ein längerer, deutlich schräg zur Brettlängsachse verlaufender Riss oder Bruchverlauf als indirektes Indiz dienen; GSF ist dann als vermutet zu kennzeichnen.",
+      "positive_bildmerkmale": [
+        "Über einen längeren sichtbaren Abschnitt verlaufen belastbare Faserindikatoren schräg zur Prüfkörperlängsachse.",
+        "Ein längerer, deutlich schräg zur Brettlängsachse verlaufender Riss oder Bruchverlauf kann als indirektes visuelles Indiz dienen.",
+        "Die Abweichung ist nicht auf eine einzelne lokale Störstelle begrenzt.",
+        "Der erkennbare Verlauf bleibt über den sichtbaren Bereich annähernd gleichgerichtet."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "LSF: örtlich begrenzte Richtungsänderung mit weitgehend achsparallelem Verlauf außerhalb der Störzone; GSF bleibt über eine große Länge gleichgerichtet.",
-        "DW: Drehwuchs bezeichnet eine mögliche wuchsbedingte Ursache. Aus normalen Prüffotos ist diese Ursache meist nicht von einschnittbedingter Schrägfaser zu trennen.",
-        "Spl HB und LR: Splitter und Risse können der Faser folgen und deshalb als Faserindikatoren dienen, sind aber selbst keine GSF.",
-        "Jahrringgrenzen allein sind kein hinreichender Nachweis der Faserrichtung."
+        "LSF beschreibt eine örtlich begrenzte Faserumlenkung mit geraderem beziehungsweise achsparallelerem Verlauf außerhalb der Störzone.",
+        "Ein längerer, deutlich schräger Riss oder Bruchverlauf ohne eindeutig sichtbaren Faserverlauf erlaubt nur einen vermuteten GSF-Vorschlag.",
+        "Ein kurzer schräger Riss unmittelbar um einen Ast spricht eher für LSF; ein nahezu brettparalleler Riss eher für LR.",
+        "Jahrring- beziehungsweise Fladerzeichnungen dürfen nicht automatisch als Faserrichtung interpretiert werden.",
+        "Splitter und Längsrisse können der Faser folgen und als Indiz dienen, sind selbst aber keine GSF."
       ],
-      "benoetigte_fotoansichten": [
-        "Übersichtsaufnahme mindestens einer vollständigen Breitseite mit sichtbarer Probenlängsachse und Maßstab.",
-        "Gegenüberliegende Breitseite und beide Schmalseiten zur Beurteilung der räumlichen Faserneigung.",
-        "Detailaufnahme eines belastbaren Faserindikators und eine Aufnahme der Bruchzone."
+      "nicht_vergeben_wenn": [
+        "Nur ein kurzer, örtlich begrenzter schräger Riss beziehungsweise Bruchverlauf sichtbar ist.",
+        "Der sichtbare Riss beziehungsweise Bruchverlauf nahezu parallel zur Brettlängsachse verläuft.",
+        "Die Richtungsänderung ausschließlich in einer klar begrenzten lokalen Zone liegt.",
+        "Nur Jahrring- oder Fladerzeichnung als vermeintliche Faserrichtung erkennbar ist."
+      ],
+      "unklar_wenn": [
+        "Weder belastbare Faserindikatoren noch Richtung und Ausdehnung eines längeren Riss- oder Bruchverlaufs beurteilbar sind.",
+        "Perspektive, Bildausschnitt oder Bildschärfe die Abgrenzung zwischen global und lokal nicht zulassen.",
+        "Die gegenüberliegenden Draufsichten widersprüchliche oder nicht zuordenbare Verläufe zeigen."
       ],
       "einschraenkungen_visuelle_erkennung": [
-        "Ohne sichtbare Risse, Harzkanäle, Poren, Holzstrahlen oder freiliegende Fasern ist der Faserwinkel aus einem normalen Farbfoto nicht zuverlässig bestimmbar.",
-        "Eine Einzelansicht erfasst keine Faserneigung in Dickenrichtung.",
-        "Die Mindestlänge für die Bezeichnung global und die zulässige Winkelstreuung sind im Laborcodebuch noch festzulegen.",
-        "Eine tatsächliche Festigkeitsminderung oder Bruchursache kann aus dem Foto nicht quantifiziert werden."
+        "Die vorhandenen Draufsichten zeigen keine Faserneigung in Dickenrichtung.",
+        "Ein Riss- oder Bruchverlauf ist nur indirekte Evidenz für GSF und muss ohne eindeutig sichtbaren Faserverlauf als vermutet gekennzeichnet werden.",
+        "Die Mindestlänge für die Bezeichnung global und die zulässige Winkelstreuung sind laborintern noch nicht festgelegt.",
+        "Eine tatsächliche Festigkeitsminderung oder Bruchursache kann aus den Fotos nicht quantifiziert werden."
       ],
-      "nicht_zulaessige_ursachenaussage": "GSF darf als sichtbares Merkmal vergeben werden; eine ursächliche Auslösung des Bruchs ist ohne Messdaten und räumliche Bruchanalyse nicht nachgewiesen.",
+      "nicht_zulaessige_ursachenaussage": "GSF darf als sichtbares Merkmal vorgeschlagen werden; eine ursächliche Auslösung des Bruchs ist ohne Messdaten und räumliche Bruchanalyse nicht nachgewiesen.",
       "fachlicher_pruefstatus": {
         "status": "bedingt_geeignet",
-        "begruendung": "Faserneigung und ihre mechanische Relevanz sind fachlich belegt. Für die Trennung global/lokal fehlt eine normativ bestätigte fotografische Längenschwelle.",
+        "begruendung": "Faserneigung und ihre mechanische Relevanz sind fachlich belegt. Für die Trennung global/lokal fehlt eine normativ bestätigte fotografische Längenschwelle. Die Verwendung eines längeren schrägen Riss- oder Bruchverlaufs als indirekte Evidenz ist eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
           "Bezugs- und Mindestlänge für global festlegen.",
           "Zulässige Änderung des lokalen Faserwinkels innerhalb einer GSF-Klasse festlegen.",
           "Festlegen, welche Oberflächenindikatoren im vorhandenen Bildmaterial zuverlässig sichtbar sind."
         ]
-      }
+      },
+      "literaturquellen": [
+        "Hunger, F.; van de Kuilen, J.-W.G. (2018): Slope of grain measurement: a tool to improve machine strength grading by detecting top ruptures. Wood Science and Technology 52(3), 821–838. doi:10.1007/s00226-018-1000-7",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz."
+      ]
     },
     {
       "code": "LSF",
       "name": "Lokale Schrägfaser",
       "klassentyp": "sichtbares_holzmerkmal",
-      "klassifikationsziel": "Räumlich begrenzte Faserabweichung gegenüber einem außerhalb der Zone weitgehend achsparallelen Faserverlauf.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Belastbare Faserindikatoren zeigen in einer begrenzten Zone eine deutliche Krümmung, Umlenkung oder Richtungsänderung.",
-        "Vor und nach der Zone ist an derselben Fläche ein deutlich geraderer, achsparalleler Verlauf erkennbar.",
-        "Ein Ast oder eine andere sichtbare Störung kann im Zentrum liegen, ist aber keine notwendige Bedingung für das Label LSF."
+      "klassifikationsziel": "Lokale Schrägfaser liegt vor, wenn ein schräger Riss- beziehungsweise Faserverlauf nur innerhalb eines örtlich begrenzten Bereichs von der Brettlängsrichtung abweicht, häufig in unmittelbarer Umgebung eines Seiten- oder Kantenastes.",
+      "positive_bildmerkmale": [
+        "In einer örtlich begrenzten Zone ist eine Krümmung, Umlenkung oder Richtungsänderung belastbarer Faserindikatoren sichtbar.",
+        "Eine kurze, lokal begrenzte schräge Riss- oder Bruchzone um einen Ast ist sichtbar, besonders wenn der Verlauf am Ast vorbeiführt.",
+        "Die lokale Umlenkung liegt häufig im Bereich eines Astes oder einer anderen sichtbaren Holzstörung.",
+        "Außerhalb der Störzone ist auf derselben sichtbaren Fläche ein geraderer beziehungsweise achsparallelerer Verlauf erkennbar."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "GSF: über eine große Länge gleichgerichtete Neigung ohne klar begrenzte Rückkehr zum achsparallelen Verlauf.",
-        "KA oder SA: Astklassen benennen den sichtbaren Ast; LSF benennt die Faserumlenkung. Beide Labels dürfen gleichzeitig vorkommen.",
-        "WB: Die Entstehung durch einen Wipfelbruch darf aus der Faserumlenkung allein nicht abgeleitet werden.",
-        "Bruchzickzack oder schräger Bruch allein genügt nicht, wenn der Faserverlauf außerhalb der Bruchzone nicht sichtbar ist."
+        "GSF erstreckt sich gleichgerichtet über einen größeren sichtbaren Bereich.",
+        "Ein nahezu brettparalleler Riss spricht eher für LR.",
+        "Ein sichtbarer Ast allein beweist keine lokale Schrägfaser.",
+        "LSF darf zusätzlich zu KA oder SA vorgeschlagen werden, wenn die Faserumlenkung tatsächlich sichtbar ist.",
+        "GSF und LSF dürfen gemeinsam vorgeschlagen werden, wenn ein großräumiger schräger Verlauf und eine davon unterscheidbare lokale Abweichung sichtbar sind."
       ],
-      "benoetigte_fotoansichten": [
-        "Übersicht der gesamten betroffenen Breitseite einschließlich gerader Referenzbereiche vor und nach der Störzone.",
-        "Detailaufnahme der Störzone mit Maßstab.",
-        "Angrenzende Schmalseite und möglichst gegenüberliegende Breitseite.",
-        "Bruchzonenaufnahme, falls die räumliche Beziehung zum Bruch dokumentiert werden soll."
+      "nicht_vergeben_wenn": [
+        "Nur ein Ast ohne erkennbare lokale Faserumlenkung sichtbar ist.",
+        "Die Abweichung über einen größeren Bereich annähernd gleichgerichtet verläuft und damit eher GSF entspricht.",
+        "Weder eine lokale schräge Riss- beziehungsweise Bruchzone noch eine lokale Faserumlenkung sichtbar ist."
+      ],
+      "unklar_wenn": [
+        "Nicht sicher entschieden werden kann, ob eine kurze lokale Abweichung oder nur eine unklare Bruchkontur vorliegt.",
+        "Faserindikatoren durch Beleuchtung, Schmutz oder geringe Auflösung nicht verlässlich verfolgt werden können.",
+        "Die lokale Zone nur auf einer Aufnahme teilweise sichtbar ist."
       ],
       "einschraenkungen_visuelle_erkennung": [
         "Lokale Faserabweichung im Probeninneren bleibt unsichtbar.",
-        "Die Winkelmessung aus perspektivisch verzerrten Fotos ist ohne Kamerakalibrierung nicht belastbar.",
-        "Die minimale beziehungsweise maximale Ausdehnung einer lokalen Zone ist laborintern noch nicht definiert.",
-        "Die Studie von Hunger und van de Kuilen zu Wipfelbrüchen bestätigt nicht unmittelbar die Astumgebung, da diese dort ausgeschlossen war."
+        "Winkelmessungen aus perspektivischen Fotos sind ohne Kamerakalibrierung nicht belastbar.",
+        "Die minimale beziehungsweise maximale Ausdehnung einer lokalen Zone ist laborintern noch nicht definiert."
       ],
       "nicht_zulaessige_ursachenaussage": "LSF beschreibt die sichtbare Faserabweichung. Ob sie oder ein begleitender Ast den Bruch ausgelöst hat, bleibt offen.",
       "fachlicher_pruefstatus": {
         "status": "bedingt_geeignet",
-        "begruendung": "Lokale Faserabweichung ist fachlich belegt und bildlich grundsätzlich erfassbar; die laborinterne Zonengrenze und Messmethode fehlen.",
+        "begruendung": "Lokale Faserabweichung ist fachlich belegt und bildlich grundsätzlich erfassbar; die laborinterne Zonengrenze und Messmethode fehlen. Die kurze lokale schräge Riss- oder Bruchzone um einen Ast ist eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
           "Räumliche Ausdehnung der lokalen Zone definieren.",
-          "Mindestwinkel oder Mindeständerung des Faserwinkels festlegen.",
-          "Regel für LSF ohne sichtbaren Ast oder ohne sichtbares Störungszentrum festlegen."
+          "Eine mögliche quantitative Winkelregel ist fachlich festzulegen und darf vom Modell nicht erfunden werden.",
+          "Regel für LSF ohne sichtbaren Ast oder sichtbares Störungszentrum festlegen."
         ]
-      }
+      },
+      "literaturquellen": [
+        "Hunger, F.; van de Kuilen, J.-W.G. (2018): Slope of grain measurement: a tool to improve machine strength grading by detecting top ruptures. Wood Science and Technology 52(3), 821–838. doi:10.1007/s00226-018-1000-7",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
     },
     {
       "code": "KA",
       "name": "Kantenast",
       "klassentyp": "sichtbares_holzmerkmal",
-      "klassifikationsziel": "Astanschnitt an einer Längskante, dessen sichtbare Astfläche über diese Kante auf angrenzende Flächen reicht.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Der Astanschnitt berührt eine Längskante des Prüfkörpers.",
-        "Zusammengehörige Astanteile sind auf der Breitseite und der angrenzenden Schmalseite sichtbar.",
-        "Astholz beziehungsweise Astloch und die umgebende Faserumlenkung sind als zusammengehörige Struktur erkennbar."
+      "klassifikationsziel": "Ein Kantenast ist ein Ast, dessen sichtbarer Anschnitt eine Längskante des Prüfkörpers erreicht beziehungsweise anschneidet.",
+      "positive_bildmerkmale": [
+        "Der sichtbare Astanschnitt befindet sich unmittelbar an einer sichtbaren Brettkante.",
+        "Der Astanschnitt berührt oder unterbricht die Längskante in mindestens einer vorhandenen Draufsicht.",
+        "Eine begleitende Faserumlenkung oder ein Ausbruch kann sichtbar sein, ist aber keine notwendige Bedingung."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "SA: Ast innerhalb der Breitseite ohne Berührung der Längskante.",
-        "SSA: gesonderte Schmalseitenast-Geometrie; die eindeutige laborinterne Grenze zu KA muss anhand der Querschnittsgeometrie und Referenzbilder festgelegt werden.",
-        "FLA: annähernd längs zur Astachse aufgeschnittener, langgestreckter Ast; die bloße Lage an der Kante genügt für diese Abgrenzung nicht.",
-        "LSF: Faserumlenkung ist ein zusätzliches Merkmal und ersetzt das Astlabel nicht."
+        "SA liegt innerhalb der sichtbaren Breitseite, ohne eine Längskante zu berühren.",
+        "Da keine gesonderten Schmalseitenaufnahmen vorhanden sind, darf der Verlauf des Astes auf der Schmalseite nicht als sicher gesehen behauptet werden.",
+        "LSF bezeichnet eine zusätzlich sichtbare Faserumlenkung und ersetzt das Astlabel nicht."
       ],
-      "benoetigte_fotoansichten": [
-        "Breitseite mit vollständig sichtbarer Längskante.",
-        "Direkte Aufnahme der angrenzenden Schmalseite.",
-        "Schrägaufnahme der gemeinsamen Kante zur Zuordnung beider Astanteile.",
-        "Bruchfläche und zweite Bruchhälfte, falls die Lagebeziehung zum Bruch beurteilt werden soll."
+      "nicht_vergeben_wenn": [
+        "Zwischen dem sichtbaren Astanschnitt und der beziehungsweise den im Bereich des Astes sichtbaren Längskanten eindeutig Holz liegt.",
+        "Nur eine Faserumlenkung ohne erkennbaren Astanschnitt sichtbar ist.",
+        "Eine Kantenberührung allein wegen abgeschnittenem Bildrand vermutet wird."
+      ],
+      "unklar_wenn": [
+        "Die betreffende Längskante im Bereich des Astes nicht sichtbar oder nicht sicher zuzuordnen ist.",
+        "Astanschnitt, Ausbruch und Bruchkante visuell nicht sicher voneinander getrennt werden können.",
+        "Die Kantenlage auf den verfügbaren Draufsichten widersprüchlich erscheint."
       ],
       "einschraenkungen_visuelle_erkennung": [
-        "Mit nur einer Breitseitenaufnahme ist KA nicht sicher von SA oder SSA unterscheidbar.",
+        "Ohne Schmalseitenansicht bleibt der räumliche Astverlauf nicht beurteilbar.",
         "Der innere Astverlauf und der tatsächliche Querschnittsverlust sind fotografisch nicht bestimmbar.",
-        "Normgerechte Astmaße erfordern Maßstab, entzerrte Ansichten und die festgelegte Messregel.",
-        "Bruchnähe beweist keine ursächliche Bruchauslösung."
+        "Normgerechte Astmaße erfordern eine gesonderte Messregel; aus den Bildern dürfen keine Schwellen erfunden werden."
       ],
-      "nicht_zulaessige_ursachenaussage": "KA darf als Astgeometrie klassifiziert werden. Selbst wenn der Bruch durch den Ast läuft, ist die mechanische Hauptursache nicht allein durch Fotos nachgewiesen.",
+      "nicht_zulaessige_ursachenaussage": "KA darf als sichtbare Astgeometrie vorgeschlagen werden. Selbst wenn der Bruch durch den Ast läuft, ist die mechanische Hauptursache nicht allein durch Fotos nachgewiesen.",
       "fachlicher_pruefstatus": {
-        "status": "vorlaeufig_bestaetigt",
-        "begruendung": "Die geometrische Grunddefinition ist in den eingesehenen Erläuterungen zur DIN 4074-1 nachvollziehbar. Die konkrete Laborabgrenzung zu SSA ist noch offen.",
+        "status": "bedingt_geeignet",
+        "begruendung": "Die geometrische Grunddefinition ist in den eingesehenen Erläuterungen zur DIN 4074-1 nachvollziehbar. Die Beurteilung wird hier ausdrücklich auf die im Bereich des Astes sichtbaren Längskanten begrenzt. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
-          "Verbindliche Abgrenzung KA zu SSA für die verwendeten Probenquerschnitte festlegen.",
-          "Entscheiden, ob ein nur minimaler Anschnitt auf der zweiten Fläche für KA genügt.",
+          "Verbindliche Laborabgrenzung zu Schmalseitenästen für die verwendeten Probenquerschnitte festlegen.",
+          "Festlegen, ob ein nur minimaler sichtbarer Kantenanschnitt für KA genügt.",
           "Festlegen, ob Astlöcher und teilweise herausgebrochene Äste gleich behandelt werden."
         ]
-      }
+      },
+      "literaturquellen": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz.",
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie."
+      ]
     },
     {
       "code": "SA",
       "name": "Seitenast",
       "klassentyp": "sichtbares_holzmerkmal",
-      "klassifikationsziel": "Astanschnitt auf einer Breitseite, der keine Längskante berührt.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Runder bis ovaler Astanschnitt liegt vollständig innerhalb einer Breitseite.",
-        "Zwischen Astanschnitt und beiden Längskanten ist auf der entzerrten Breitseitenansicht Holz sichtbar.",
-        "Auf den angrenzenden Schmalseiten ist kein zusammengehöriger Astanteil erkennbar."
+      "klassifikationsziel": "Ein Seitenast ist ein vollständig sichtbarer Astanschnitt auf der Breitseite des Prüfkörpers, der keine Brettkante berührt.",
+      "positive_bildmerkmale": [
+        "Ein runder, ovaler oder anderweitig erkennbarer Astanschnitt ist vollständig auf der sichtbaren Breitseite abgebildet.",
+        "Zwischen dem Astanschnitt und der beziehungsweise den im Bereich des Astes sichtbaren Längskanten befindet sich Holz.",
+        "Eine lokale Faserumlenkung um den Ast kann sichtbar sein und darf zusätzlich als LSF vorgeschlagen werden."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "KA: berührt eine Längskante und setzt sich auf die angrenzende Schmalseite fort.",
-        "SSA: primär auf der Schmalseite beziehungsweise mit besonderem Verlauf von der Schmalseite in den Querschnitt; Laborregel erforderlich.",
-        "FLA: deutlich längsgestreckter Astanschnitt, der annähernd parallel zur Astlängsachse geschnitten wurde.",
-        "AA: mehrere Äste innerhalb der festgelegten Bezugslänge; SA kann zusätzlich als Einzelastgeometrie vergeben werden, wenn dies im Labelkonzept vorgesehen ist."
+        "KA berührt oder unterbricht eine sichtbare Längskante.",
+        "Eine Faserumlenkung kann zusätzlich als LSF erfasst werden.",
+        "Ist der Randbereich im Bereich des Astes nicht sichtbar, dürfen KA und SA nicht mit unbegründeter Sicherheit unterschieden werden."
       ],
-      "benoetigte_fotoansichten": [
-        "Entzerrte Aufnahme der vollständigen betroffenen Breitseite mit beiden Längskanten.",
-        "Beide angrenzenden Schmalseiten zum Ausschluss eines Kanten- oder Schmalseitenastes.",
-        "Gegenüberliegende Breitseite zur Dokumentation eines möglichen durchlaufenden Astes.",
-        "Detailaufnahme mit Maßstab und Bruchflächenansicht."
+      "nicht_vergeben_wenn": [
+        "Der Astanschnitt eine sichtbare Längskante berührt oder unterbricht.",
+        "Nur eine Faserumlenkung ohne erkennbaren Astanschnitt sichtbar ist.",
+        "Der vermeintliche Ast lediglich aus einer unklaren Verfärbung ohne erkennbare Aststruktur besteht."
+      ],
+      "unklar_wenn": [
+        "Die für die Abgrenzung relevante Längskante beziehungsweise die relevanten Längskanten im Bereich des Astes nicht sichtbar sind.",
+        "Der Astanschnitt nicht vollständig sichtbar oder teilweise durch Bruch, Splitter oder Bildrand verdeckt ist.",
+        "Eine minimale Kantenberührung aus den Draufsichten nicht sicher beurteilt werden kann."
       ],
       "einschraenkungen_visuelle_erkennung": [
-        "Der Laborbegriff Seitenast ist ohne verbindliches Bild- und Messhandbuch nicht vollständig reproduzierbar.",
-        "Ein verdeckter oder nur minimaler Austritt auf einer anderen Fläche kann übersehen werden.",
-        "Astdurchmesser, Astflächenverhältnis und innerer Astverlauf sind aus einer Perspektivaufnahme nicht zuverlässig messbar.",
+        "Ein verdeckter oder nur auf einer nicht fotografierten Schmalseite austretender Astanteil bleibt nicht beurteilbar.",
+        "Astdurchmesser, Astflächenverhältnis und innerer Astverlauf sind aus den Draufsichten nicht zuverlässig messbar.",
         "Die Lage im Bruchbereich beweist keine ursächliche Wirkung."
       ],
       "nicht_zulaessige_ursachenaussage": "SA benennt den sichtbaren Asttyp. Die Aussage, dass dieser Ast den Bruch verursacht hat, erfordert zusätzliche mechanische und räumliche Evidenz.",
       "fachlicher_pruefstatus": {
         "status": "bedingt_geeignet",
-        "begruendung": "Der Seitenast ist in den eingesehenen DIN-Erläuterungen als Astgeometrie dargestellt. Die hier verwendete Regel 'vollständig innerhalb der Breitseite' muss als Laborregel bestätigt werden.",
+        "begruendung": "Der Seitenast ist in den eingesehenen DIN-Erläuterungen als Astgeometrie dargestellt. Die hier verwendete Draufsichtregel bezieht sich auf die im Bereich des Astes sichtbaren Längskanten und muss als Laborregel bestätigt werden. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
           "Laborinterne Definition von SA schriftlich bestätigen.",
-          "Umgang mit durchlaufenden Ästen und einem Austritt auf der gegenüberliegenden Breitseite festlegen.",
-          "Koexistenzregeln für SA, AA und LSF festlegen."
+          "Umgang mit durchlaufenden Ästen und nicht sichtbaren Austritten festlegen.",
+          "Koexistenzregeln für SA und LSF festlegen."
         ]
-      }
+      },
+      "literaturquellen": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz.",
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie."
+      ]
     },
     {
       "code": "sp HB",
       "name": "Spröder Holzbruch",
       "klassentyp": "sichtbares_bruchbild",
-      "klassifikationsziel": "Makroskopisch kurze, überwiegend quer verlaufende Bruchzone mit geringem sichtbarem Faserauszug.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Die Bruchzone ist im Verhältnis zur Probenbreite kurz und überwiegend quer zur lokalen Faserrichtung orientiert.",
-        "Auf beiden Bruchhälften sind nur wenige beziehungsweise kurze herausgezogene Faserbündel sichtbar.",
-        "Die Bruchflächen wirken makroskopisch vergleichsweise eben; die beiden Hälften lassen sich visuell weitgehend zuordnen."
+      "klassifikationsziel": "Diese Klasse beschreibt ausschließlich eine vergleichsweise kurze, überwiegend gerade oder quer zur Faserrichtung verlaufende sichtbare Bruchstelle mit wenig bis keiner Splitterbildung; sie ist kein Nachweis des zeitlichen Bruchverhaltens oder einer bestimmten Materialzähigkeit.",
+      "positive_bildmerkmale": [
+        "Die sichtbare Bruchzone ist vergleichsweise kurz und verläuft überwiegend quer zur lokalen Faserrichtung.",
+        "Die Bruchfläche wirkt eher abrupt abgetrennt und kann etwas körnig oder unregelmäßig sein.",
+        "Es sind wenige bis keine Splitter, wenige beziehungsweise kurze herausgezogene Fasern und nur geringe Längsaufspaltungen sichtbar."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "Spl HB: deutlich längere, gezackte Bruchzone mit langen Splittern und starkem Faserauszug.",
-        "KZGB: Bruchlage am Zinkengrund mit erkennbarem Keilzinkenprofil; diese Lageklasse hat Vorrang als gesondertes Merkmal.",
-        "GSF oder LSF: schräger Verlauf kann durch Faserabweichung entstehen; die Faserklasse ist getrennt zu vergeben.",
-        "BF, Bu oder DF: mögliche sichtbare Begleitmerkmale beziehungsweise Ursachenhypothesen, nicht aus sp HB abzuleiten."
+        "Spl HB weist ausgeprägte Splitterbildung, herausgezogene Faserbündel und eine stärker längs ausgedehnte zerfaserte Bruchzone auf.",
+        "Spl HB und sp HB dürfen gemeinsam vorgeschlagen werden, wenn unterschiedliche sichtbare Bruchbereiche jeweils die entsprechenden Kriterien erfüllen.",
+        "Ein Prüfkörper muss nicht automatisch als sp HB klassifiziert werden.",
+        "Bei gemischten oder unzureichend sichtbaren Bruchflächen ist Unsicherheit anzugeben."
       ],
-      "benoetigte_fotoansichten": [
-        "Beide Bruchhälften in gleicher Orientierung.",
-        "Je eine senkrechte und schräge Nahaufnahme der vollständigen Bruchfläche mit Maßstab.",
-        "Seitenansichten der Bruchzone zur Erfassung kurzer verdeckter Splitter.",
-        "Übersicht des Prüfkörpers zur Lage relativ zu Ast, Keilzinkung und Einspannung."
+      "nicht_vergeben_wenn": [
+        "Der betrachtete Bruchbereich ausgeprägte lange Splitter, zahlreiche herausgezogene Faserbündel und eine stark längs ausgedehnte Bruchzone zeigt.",
+        "Die Bruchzone in den vorhandenen Bildern nicht ausreichend sichtbar ist.",
+        "Nur aus einem fehlenden Spl-HB-Nachweis auf sp HB geschlossen würde."
+      ],
+      "unklar_wenn": [
+        "Kurze und splitternde Bereiche nicht räumlich getrennt oder nicht zuverlässig den jeweiligen Bruchmorphologien zugeordnet werden können.",
+        "Bruchflächen durch Lage der Bruchstücke, Unschärfe oder fehlende Detailansicht verdeckt sind.",
+        "Möglicher nachträglicher Splitterverlust das Erscheinungsbild verändert haben kann."
       ],
       "einschraenkungen_visuelle_erkennung": [
-        "Das Last-Verformungsverhalten und damit mechanische Sprödigkeit sind aus einem Nachbruchfoto nicht messbar.",
+        "Das Last-Verformungsverhalten und damit mechanische Sprödigkeit sind aus Nachbruchfotos nicht messbar.",
         "Eine feste Grenze der Bruchlänge beziehungsweise des Faserauszugs ist noch nicht fachlich kalibriert.",
-        "Transport- oder Ausbauverluste können Splitter entfernen und einen Bruch fälschlich glatt erscheinen lassen.",
-        "Die Ursache des Erscheinungsbildes, etwa Druckschaden, Fäule oder Reaktionsholz, darf nicht aus der Morphologie allein abgeleitet werden."
+        "Transport- oder Ausbauverluste können Splitter entfernen und einen Bruch fälschlich glatt erscheinen lassen."
       ],
       "nicht_zulaessige_ursachenaussage": "Das Label beschreibt ausschließlich die sichtbare Bruchmorphologie. Es weist weder Materialversprödung noch eine konkrete Vorschädigung oder Ursache nach.",
       "fachlicher_pruefstatus": {
         "status": "fachlich_offen",
-        "begruendung": "Die makroskopische Gegenüberstellung glatter/kurzer und splitternder Brüche ist fachlich plausibel. Die genaue deutsche Laborklasse und eine reproduzierbare Grenze für axiale Zugversuche sind durch die eingesehenen Quellen nicht abschließend bestätigt.",
+        "begruendung": "Die makroskopische Gegenüberstellung kurzer, wenig zerfaserter und splitternder Brüche ist fachlich plausibel. Eine reproduzierbare fotografische Grenze für axiale Zugversuche ist durch die eingesehenen Quellen nicht abschließend bestätigt. Die Beschreibung und die gemeinsame Vergabe bei getrennten Bruchbereichen sind eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
           "Referenzbildsatz und messbare Grenze zu Spl HB festlegen.",
-          "Klären, ob gemischte Brüche beide Labels oder ein eigenes Unsicherheitslabel erhalten.",
-          "Klären, ob 'spröde' ohne Kraft-Verformungs-Daten im Klassennamen beibehalten werden soll."
+          "Regel für gemischte Brüche definieren.",
+          "Klären, ob der Begriff spröde ohne Kraft-Verformungs-Daten im Klassennamen beibehalten werden soll."
         ]
-      }
+      },
+      "literaturquellen": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI.",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
     },
     {
       "code": "Spl HB",
       "name": "Splitterholzbruch",
       "klassentyp": "sichtbares_bruchbild",
-      "klassifikationsziel": "Makroskopisch stark zerfaserte, längs ausgedehnte Bruchzone mit langen Splittern oder herausgezogenen Faserbündeln.",
-      "eindeutige_visuelle_erkennungsmerkmale": [
-        "Mehrere lange, spitz auslaufende Splitter oder Faserbündel stehen aus mindestens einer Bruchhälfte hervor.",
-        "Die Bruchzone erstreckt sich sichtbar in Faserrichtung und enthält mehrere Längsaufspaltungen.",
-        "Die Bruchkante ist deutlich gezackt oder verzahnt und die Bruchhälften passen makroskopisch nicht glatt zusammen."
+      "klassifikationsziel": "Splitterholzbruch bezeichnet eine deutlich zerfaserte sichtbare Bruchstelle mit einzelnen, teilweise langen Holzsplittern, herausstehenden oder abgetrennten Fasern und einem unregelmäßigen, zackigen Bruchverlauf.",
+      "positive_bildmerkmale": [
+        "Lange, teilweise spitz auslaufende Holzsplitter sind sichtbar.",
+        "Herausgezogene Faserbündel und deutliche Längsaufspaltungen liegen im Bereich der Bruchzone vor.",
+        "Die Bruchkonturen wirken unregelmäßig, gezackt oder verzahnt."
       ],
       "abgrenzung_zu_aehnlichen_klassen": [
-        "sp HB: kurze, überwiegend quer verlaufende und vergleichsweise ebene Bruchzone mit geringem Faserauszug.",
-        "LR: einzelner, klar begrenzter Längsriss außerhalb beziehungsweise vor der Hauptbruchzone; Spl HB umfasst mehrere frische Aufspaltungen im Bruchbereich.",
-        "GSF oder LSF: Splitter folgen häufig der Faser und können deren Richtung anzeigen; das Bruchbild allein entscheidet nicht, ob die Faserabweichung global oder lokal ist.",
-        "RiSch: Trennung entlang einer einzelnen Jahrringgrenze ist gesondert zu beurteilen."
+        "sp HB beschreibt eine vergleichsweise kurze und wenig zerfaserte Bruchzone.",
+        "Spl HB und sp HB dürfen gemeinsam vorgeschlagen werden, wenn unterschiedliche sichtbare Bruchbereiche jeweils die entsprechenden Kriterien erfüllen.",
+        "Ein einzelner Längsriss ist nicht automatisch ein Splitterholzbruch.",
+        "Eine flächige oder schichtartige Ablösung kann auf RiSch hinweisen.",
+        "Spl HB kann gemeinsam mit anderen sichtbaren Holzmerkmalen oder RiSch auftreten."
       ],
-      "benoetigte_fotoansichten": [
-        "Beide Bruchhälften vollständig und in gleicher Orientierung.",
-        "Seitliche Übersichten entlang der Probenlängsachse zur Erfassung der Ausdehnung.",
-        "Nahaufnahmen der längsten Splitter und der Bruchflächen mit Maßstab.",
-        "Übersicht vor oder unmittelbar nach dem Ausbau, um nachträglichen Splitterverlust zu dokumentieren."
+      "nicht_vergeben_wenn": [
+        "Nur ein einzelner schmaler Längsriss ohne stark zerfaserte Bruchzone sichtbar ist.",
+        "Lediglich eine zusammenhängende schichtartige Ablösung ohne ausgeprägte Splitterbildung vorliegt.",
+        "Der betrachtete Bruchbereich kurz, überwiegend gerade oder quer und wenig zerfasert erscheint."
+      ],
+      "unklar_wenn": [
+        "Nur ein kleiner Ausschnitt der Bruchzone sichtbar ist.",
+        "Splitter durch Überlagerung, Bildunschärfe oder möglichen nachträglichen Verlust nicht zuverlässig beurteilt werden können.",
+        "Kurze und splitternde Bruchanteile nicht räumlich getrennt oder nicht zuverlässig den jeweiligen Bruchmorphologien zugeordnet werden können."
       ],
       "einschraenkungen_visuelle_erkennung": [
         "Eine feste Mindestlänge oder Mindestanzahl von Splittern ist noch nicht fachlich kalibriert.",
-        "Abgebrochene oder beim Transport verlorene Splitter führen zu Fehlklassifikation.",
-        "Ein splitterndes Bild beweist weder hohe Zähigkeit noch fehlerfreies oder besonders festes Holz.",
-        "Bei gemischten Bruchflächen kann nur eine segmentweise Annotation oder eine Multi-Label-Regel die Morphologie angemessen abbilden."
+        "Abgebrochene oder beim Transport verlorene Splitter können zur Fehlklassifikation führen.",
+        "Ein splitterndes Bild beweist weder hohe Zähigkeit noch fehlerfreies oder besonders festes Holz."
       ],
-      "nicht_zulaessige_ursachenaussage": "Spl HB beschreibt den sichtbaren Bruch. Aussagen wie 'zähes', 'gesundes', 'fehlerfreies' oder 'hochfestes Holz' sind aus dem Foto allein nicht zulässig.",
+      "nicht_zulaessige_ursachenaussage": "Spl HB beschreibt das sichtbare Bruchbild. Aussagen wie zähes, gesundes, fehlerfreies oder hochfestes Holz sind aus den Fotos allein nicht zulässig.",
       "fachlicher_pruefstatus": {
         "status": "fachlich_offen",
-        "begruendung": "Splitternde Zugbrüche parallel zur Faser sind in eingesehenen Facharbeiten beschrieben. Die laborinterne deutsche Klasse und ihre makroskopische Schwelle sind noch nicht validiert.",
+        "begruendung": "Splitternde Zugbrüche parallel zur Faser sind in eingesehenen Facharbeiten beschrieben. Die laborinterne Klasse und ihre makroskopische Schwelle sind noch nicht validiert. Die sichtbare Beschreibung und die gemeinsame Vergabe bei getrennten Bruchbereichen sind eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
         "offene_punkte": [
           "Messbare Schwelle für Bruchlänge, Splitterlänge und Faserauszug festlegen.",
           "Regel für gemischte Brüche definieren.",
           "Referenzbilder derselben Holzart, Feuchte und Probengeometrie fachlich annotieren lassen."
         ]
-      }
+      },
+      "literaturquellen": [
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI.",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg.",
+        "Dinwoodie, J.M. (2000): Timber: Its Nature and Behaviour. 2. Aufl., E & FN Spon, London."
+      ]
+    },
+    {
+      "code": "RiSch",
+      "name": "Ringschäle",
+      "klassentyp": "sichtbares_holzmerkmal",
+      "klassifikationsziel": "Ringschäle bezeichnet eine sichtbare Trennung entlang einer gekrümmten, jahrringähnlichen Struktur, bei der sich ein zusammenhängender Holzbereich schicht- oder schalenartig ablöst beziehungsweise aufspaltet. Ein Nachweis der tatsächlichen Jahrringgrenze wird nicht verlangt.",
+      "positive_bildmerkmale": [
+        "Ein zusammenhängender Holzbereich hat sich in der Draufsicht schicht- oder schalenartig vom restlichen Brett gelöst.",
+        "Die Ablösung beziehungsweise Aufspaltung ist deutlich erkennbar und teilweise abgerundet oder bogenförmig.",
+        "Die Ablösung ist länglich und gegebenenfalls flächig über einen größeren Abschnitt der Bruchzone ausgedehnt.",
+        "Die Trennung wirkt wie das Ablösen einer zusammenhängenden Holzschicht.",
+        "Wenn Jahrringgrenzen sichtbar sind, kann ihre Übereinstimmung mit dem Trennverlauf als zusätzliches Indiz dienen."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "Spl HB zeigt vor allem einzelne lange Splitter, herausgezogene Faserbündel und eine stark zerfaserte Bruchzone.",
+        "LR beschreibt einen längs verlaufenden Riss ohne deutlich schichtartig abgelösten Holzbereich.",
+        "RiSch und Spl HB können gleichzeitig vorgeschlagen werden, wenn beide Merkmalsgruppen sichtbar sind."
+      ],
+      "nicht_vergeben_wenn": [
+        "Nur einzelne lange Splitter oder Faserbündel ohne zusammenhängende schichtartige Ablösung sichtbar sind.",
+        "Nur ein schmaler Längsriss ohne flächig oder schalenartig abgelösten Holzbereich erkennbar ist.",
+        "Nur eine gekrümmte Bruchlinie ohne erkennbare schichtartige Trennung sichtbar ist."
+      ],
+      "unklar_wenn": [
+        "Nicht sicher entschieden werden kann, ob eine schichtartige Ablösung beziehungsweise Aufspaltung tatsächlich sichtbar ist.",
+        "Splittern, Riss und flächige Ablösung auf den Bildern nicht zuverlässig voneinander getrennt werden können.",
+        "Bildausschnitt oder Überlagerung der Bruchstücke die Ausdehnung der Trennung verdeckt."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "Die sichtbare Morphologie beweist keine botanisch nachgewiesene Bindung an eine Jahrringgrenze.",
+        "Ein Nachweis der Jahrringgrenze sowie Hirnholz- oder Querschnittsansichten werden nicht vorausgesetzt.",
+        "Ob die Trennung vor oder während des Versuchs entstand, ist aus den Nachbruchfotos nicht sicher bestimmbar."
+      ],
+      "nicht_zulaessige_ursachenaussage": "Die sichtbare Trennung darf weder automatisch als bereits vor dem Zugversuch bestehend noch als nachgewiesene Hauptversagensursache bezeichnet werden.",
+      "fachlicher_pruefstatus": {
+        "status": "bedingt_geeignet",
+        "begruendung": "Die fachliche Grunddefinition ist dokumentiert. Die Vergabe anhand einer deutlich sichtbaren gekrümmten, schichtartigen Ablösung ohne Nachweis der Jahrringgrenze ist eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Laborregel für die Vergabe RiSch bei sichtbarer schichtartiger Ablösung ohne nachweisbare Jahrringgrenze bestätigen.",
+          "Abgrenzung gemischter RiSch- und Spl-HB-Morphologien anhand fachlich bestätigter Beispiele kalibrieren.",
+          "Der Entstehungszeitpunkt bleibt ohne Vorher-Fotos offen."
+        ]
+      },
+      "literaturquellen": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz."
+      ]
+    },
+    {
+      "code": "LR",
+      "name": "Längsriss",
+      "klassentyp": "sichtbares_holzmerkmal_oder_bruchmerkmal",
+      "klassifikationsziel": "Ein Längsriss ist ein länglicher Riss beziehungsweise eine erkennbare Trennlinie, die nahezu parallel zur Brettlängsachse beziehungsweise zur seitlichen Brettkante verläuft.",
+      "positive_bildmerkmale": [
+        "Ein schmaler, länglicher Spalt mit erkennbaren Rissufern ist sichtbar.",
+        "Der Riss verläuft nahezu parallel zur Brettlängsachse beziehungsweise zur seitlichen Brettkante.",
+        "Der Riss kann innerhalb oder außerhalb der Bruchzone liegen."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "Spl HB umfasst eine stark zerfaserte Bruchzone mit ausgeprägten Splittern und mehreren Aufspaltungen.",
+        "RiSch beschreibt eine Trennung beziehungsweise schichtartige Ablösung entlang oder annähernd entlang einer Jahrringgrenze.",
+        "Ein deutlich schräger Verlauf über einen größeren Brettbereich spricht eher für GSF; eine kurze lokale schräge Zone eher für LSF.",
+        "Ein einzelner Längsriss darf nicht automatisch als Splitterholzbruch eingeordnet werden."
+      ],
+      "nicht_vergeben_wenn": [
+        "Nur eine äußere Schattenlinie, Oberflächenzeichnung oder Fuge zwischen den Bruchstücken ohne erkennbare Rissufer sichtbar ist.",
+        "Die sichtbare Struktur ausschließlich aus mehreren Splittern und einer stark zerfaserten Hauptbruchzone besteht.",
+        "Eine zusammenhängende schichtartige Ablösung statt eines schmalen Spalts vorliegt."
+      ],
+      "unklar_wenn": [
+        "Rissufer, Verlauf oder Bezug zur Brettlängsachse beziehungsweise seitlichen Brettkante nicht sicher erkennbar sind.",
+        "Nicht unterscheidbar ist, ob die Linie ein Riss, eine Jahrringzeichnung, ein Schatten oder die Bruchstückgrenze ist.",
+        "Der Entstehungszeitpunkt des Risses aus den Bildern nicht bestimmbar ist."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "Die Risstiefe ist auf den Draufsichten nicht messbar.",
+        "Der Entstehungszeitpunkt vor, während oder nach dem Versuch bleibt ohne zusätzliche Dokumentation offen.",
+        "Ob LR im Labor als vorhandenes Holzmerkmal oder als versuchsbedingtes Bruchmerkmal geführt wird, ist fachlich noch festzulegen."
+      ],
+      "nicht_zulaessige_ursachenaussage": "LR bezeichnet ausschließlich den sichtbaren Riss. Weder sein Entstehungszeitpunkt noch seine Rolle als Hauptversagensursache darf aus den Nachbruchfotos als nachgewiesen behauptet werden.",
+      "fachlicher_pruefstatus": {
+        "status": "fachlich_offen",
+        "begruendung": "Die visuelle Rissbeschreibung ist nutzbar. Die bestehende Fachdokumentation kennzeichnet ausdrücklich als offen, ob LR im Labor als vorhandenes Merkmal oder als Bruchbild gemeint ist. Der Bezug auf Brettlängsachse beziehungsweise Brettkante ist eine fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Festlegen, ob LR als Holzmerkmal, Bruchmerkmal oder kontextabhängig in beiden Rollen geführt wird.",
+          "Regel für die Abgrenzung eines einzelnen LR von mehreren Längsaufspaltungen bei Spl HB bestätigen.",
+          "Der Entstehungszeitpunkt darf ohne zusätzliche Evidenz nicht festgelegt werden."
+        ]
+      },
+      "literaturquellen": [
+        "EN 844:2019 – Rund- und Schnittholz – Terminologie.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz.",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München."
+      ]
+    },
+    {
+      "code": "Bu",
+      "name": "Buchs",
+      "klassentyp": "sichtbares_holzmerkmal",
+      "klassifikationsziel": "Buchs bezeichnet vorläufig einen auffällig dunkleren Holzbereich im Vergleich zum umgebenden Holz. Beruht der Vorschlag ausschließlich auf der Färbung, ist Bu als vermutet zu kennzeichnen. Die Gleichsetzung mit Druckholz bleibt eine offene fachliche Frage.",
+      "positive_bildmerkmale": [
+        "Ein zusammenhängender Holzbereich erscheint im Vergleich zum umgebenden Holz auffällig dunkler.",
+        "Eine rötlich-braune Zone kann als Angabe aus dem Gesamtkatalog berücksichtigt werden.",
+        "Sind keine weiteren bestätigten Kriterien sichtbar, erlaubt die dunklere Färbung nur einen vermuteten Bu-Vorschlag."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "sp HB beschreibt ein Bruchbild; Bu beschreibt ein mögliches Holzmerkmal. Beide dürfen gemeinsam vorgeschlagen werden.",
+        "Eine bloße Beleuchtungs-, Schatten- oder Weißabgleichabweichung ist kein Bu.",
+        "Die Bezeichnung Druckholz darf aus den Draufsichten nicht als bestätigt abgeleitet werden."
+      ],
+      "nicht_vergeben_wenn": [
+        "Die vermeintliche Zone plausibel durch Schatten, Schmutz, Nässe oder Bildwiedergabe erklärt werden kann.",
+        "Für die Entscheidung Hirnholz-, Querschnitts- oder Mikroskopiemerkmale vorausgesetzt werden müssten."
+      ],
+      "unklar_wenn": [
+        "Die Farbwirkung zwischen Aufnahmen widersprüchlich ist oder Weißabgleich und Beleuchtung keine verlässliche Beurteilung erlauben.",
+        "Nicht erkennbar ist, ob eine zusammenhängende Holzstruktur oder nur eine oberflächliche Verfärbung vorliegt.",
+        "Die Abgrenzung zu normalem Spätholz oder anderen Verfärbungen aus den Draufsichten nicht möglich ist."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "Färbung allein genügt nur für einen vermuteten, nicht für einen sicher sichtbaren Bu-Vorschlag.",
+        "Hirnholz- und Mikroskopiemerkmale stehen in den vorhandenen Draufsichten nicht zur Verfügung und werden nicht als Bildmerkmale verwendet.",
+        "Die Gleichsetzung von Buchs und Druckholz sowie die Übertragbarkeit der Katalogmerkmale müssen fachlich bestätigt werden."
+      ],
+      "nicht_zulaessige_ursachenaussage": "Bu darf als vorläufiges sichtbares Holzmerkmal vorgeschlagen werden. Weder Druckholz noch eine ursächliche Wirkung auf den Bruch sind damit nachgewiesen.",
+      "fachlicher_pruefstatus": {
+        "status": "fachlich_offen",
+        "begruendung": "Die Gleichsetzung Buchs = Druckholz ist offen. Rötlich-braun stammt aus dem Gesamtkatalog, dunklere Färbung aus der Aufnahme; beide Angaben sind für die verfügbaren Draufsichten noch fachlich zu prüfen. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Regionalen Begriff Buchs und eine mögliche Gleichsetzung mit Druckholz fachlich bestätigen.",
+          "Festlegen, welche zusätzlich zur Farbe sichtbare Struktur für einen Vorschlag erforderlich ist.",
+          "Abgrenzung zu normalem Spätholz, Schatten und sonstigen Verfärbungen anhand geeigneter Draufsichten prüfen."
+        ]
+      },
+      "literaturquellen": [
+        "Timell, T.E. (1986): Compression Wood in Gymnosperms. Bd. 1–3. Springer, Berlin/Heidelberg.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Niemz, P.; Sonderegger, W. (2017): Holzphysik – Physik des Holzes und der Holzwerkstoffe. Carl Hanser Verlag, München.",
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "Katzengruber, R.; Jeitler, G.; Brandner, R.; Schickhofer, G.: Tensile proof loading to assure quality of finger-jointed structural timber. TU Graz / holz.bau forschungs gmbh. https://graz.elsevierpure.com/files/2814980/Tensile%20Proof%20Loading%20-%20Paper%20E.pdf (Erscheinungsjahr/Tagungsband vor Zitation prüfen)"
+      ]
+    },
+    {
+      "code": "AA",
+      "name": "Astansammlung",
+      "klassentyp": "sichtbares_holzmerkmal",
+      "klassifikationsziel": "Eine Astansammlung liegt vor, wenn mindestens zwei getrennt erkennbare Äste sichtbar dicht beieinander liegen. Eine Obergrenze der Astzahl oder ein zahlenmäßig festgelegter Maximalabstand wird nicht verlangt.",
+      "positive_bildmerkmale": [
+        "Mindestens zwei voneinander unterscheidbare Astanschnitte oder Aststrukturen liegen sichtbar räumlich konzentriert beieinander.",
+        "Sich überschneidende lokale Faserumlenkungen können als zusätzlicher Hinweis dienen, sind aber keine Voraussetzung.",
+        "Mehrere Aufnahmen desselben Bruchstücks dürfen gemeinsam genutzt werden, um die Äste zu zählen und zuzuordnen.",
+        "Zusätzliche Labels wie KA, SA oder SSA dürfen für die einzelnen Äste vergeben werden, wenn deren Geometrie jeweils sichtbar ist."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "KA, SA und SSA beschreiben die Lage einzelner Äste; AA beschreibt mindestens zwei sichtbar dicht beieinanderliegende Äste.",
+        "Es wird weder ein zahlenmäßig festgelegter Abstand noch eine quirlartige Anordnung verlangt.",
+        "Derselbe Ast auf mehreren Aufnahmen darf nicht mehrfach gezählt werden."
+      ],
+      "nicht_vergeben_wenn": [
+        "Nur ein einzelner Ast sicher erkennbar ist.",
+        "Mehrere Äste zwar sichtbar, aber nicht als räumlich konzentrierte Ansammlung erkennbar sind.",
+        "Mehrere Ansichten lediglich denselben Ast zeigen.",
+        "Die vermeintlichen zusätzlichen Äste nur aus Verfärbungen oder unklaren Ausbrüchen abgeleitet werden."
+      ],
+      "unklar_wenn": [
+        "Nicht sicher entschieden werden kann, ob zwei Aufnahmen denselben oder verschiedene Äste zeigen.",
+        "Ohne erfundenen Abstandswert nicht sicher beurteilt werden kann, ob die sichtbaren Äste dicht beieinander liegen.",
+        "Die Aufnahmen nicht sicher demselben Prüfkörper beziehungsweise Bruchstück zugeordnet werden können.",
+        "Mindestens eine der für die Mindestanzahl benötigten Aststrukturen verdeckt oder nicht eindeutig ist."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "Es gilt bewusst keine Obergrenze und kein zahlenmäßig festgelegter Abstand zwischen den Ästen.",
+        "Verdeckte Äste im Probeninneren oder auf nicht sichtbaren Flächen bleiben unberücksichtigt.",
+        "AA beweist weder eine gemeinsame mechanische Wirkung noch eine Bruchursache."
+      ],
+      "nicht_zulaessige_ursachenaussage": "AA beschreibt mindestens zwei sichtbare Äste. Eine überlagerte Festigkeitswirkung oder ursächliche Auslösung des Bruchs darf daraus nicht als nachgewiesen behauptet werden.",
+      "fachlicher_pruefstatus": {
+        "status": "fachlich_offen",
+        "begruendung": "Die Aufnahme nennt mindestens zwei dicht beieinanderliegende Äste, aber keine Obergrenze und keinen zahlenmäßig festgelegten Abstand. Sich überschneidende lokale Faserumlenkungen sind nur ein zusätzlicher Hinweis. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Laborregel ohne festen Abstand gegenüber normativen Bezugsbereichen fachlich einordnen.",
+          "Regel zur Identität desselben Astes über mehrere Aufnahmen fachlich kalibrieren.",
+          "Mehrfachvergabe mit KA, SA und SSA anhand bestätigter Beispiele prüfen."
+        ]
+      },
+      "literaturquellen": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "SSA",
+      "name": "Schmalseitenast",
+      "klassentyp": "sichtbares_holzmerkmal",
+      "klassifikationsziel": "Ein Schmalseitenast ist ein vollständig sichtbarer Astanschnitt auf einer tatsächlich vorhandenen und eindeutig als Schmalseite erkennbaren Ansicht des Prüfkörpers.",
+      "positive_bildmerkmale": [
+        "Ein Astanschnitt ist vollständig auf der schmalen Brettfläche sichtbar.",
+        "Die gezeigte Fläche kann anhand der Brettgeometrie eindeutig als Schmalseite identifiziert werden.",
+        "Mehrere Aufnahmen desselben Bruchstücks dürfen gemeinsam zur Flächenzuordnung genutzt werden."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "SA liegt auf der Breitseite.",
+        "KA erreicht oder unterbricht eine Längskante im Bereich des Astes.",
+        "Die Bezeichnung Flügelast wird nicht als Synonym oder zusätzliche Klasse übernommen."
+      ],
+      "nicht_vergeben_wenn": [
+        "Die sichtbare Fläche eine Breitseite ist.",
+        "Die Schmalseite nur vermutet, aber anhand der Bildgeometrie nicht eindeutig identifiziert werden kann.",
+        "Nur eine Faserumlenkung oder Verfärbung ohne erkennbare Aststruktur sichtbar ist."
+      ],
+      "unklar_wenn": [
+        "Die Schmalseite nur zufällig teilweise oder unter einem nicht eindeutig beurteilbaren Winkel sichtbar ist.",
+        "Der Astanschnitt auf der Schmalseite nicht vollständig sichtbar ist.",
+        "Die Zuordnung zwischen Ast, Kante und angrenzenden Flächen aus den vorhandenen Aufnahmen nicht sicher möglich ist.",
+        "Der Ast durch Bruch, Splitter oder Bildrand verdeckt ist."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "SSA darf nur vorgeschlagen werden, wenn eine zufällig sichtbare Fläche eindeutig als Schmalseite erkennbar ist; andernfalls ist das Merkmal nicht beurteilbar.",
+        "Es werden keine planmäßig aufgenommenen Schmalseitenansichten vorausgesetzt.",
+        "Der innere Astverlauf und die ursächliche Wirkung auf den Bruch bleiben aus den Fotos offen."
+      ],
+      "nicht_zulaessige_ursachenaussage": "SSA benennt ausschließlich die sichtbare Lage eines Astes auf der Schmalseite. Eine bruchauslösende Wirkung ist damit nicht nachgewiesen.",
+      "fachlicher_pruefstatus": {
+        "status": "fachlich_offen",
+        "begruendung": "SSA bleibt als aktive Klasse erhalten, darf aber nur bei tatsächlich vorhandener Schmalseitenansicht und vollständig sichtbarem Astanschnitt vorgeschlagen werden. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Laborabgrenzung zwischen SSA und KA für die vorhandenen Probenquerschnitte bestätigen.",
+          "Zuverlässige geometrische Kriterien für eine zufällig sichtbare Schmalseite festlegen.",
+          "Regel anhand fachlich bestätigter Draufsichten und zufälliger Schmalseitenansichten kalibrieren."
+        ]
+      },
+      "literaturquellen": [
+        "DIN 4074-1:2012-06 – Sortierung von Holz nach der Tragfähigkeit – Teil 1: Nadelschnittholz. Beuth, Berlin.",
+        "EN 1309-3:2018 – Rund- und Schnittholz – Messverfahren – Teil 3: Merkmale von Schnittholz. CEN, Brüssel.",
+        "Forest Products Laboratory (2021): Wood Handbook – Wood as an Engineering Material. General Technical Report FPL-GTR-282. USDA Forest Service, Madison, WI (insb. Kapitel zu mechanischen Eigenschaften: Faserneigung, Äste, Druckholz, Sprödigkeit/Brashness, Druckbrüche).",
+        "Kollmann, F.F.P.; Côté, W.A. (1968): Principles of Wood Science and Technology. Vol. I: Solid Wood. Springer, Berlin/Heidelberg."
+      ]
+    },
+    {
+      "code": "KB",
+      "name": "Klemmbacken",
+      "klassentyp": "sichtbare_pruef_oder_einspannspur",
+      "klassifikationsziel": "KB bezeichnet sichtbare Prüf- oder Einspannspuren auf einer sichtbaren Brettfläche, die Klemmbacken zugeordnet werden können. Erforderlich sind unterscheidbare Abdrücke oder regelmäßige, wiederkehrende Druck- beziehungsweise Oberflächenmuster im sichtbaren Einspannbereich; die Lage am Brettende allein genügt nicht.",
+      "positive_bildmerkmale": [
+        "Unterscheidbare Abdrücke oder regelmäßige, wiederkehrende Druck- beziehungsweise Oberflächenmuster der Backen sind auf einer sichtbaren Brettfläche erkennbar.",
+        "Die Spur liegt im sichtbaren Endbereich beziehungsweise in einem als Klemmbereich erkennbaren Abschnitt des Prüfkörpers.",
+        "Quetschungen, Riefen, abgescherte oder abgelöste Oberflächenschichten können im selben Bereich zusätzlich sichtbar sein."
+      ],
+      "abgrenzung_zu_aehnlichen_klassen": [
+        "BB (Gezu) beschreibt nach dem vorhandenen Gesamtkatalog einen Bruch im Bereich beziehungsweise am Rand der Spannbacken; KB beschreibt hier die sichtbare Prüf- oder Einspannspur. Die laborinterne Grenze bleibt offen.",
+        "QD beschreibt nach dem vorhandenen Gesamtkatalog eine Druckschädigung mit Eindrückung beziehungsweise Zellkollaps an Auflagern oder Einspannungen; eine Überschneidung mit KB ist möglich und fachlich zu klären.",
+        "HB, sp HB und Spl HB beschreiben Bruchbilder im Holz. Sie sind getrennt von einer sichtbaren KB-Spur zu beurteilen.",
+        "Natürliche Holzstruktur, Sägespuren und Transportbeschädigungen dürfen nicht ohne unterscheidbare Klemmbackenspur als KB eingeordnet werden."
+      ],
+      "nicht_vergeben_wenn": [
+        "Nur die Lage am Brettende oder der Bruchort im Einspannbereich erkennbar ist, aber keine unterscheidbare Klemmbackenspur vorliegt.",
+        "Oberflächenschäden nicht sicher von Bearbeitungs-, Transport- oder anderen Spuren unterschieden werden können.",
+        "Die vermeintliche Spur nur aus Protokollwissen und nicht aus den Bildern abgeleitet wird."
+      ],
+      "unklar_wenn": [
+        "Der End- beziehungsweise Klemmbereich nicht abgebildet oder nicht sicher lokalisierbar ist.",
+        "Nicht entschieden werden kann, ob Muster oder Abdrücke von Klemmbacken, Bearbeitung, Transport oder anderen Oberflächeneinflüssen stammen.",
+        "Die sichtbare Spur zu schwach oder unvollständig ist, um sie sicher einer Klemmbacke zuzuordnen."
+      ],
+      "einschraenkungen_visuelle_erkennung": [
+        "Das Rutschen eines Prüfkörpers ist auf einem Foto nicht sichtbar. Sichtbare Spuren beweisen kein Rutschen.",
+        "Eine aufgebrachte Zugkraft oder Kraftgrenze darf aus den Bildern nicht abgeleitet werden.",
+        "Aus der sichtbaren Spur kann keine bruchauslösende Wirkung sicher abgeleitet werden."
+      ],
+      "nicht_zulaessige_ursachenaussage": "KB bezeichnet eine sichtbare Prüfspur. Sie darf nicht automatisch als Versagensmerkmal, Fehlklassifikation des Holzes oder nachgewiesene Bruchursache bezeichnet werden.",
+      "fachlicher_pruefstatus": {
+        "status": "fachlich_offen",
+        "begruendung": "Das sichtbare Muster, die mögliche Endlage und zusätzliche Oberflächenschäden wurden als fachliche Angabe der Autorin aufgenommen. Die neutrale Formulierung sichtbare Brettfläche legt weder Breit- noch Schmalseite fest. Fachliche Angabe der Autorin/Expertenaufnahme, noch zu prüfen.",
+        "offene_punkte": [
+          "Laborinterne Abgrenzung von KB zu BB (Gezu), QD und normalem Bruch im Holz festlegen.",
+          "Bildregel zur Abgrenzung von Backenabdruck, Bearbeitungs-, Transport- und sonstigen Oberflächenspuren festlegen.",
+          "Klären, welche sichtbaren Merkmale zusätzlich zur Endlage für KB mindestens erforderlich sind."
+        ]
+      },
+      "literaturquellen": [
+        "EN 408:2010+A1:2012 – Holzbauwerke – Bauholz für tragende Zwecke und Brettschichtholz – Bestimmung einiger physikalischer und mechanischer Eigenschaften (Abschnitte Zugfestigkeit/Zug-E-Modul parallel zur Faser). CEN, Brüssel."
+      ]
     }
   ]
 }

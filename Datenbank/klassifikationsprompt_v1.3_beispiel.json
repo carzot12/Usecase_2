@@ -1,0 +1,539 @@
+{
+  "artifact": "Vollständiger Beispielprompt ohne Bilddaten und ohne Modellaufruf",
+  "prompt_version": "5.2-qwen-joint-images-primary-candidate",
+  "classification_rules_version": "1.3",
+  "reference_images": 0,
+  "ground_truth_included": false,
+  "expert_assessments_included": false,
+  "previous_ai_results_included": false,
+  "prompt": {
+    "task": "Gemeinsame visuelle Mehrbildklassifikation einer unbekannten Holz-Zugprobe mit unverbindlichem Primärkandidaten",
+    "rules": [
+      "Arbeite in zwei strikt getrennten Phasen: (1) sichtbare Beobachtungen knapp erfassen, (2) erst danach mögliche Klassencodes gleichrangig vorschlagen.",
+      "Nenne in Phase 1 Risse und Rissverläufe, Splitter/Auffaserung, mögliche Jahrringtrennungen, Äste und deren Position, Faserrichtung, Bruchflächen und weitere tatsächlich sichtbare Auffälligkeiten.",
+      "Untersuche den gesamten sichtbaren Prüfkörper und dokumentiere relevante Merkmale innerhalb und außerhalb der Bruchzone.",
+      "Kennzeichne unsichere Beobachtungen ausdrücklich als unsicher. Unterscheide: nicht sichtbar = in den Bildern nicht erkennbar; nicht beurteilbar = Bildqualität, Ausschnitt oder Perspektive erlauben keine verlässliche Entscheidung.",
+      "Verwende ausschliesslich die bereitgestellten 12 Klassencodes oder UNKLAR.",
+      "Alle bereitgestellten Klassen sind gleichberechtigt. Erzwinge insbesondere weder sp HB noch Spl HB.",
+      "Werte alle ausgewählten Testbilder gemeinsam als verschiedene Ansichten desselben Prüfkörpers aus; entscheide nicht bildweise.",
+      "Wenn Merkmale erkennbar sind, markiere genau einen bestpassenden unverbindlichen Klassenvorschlag als primary und weitere passende Vorschläge als secondary.",
+      "Primary bedeutet nur bestpassender visueller Vorschlag und niemals nachgewiesene Hauptversagensursache.",
+      "Ordne jedem Klassenvorschlag eine Rolle primary oder secondary und nur eine knappe Sicherheitsstufe hoch, mittel oder unsicher zu; schreibe dazu keine Begründung.",
+      "Behaupte niemals, ein Holzmerkmal sei die nachgewiesene Versagens- oder Bruchursache.",
+      "Gib UNKLAR aus, wenn Bildausschnitt, Perspektive oder Schärfe keine verlässliche Beurteilung erlauben; nenne die konkrete Einschränkung in uncertain_points.",
+      "Gib KEINE_MERKMALE aus, wenn die Bilder beurteilbar sind, aber keines der definierten Merkmale sichtbar ist.",
+      "Verwende KLASSIFIZIERT, sobald mindestens ein regelkonformes sichtbares Merkmal erkannt ist; fehlende Ursachensicherheit ist kein Grund für UNKLAR.",
+      "Erfinde keine Winkel, Längen, Anzahlen oder sonstigen Entscheidungsschwellen.",
+      "Beurteile ausschließlich die ausgewählten unbekannten Prüfkörperbilder und die bereitgestellten Klassenbeschreibungen.",
+      "Gib ausschließlich kurze Stichpunktfragmente aus: keine Absätze, Einleitungen, bildweisen Mini-Gutachten oder wiederholten Informationen.",
+      "Nutze observations_short für den Gesamtblick, visible_features für einzelne sichtbare Merkmale und uncertain_points nur für nicht sichere Punkte; wiederhole keinen Inhalt zwischen diesen Listen.",
+      "Beginne keinen Stichpunkt mit Testbild, Bild oder In Bild. Nenne einen Bildbezug nur, wenn er zur Unterscheidung notwendig ist.",
+      "Begrenze jeden Text auf höchstens 120 Zeichen und möglichst acht Wörter; höchstens 12 Beobachtungen, 12 sichtbare Merkmale, 12 Klassenvorschläge und 6 Unsicherheiten.",
+      "Bei Status UNKLAR oder KEINE_MERKMALE muss class_suggestions leer sein.",
+      "Auch bei UNKLAR muss observations_short mindestens eine konkrete sichtbare Beobachtung oder eine konkrete Bildbegrenzung enthalten; gib niemals alle Textlisten leer aus."
+    ],
+    "classes": [
+      {
+        "code": "GSF",
+        "name": "Globale Schrägfaser",
+        "definition": "Globale Schrägfaser liegt vor, wenn der erkennbare Faserverlauf über einen größeren sichtbaren Abschnitt des Prüfkörpers gleichgerichtet von dessen Längsachse abweicht.",
+        "positive_image_features": [
+          "Über einen längeren sichtbaren Abschnitt verlaufen belastbare Faserindikatoren schräg zur Prüfkörperlängsachse.",
+          "Die Abweichung ist nicht auf eine einzelne lokale Störstelle begrenzt.",
+          "Der erkennbare Verlauf bleibt über den sichtbaren Bereich annähernd gleichgerichtet."
+        ],
+        "distinguishing_features": [
+          "LSF beschreibt eine örtlich begrenzte Faserumlenkung mit geraderem beziehungsweise achsparallelerem Verlauf außerhalb der Störzone.",
+          "Eine schräge Bruchkante allein ist kein sicherer Nachweis für GSF.",
+          "Jahrring- beziehungsweise Fladerzeichnungen dürfen nicht automatisch als Faserrichtung interpretiert werden.",
+          "Splitter und Längsrisse können der Faser folgen und als Indiz dienen, sind selbst aber keine GSF."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur die Bruchkante schräg verläuft, ohne dass weitere belastbare Faserindikatoren sichtbar sind.",
+            "Die Richtungsänderung ausschließlich in einer klar begrenzten lokalen Zone liegt.",
+            "Nur Jahrring- oder Fladerzeichnung als vermeintliche Faserrichtung erkennbar ist."
+          ],
+          "unclear_when": [
+            "Keine belastbaren Faserindikatoren über einen ausreichend großen sichtbaren Bereich erkennbar sind.",
+            "Perspektive, Bildausschnitt oder Bildschärfe die Abgrenzung zwischen global und lokal nicht zulassen.",
+            "Die gegenüberliegenden Draufsichten widersprüchliche oder nicht zuordenbare Verläufe zeigen."
+          ],
+          "visual_limitations": [
+            "Die vorhandenen Draufsichten zeigen keine Faserneigung in Dickenrichtung.",
+            "Die Mindestlänge für die Bezeichnung global und die zulässige Winkelstreuung sind laborintern noch nicht festgelegt.",
+            "Eine tatsächliche Festigkeitsminderung oder Bruchursache kann aus den Fotos nicht quantifiziert werden."
+          ]
+        }
+      },
+      {
+        "code": "LSF",
+        "name": "Lokale Schrägfaser",
+        "definition": "Lokale Schrägfaser liegt vor, wenn der erkennbare Faserverlauf nur innerhalb eines begrenzten Bereichs von der Prüfkörperlängsachse abweicht.",
+        "positive_image_features": [
+          "In einer örtlich begrenzten Zone ist eine Krümmung, Umlenkung oder Richtungsänderung belastbarer Faserindikatoren sichtbar.",
+          "Die lokale Umlenkung liegt häufig im Bereich eines Astes oder einer anderen sichtbaren Holzstörung.",
+          "Außerhalb der Störzone ist auf derselben sichtbaren Fläche ein geraderer beziehungsweise achsparallelerer Verlauf erkennbar."
+        ],
+        "distinguishing_features": [
+          "GSF erstreckt sich gleichgerichtet über einen größeren sichtbaren Bereich.",
+          "Ein sichtbarer Ast allein beweist keine lokale Schrägfaser.",
+          "LSF darf zusätzlich zu KA oder SA vorgeschlagen werden, wenn die Faserumlenkung tatsächlich sichtbar ist.",
+          "Ein Bruchzickzack allein genügt nicht als Nachweis."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur ein Ast ohne erkennbare lokale Faserumlenkung sichtbar ist.",
+            "Die Abweichung über einen größeren Bereich annähernd gleichgerichtet verläuft und damit eher GSF entspricht.",
+            "Lediglich der Verlauf der Bruchkante als Faserindikator herangezogen werden kann."
+          ],
+          "unclear_when": [
+            "Geradere Referenzbereiche außerhalb der vermuteten Störzone nicht abgebildet sind.",
+            "Faserindikatoren durch Beleuchtung, Schmutz oder geringe Auflösung nicht verlässlich verfolgt werden können.",
+            "Die lokale Zone nur auf einer Aufnahme teilweise sichtbar ist."
+          ],
+          "visual_limitations": [
+            "Lokale Faserabweichung im Probeninneren bleibt unsichtbar.",
+            "Winkelmessungen aus perspektivischen Fotos sind ohne Kamerakalibrierung nicht belastbar.",
+            "Die minimale beziehungsweise maximale Ausdehnung einer lokalen Zone ist laborintern noch nicht definiert."
+          ]
+        }
+      },
+      {
+        "code": "KA",
+        "name": "Kantenast",
+        "definition": "Ein Kantenast ist ein Ast, dessen sichtbarer Anschnitt eine Längskante des Prüfkörpers erreicht beziehungsweise anschneidet.",
+        "positive_image_features": [
+          "Der sichtbare Astanschnitt befindet sich unmittelbar an einer sichtbaren Brettkante.",
+          "Der Astanschnitt berührt oder unterbricht die Längskante in mindestens einer vorhandenen Draufsicht.",
+          "Eine begleitende Faserumlenkung oder ein Ausbruch kann sichtbar sein, ist aber keine notwendige Bedingung."
+        ],
+        "distinguishing_features": [
+          "SA liegt innerhalb der sichtbaren Breitseite, ohne eine Längskante zu berühren.",
+          "Da keine gesonderten Schmalseitenaufnahmen vorhanden sind, darf der Verlauf des Astes auf der Schmalseite nicht als sicher gesehen behauptet werden.",
+          "LSF bezeichnet eine zusätzlich sichtbare Faserumlenkung und ersetzt das Astlabel nicht."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Zwischen dem sichtbaren Astanschnitt und der beziehungsweise den im Bereich des Astes sichtbaren Längskanten eindeutig Holz liegt.",
+            "Nur eine Faserumlenkung ohne erkennbaren Astanschnitt sichtbar ist.",
+            "Eine Kantenberührung allein wegen abgeschnittenem Bildrand vermutet wird."
+          ],
+          "unclear_when": [
+            "Die betreffende Längskante im Bereich des Astes nicht sichtbar oder nicht sicher zuzuordnen ist.",
+            "Astanschnitt, Ausbruch und Bruchkante visuell nicht sicher voneinander getrennt werden können.",
+            "Die Kantenlage auf den verfügbaren Draufsichten widersprüchlich erscheint."
+          ],
+          "visual_limitations": [
+            "Ohne Schmalseitenansicht bleibt der räumliche Astverlauf nicht beurteilbar.",
+            "Der innere Astverlauf und der tatsächliche Querschnittsverlust sind fotografisch nicht bestimmbar.",
+            "Normgerechte Astmaße erfordern eine gesonderte Messregel; aus den Bildern dürfen keine Schwellen erfunden werden."
+          ]
+        }
+      },
+      {
+        "code": "SA",
+        "name": "Seitenast",
+        "definition": "Ein Seitenast ist ein Ast, dessen sichtbarer Anschnitt innerhalb der Breitseite des Prüfkörpers liegt, ohne eine Längskante zu berühren.",
+        "positive_image_features": [
+          "Ein runder, ovaler oder anderweitig erkennbarer Astanschnitt liegt auf der sichtbaren Brettfläche.",
+          "Zwischen dem Astanschnitt und der beziehungsweise den im Bereich des Astes sichtbaren Längskanten befindet sich Holz.",
+          "Eine lokale Faserumlenkung um den Ast kann sichtbar sein und darf zusätzlich als LSF vorgeschlagen werden."
+        ],
+        "distinguishing_features": [
+          "KA berührt oder unterbricht eine sichtbare Längskante.",
+          "Eine Faserumlenkung kann zusätzlich als LSF erfasst werden.",
+          "Ist der Randbereich im Bereich des Astes nicht sichtbar, dürfen KA und SA nicht mit unbegründeter Sicherheit unterschieden werden."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Der Astanschnitt eine sichtbare Längskante berührt oder unterbricht.",
+            "Nur eine Faserumlenkung ohne erkennbaren Astanschnitt sichtbar ist.",
+            "Der vermeintliche Ast lediglich aus einer unklaren Verfärbung ohne erkennbare Aststruktur besteht."
+          ],
+          "unclear_when": [
+            "Die für die Abgrenzung relevante Längskante beziehungsweise die relevanten Längskanten im Bereich des Astes nicht sichtbar sind.",
+            "Der Ast teilweise durch Bruch, Splitter oder Bildrand verdeckt ist.",
+            "Eine minimale Kantenberührung aus den Draufsichten nicht sicher beurteilt werden kann."
+          ],
+          "visual_limitations": [
+            "Ein verdeckter oder nur auf einer nicht fotografierten Schmalseite austretender Astanteil bleibt nicht beurteilbar.",
+            "Astdurchmesser, Astflächenverhältnis und innerer Astverlauf sind aus den Draufsichten nicht zuverlässig messbar.",
+            "Die Lage im Bruchbereich beweist keine ursächliche Wirkung."
+          ]
+        }
+      },
+      {
+        "code": "sp HB",
+        "name": "Spröder Holzbruch",
+        "definition": "Diese Klasse beschreibt ausschließlich eine vergleichsweise kurze, überwiegend quer verlaufende und wenig zerfaserte sichtbare Bruchmorphologie; sie ist kein Nachweis einer bestimmten Materialzähigkeit.",
+        "positive_image_features": [
+          "Die sichtbare Bruchzone ist vergleichsweise kurz und verläuft überwiegend quer zur lokalen Faserrichtung.",
+          "Die sichtbaren Bruchkonturen beziehungsweise Bruchflächen wirken relativ eben.",
+          "Es sind wenige beziehungsweise kurze herausgezogene Fasern und nur geringe Längsaufspaltungen sichtbar."
+        ],
+        "distinguishing_features": [
+          "Spl HB weist ausgeprägte Splitterbildung, herausgezogene Faserbündel und eine stärker längs ausgedehnte zerfaserte Bruchzone auf.",
+          "Ein Prüfkörper muss nicht automatisch als sp HB klassifiziert werden.",
+          "Bei gemischten oder unzureichend sichtbaren Bruchflächen ist Unsicherheit anzugeben."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Ausgeprägte lange Splitter, zahlreiche herausgezogene Faserbündel und eine stark längs ausgedehnte Bruchzone das Bild dominieren.",
+            "Die Bruchzone in den vorhandenen Bildern nicht ausreichend sichtbar ist.",
+            "Nur aus einem fehlenden Spl-HB-Nachweis auf sp HB geschlossen würde."
+          ],
+          "unclear_when": [
+            "Kurze und splitternde Bereiche gleichzeitig auftreten und keine klare visuelle Zuordnung möglich ist.",
+            "Bruchflächen durch Lage der Bruchstücke, Unschärfe oder fehlende Detailansicht verdeckt sind.",
+            "Möglicher nachträglicher Splitterverlust das Erscheinungsbild verändert haben kann."
+          ],
+          "visual_limitations": [
+            "Das Last-Verformungsverhalten und damit mechanische Sprödigkeit sind aus Nachbruchfotos nicht messbar.",
+            "Eine feste Grenze der Bruchlänge beziehungsweise des Faserauszugs ist noch nicht fachlich kalibriert.",
+            "Transport- oder Ausbauverluste können Splitter entfernen und einen Bruch fälschlich glatt erscheinen lassen."
+          ]
+        }
+      },
+      {
+        "code": "Spl HB",
+        "name": "Splitterholzbruch",
+        "definition": "Splitterholzbruch bezeichnet eine stark zerfaserte, in Faserrichtung ausgedehnte sichtbare Bruchzone.",
+        "positive_image_features": [
+          "Lange, teilweise spitz auslaufende Holzsplitter sind sichtbar.",
+          "Herausgezogene Faserbündel und deutliche Längsaufspaltungen liegen im Bereich der Bruchzone vor.",
+          "Die Bruchkonturen wirken unregelmäßig, gezackt oder verzahnt."
+        ],
+        "distinguishing_features": [
+          "sp HB beschreibt eine vergleichsweise kurze und wenig zerfaserte Bruchzone.",
+          "Ein einzelner Längsriss ist nicht automatisch ein Splitterholzbruch.",
+          "Eine flächige oder schichtartige Ablösung kann auf RiSch hinweisen.",
+          "Spl HB kann gemeinsam mit anderen sichtbaren Holzmerkmalen oder RiSch auftreten."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur ein einzelner schmaler Längsriss ohne stark zerfaserte Bruchzone sichtbar ist.",
+            "Lediglich eine zusammenhängende schichtartige Ablösung ohne ausgeprägte Splitterbildung vorliegt.",
+            "Die Bruchzone überwiegend kurz, quer und wenig zerfasert erscheint."
+          ],
+          "unclear_when": [
+            "Nur ein kleiner Ausschnitt der Bruchzone sichtbar ist.",
+            "Splitter durch Überlagerung, Bildunschärfe oder möglichen nachträglichen Verlust nicht zuverlässig beurteilt werden können.",
+            "Kurze und splitternde Bruchanteile ohne klare Dominanz nebeneinander vorliegen."
+          ],
+          "visual_limitations": [
+            "Eine feste Mindestlänge oder Mindestanzahl von Splittern ist noch nicht fachlich kalibriert.",
+            "Abgebrochene oder beim Transport verlorene Splitter können zur Fehlklassifikation führen.",
+            "Ein splitterndes Bild beweist weder hohe Zähigkeit noch fehlerfreies oder besonders festes Holz."
+          ]
+        }
+      },
+      {
+        "code": "RiSch",
+        "name": "Ringschäle",
+        "definition": "Ringschäle bezeichnet eine Trennung entlang beziehungsweise annähernd entlang einer Jahrringgrenze, bei der sich ein zusammenhängender Holzbereich schicht- oder schalenartig vom übrigen Holz lösen kann.",
+        "positive_image_features": [
+          "Ein zusammenhängender Holzbereich hat sich in der Draufsicht schicht- oder schalenartig vom restlichen Brett gelöst.",
+          "Die Ablösung ist länglich und gegebenenfalls flächig über einen größeren Abschnitt der Bruchzone ausgedehnt.",
+          "Die Trennung wirkt wie das Ablösen einer zusammenhängenden Holzschicht.",
+          "Wenn Jahrringgrenzen sichtbar sind, kann ihre Übereinstimmung mit dem Trennverlauf als zusätzliches Indiz dienen."
+        ],
+        "distinguishing_features": [
+          "Spl HB zeigt vor allem einzelne lange Splitter, herausgezogene Faserbündel und eine stark zerfaserte Bruchzone.",
+          "LR beschreibt einen längs verlaufenden Riss ohne deutlich schichtartig abgelösten Holzbereich.",
+          "RiSch und Spl HB können gleichzeitig vorgeschlagen werden, wenn beide Merkmalsgruppen sichtbar sind."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur einzelne lange Splitter oder Faserbündel ohne zusammenhängende schichtartige Ablösung sichtbar sind.",
+            "Nur ein schmaler Längsriss ohne flächig oder schalenartig abgelösten Holzbereich erkennbar ist.",
+            "Eine Jahrringbindung oder schichtartige Ablösung ausschließlich vermutet, aber nicht sichtbar begründet werden kann."
+          ],
+          "unclear_when": [
+            "Eine schichtartige Ablösung sichtbar ist, der Verlauf entlang einer Jahrringgrenze aus den Draufsichten aber nicht nachweisbar ist.",
+            "Splittern, Riss und flächige Ablösung auf den Bildern nicht zuverlässig voneinander getrennt werden können.",
+            "Bildausschnitt oder Überlagerung der Bruchstücke die Ausdehnung der Trennung verdeckt."
+          ],
+          "visual_limitations": [
+            "Eine schichtartige Ablösung darf als ringschälenartiges Merkmal beschrieben werden; die Jahrringbindung bleibt ohne geeignete sichtbare Evidenz nicht beurteilbar.",
+            "Es werden keine Hirnholz- oder Querschnittsansichten vorausgesetzt.",
+            "Ob die Trennung vor oder während des Versuchs entstand, ist aus den Nachbruchfotos nicht sicher bestimmbar."
+          ]
+        }
+      },
+      {
+        "code": "LR",
+        "name": "Längsriss",
+        "definition": "Ein Längsriss ist ein länglicher Riss beziehungsweise eine erkennbare Trennlinie, die überwiegend parallel zur lokalen Faserrichtung verläuft.",
+        "positive_image_features": [
+          "Ein schmaler, länglicher Spalt mit erkennbaren Rissufern ist sichtbar.",
+          "Der Riss verläuft überwiegend entlang der lokalen Faserrichtung.",
+          "Der Riss kann innerhalb oder außerhalb der Bruchzone liegen."
+        ],
+        "distinguishing_features": [
+          "Spl HB umfasst eine stark zerfaserte Bruchzone mit ausgeprägten Splittern und mehreren Aufspaltungen.",
+          "RiSch beschreibt eine Trennung beziehungsweise schichtartige Ablösung entlang oder annähernd entlang einer Jahrringgrenze.",
+          "Ein einzelner Längsriss darf nicht automatisch als Splitterholzbruch eingeordnet werden."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur eine äußere Schattenlinie, Oberflächenzeichnung oder Fuge zwischen den Bruchstücken ohne erkennbare Rissufer sichtbar ist.",
+            "Die sichtbare Struktur ausschließlich aus mehreren Splittern und einer stark zerfaserten Hauptbruchzone besteht.",
+            "Eine zusammenhängende schichtartige Ablösung statt eines schmalen Spalts vorliegt."
+          ],
+          "unclear_when": [
+            "Rissufer, Verlauf oder Bezug zur lokalen Faserrichtung nicht sicher erkennbar sind.",
+            "Nicht unterscheidbar ist, ob die Linie ein Riss, eine Jahrringzeichnung, ein Schatten oder die Bruchstückgrenze ist.",
+            "Der Entstehungszeitpunkt des Risses aus den Bildern nicht bestimmbar ist."
+          ],
+          "visual_limitations": [
+            "Die Risstiefe ist auf den Draufsichten nicht messbar.",
+            "Der Entstehungszeitpunkt vor, während oder nach dem Versuch bleibt ohne zusätzliche Dokumentation offen.",
+            "Ob LR im Labor als vorhandenes Holzmerkmal oder als versuchsbedingtes Bruchmerkmal geführt wird, ist fachlich noch festzulegen."
+          ]
+        }
+      },
+      {
+        "code": "Bu",
+        "name": "Buchs",
+        "definition": "Buchs bezeichnet vorläufig eine auffällige Holzstruktur beziehungsweise Farbzone. Die Gleichsetzung mit Druckholz bleibt eine offene fachliche Frage.",
+        "positive_image_features": [
+          "Eine rötlich-braune Zone kann als Angabe aus dem Gesamtkatalog berücksichtigt werden.",
+          "Eine dunklere Färbung kann als Angabe aus der Expertenaufnahme berücksichtigt werden.",
+          "Zusätzlich zur Farbe muss eine zusammenhängende, strukturell auffällige Holzzone auf einer verfügbaren Draufsicht erkennbar sein."
+        ],
+        "distinguishing_features": [
+          "sp HB beschreibt ein Bruchbild; Bu beschreibt ein mögliches Holzmerkmal. Beide dürfen gemeinsam vorgeschlagen werden.",
+          "Eine bloße Beleuchtungs-, Schatten- oder Weißabgleichabweichung ist kein Bu.",
+          "Die Bezeichnung Druckholz darf aus den Draufsichten nicht als bestätigt abgeleitet werden."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur eine Farbabweichung ohne zusätzliche sichtbare Struktur oder klar abgegrenzte Zone vorliegt.",
+            "Die vermeintliche Zone plausibel durch Schatten, Schmutz, Nässe oder Bildwiedergabe erklärt werden kann.",
+            "Für die Entscheidung Hirnholz-, Querschnitts- oder Mikroskopiemerkmale vorausgesetzt werden müssten."
+          ],
+          "unclear_when": [
+            "Die Farbwirkung zwischen Aufnahmen widersprüchlich ist oder Weißabgleich und Beleuchtung keine verlässliche Beurteilung erlauben.",
+            "Nicht erkennbar ist, ob eine zusammenhängende Holzstruktur oder nur eine oberflächliche Verfärbung vorliegt.",
+            "Die Abgrenzung zu normalem Spätholz oder anderen Verfärbungen aus den Draufsichten nicht möglich ist."
+          ],
+          "visual_limitations": [
+            "Färbung allein genügt nicht für einen Vorschlag.",
+            "Hirnholz- und Mikroskopiemerkmale stehen in den vorhandenen Draufsichten nicht zur Verfügung und werden nicht als Bildmerkmale verwendet.",
+            "Die Gleichsetzung von Buchs und Druckholz sowie die Übertragbarkeit der Katalogmerkmale müssen fachlich bestätigt werden."
+          ]
+        }
+      },
+      {
+        "code": "AA",
+        "name": "Astansammlung",
+        "definition": "Eine Astansammlung liegt vor, wenn mindestens zwei getrennt erkennbare Äste sichtbar dicht beieinander liegen. Eine Obergrenze der Astzahl oder ein zahlenmäßig festgelegter Maximalabstand wird nicht verlangt.",
+        "positive_image_features": [
+          "Mindestens zwei voneinander unterscheidbare Astanschnitte oder Aststrukturen liegen sichtbar räumlich konzentriert beieinander.",
+          "Mehrere Aufnahmen desselben Bruchstücks dürfen gemeinsam genutzt werden, um die Äste zu zählen und zuzuordnen.",
+          "Zusätzliche Labels wie KA, SA oder SSA dürfen für die einzelnen Äste vergeben werden, wenn deren Geometrie jeweils sichtbar ist."
+        ],
+        "distinguishing_features": [
+          "KA, SA und SSA beschreiben die Lage einzelner Äste; AA beschreibt mindestens zwei sichtbar dicht beieinanderliegende Äste.",
+          "Es wird weder ein zahlenmäßig festgelegter Abstand noch eine quirlartige Anordnung verlangt.",
+          "Derselbe Ast auf mehreren Aufnahmen darf nicht mehrfach gezählt werden."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur ein einzelner Ast sicher erkennbar ist.",
+            "Mehrere Äste zwar sichtbar, aber nicht als räumlich konzentrierte Ansammlung erkennbar sind.",
+            "Mehrere Ansichten lediglich denselben Ast zeigen.",
+            "Die vermeintlichen zusätzlichen Äste nur aus Verfärbungen oder unklaren Ausbrüchen abgeleitet werden."
+          ],
+          "unclear_when": [
+            "Nicht sicher entschieden werden kann, ob zwei Aufnahmen denselben oder verschiedene Äste zeigen.",
+            "Ohne erfundenen Abstandswert nicht sicher beurteilt werden kann, ob die sichtbaren Äste dicht beieinander liegen.",
+            "Die Aufnahmen nicht sicher demselben Prüfkörper beziehungsweise Bruchstück zugeordnet werden können.",
+            "Mindestens eine der für die Mindestanzahl benötigten Aststrukturen verdeckt oder nicht eindeutig ist."
+          ],
+          "visual_limitations": [
+            "Es gilt bewusst keine Obergrenze und kein zahlenmäßig festgelegter Abstand zwischen den Ästen.",
+            "Verdeckte Äste im Probeninneren oder auf nicht sichtbaren Flächen bleiben unberücksichtigt.",
+            "AA beweist weder eine gemeinsame mechanische Wirkung noch eine Bruchursache."
+          ]
+        }
+      },
+      {
+        "code": "SSA",
+        "name": "Schmalseitenast",
+        "definition": "Ein Schmalseitenast ist ein Ast, dessen sichtbarer Anschnitt auf einer eindeutig als Schmalseite erkennbaren Fläche des Prüfkörpers liegt.",
+        "positive_image_features": [
+          "Eine Aststruktur ist auf der schmalen Brettfläche sichtbar.",
+          "Die gezeigte Fläche kann anhand der Brettgeometrie eindeutig als Schmalseite identifiziert werden.",
+          "Mehrere Aufnahmen desselben Bruchstücks dürfen gemeinsam zur Flächenzuordnung genutzt werden."
+        ],
+        "distinguishing_features": [
+          "SA liegt auf der Breitseite.",
+          "KA erreicht oder unterbricht eine Längskante im Bereich des Astes.",
+          "Die Bezeichnung Flügelast wird nicht als Synonym oder zusätzliche Klasse übernommen."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Die sichtbare Fläche eine Breitseite ist.",
+            "Die Schmalseite nur vermutet, aber anhand der Bildgeometrie nicht eindeutig identifiziert werden kann.",
+            "Nur eine Faserumlenkung oder Verfärbung ohne erkennbare Aststruktur sichtbar ist."
+          ],
+          "unclear_when": [
+            "Die Schmalseite nur zufällig teilweise oder unter einem nicht eindeutig beurteilbaren Winkel sichtbar ist.",
+            "Die Zuordnung zwischen Ast, Kante und angrenzenden Flächen aus den vorhandenen Aufnahmen nicht sicher möglich ist.",
+            "Der Ast durch Bruch, Splitter oder Bildrand verdeckt ist."
+          ],
+          "visual_limitations": [
+            "SSA darf nur vorgeschlagen werden, wenn eine zufällig sichtbare Fläche eindeutig als Schmalseite erkennbar ist; andernfalls ist das Merkmal nicht beurteilbar.",
+            "Es werden keine planmäßig aufgenommenen Schmalseitenansichten vorausgesetzt.",
+            "Der innere Astverlauf und die ursächliche Wirkung auf den Bruch bleiben aus den Fotos offen."
+          ]
+        }
+      },
+      {
+        "code": "KB",
+        "name": "Klemmbacken",
+        "definition": "KB bezeichnet sichtbare Prüf- oder Einspannspuren, die Klemmbacken zugeordnet werden können. Erforderlich sind unterscheidbare Abdrücke oder ein charakteristisches Muster im sichtbaren End- beziehungsweise Klemmbereich; die Lage am Brettende allein genügt nicht.",
+        "positive_image_features": [
+          "Ein charakteristisches Muster oder unterscheidbare Abdrücke der Backen sind sichtbar.",
+          "Die Spur liegt im sichtbaren Endbereich beziehungsweise in einem als Klemmbereich erkennbaren Abschnitt des Prüfkörpers.",
+          "Quetschungen, Riefen, abgescherte oder abgelöste Oberflächenschichten können im selben Bereich zusätzlich sichtbar sein."
+        ],
+        "distinguishing_features": [
+          "BB (Gezu) beschreibt nach dem vorhandenen Gesamtkatalog einen Bruch im Bereich beziehungsweise am Rand der Spannbacken; KB beschreibt hier die sichtbare Prüf- oder Einspannspur. Die laborinterne Grenze bleibt offen.",
+          "QD beschreibt nach dem vorhandenen Gesamtkatalog eine Druckschädigung mit Eindrückung beziehungsweise Zellkollaps an Auflagern oder Einspannungen; eine Überschneidung mit KB ist möglich und fachlich zu klären.",
+          "HB, sp HB und Spl HB beschreiben Bruchbilder im Holz. Sie sind getrennt von einer sichtbaren KB-Spur zu beurteilen.",
+          "Natürliche Holzstruktur, Sägespuren und Transportbeschädigungen dürfen nicht ohne unterscheidbare Klemmbackenspur als KB eingeordnet werden."
+        ],
+        "uncertainty_rules": {
+          "do_not_assign_when": [
+            "Nur die Lage am Brettende oder der Bruchort im Einspannbereich erkennbar ist, aber keine unterscheidbare Klemmbackenspur vorliegt.",
+            "Oberflächenschäden nicht sicher von Bearbeitungs-, Transport- oder anderen Spuren unterschieden werden können.",
+            "Die vermeintliche Spur nur aus Protokollwissen und nicht aus den Bildern abgeleitet wird."
+          ],
+          "unclear_when": [
+            "Der End- beziehungsweise Klemmbereich nicht abgebildet oder nicht sicher lokalisierbar ist.",
+            "Nicht entschieden werden kann, ob Muster oder Abdrücke von Klemmbacken, Bearbeitung, Transport oder anderen Oberflächeneinflüssen stammen.",
+            "Die sichtbare Spur zu schwach oder unvollständig ist, um sie sicher einer Klemmbacke zuzuordnen."
+          ],
+          "visual_limitations": [
+            "Das Rutschen eines Prüfkörpers ist auf einem Foto nicht sichtbar. Sichtbare Spuren beweisen kein Rutschen.",
+            "Eine aufgebrachte Zugkraft oder Kraftgrenze darf aus den Bildern nicht abgeleitet werden.",
+            "Aus der sichtbaren Spur kann keine bruchauslösende Wirkung sicher abgeleitet werden."
+          ]
+        }
+      }
+    ]
+  },
+  "response_schema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "enum": [
+          "KLASSIFIZIERT",
+          "UNKLAR",
+          "KEINE_MERKMALE"
+        ]
+      },
+      "observations_short": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "minItems": 1,
+        "maxItems": 8
+      },
+      "visible_features": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "maxItems": 8
+      },
+      "class_suggestions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "GSF",
+                "LSF",
+                "KA",
+                "SA",
+                "sp HB",
+                "Spl HB",
+                "RiSch",
+                "LR",
+                "Bu",
+                "AA",
+                "SSA",
+                "KB"
+              ]
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "hoch",
+                "mittel",
+                "unsicher"
+              ]
+            },
+            "priority": {
+              "type": "string",
+              "enum": [
+                "primary",
+                "secondary"
+              ]
+            }
+          },
+          "required": [
+            "code",
+            "confidence",
+            "priority"
+          ],
+          "additionalProperties": false
+        },
+        "maxItems": 12
+      },
+      "uncertain_points": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "maxItems": 6
+      }
+    },
+    "required": [
+      "status",
+      "observations_short",
+      "visible_features",
+      "class_suggestions",
+      "uncertain_points"
+    ],
+    "additionalProperties": false
+  },
+  "reference_feature_codes": [
+    "GSF",
+    "LSF",
+    "KA",
+    "SA",
+    "sp HB",
+    "Spl HB",
+    "RiSch",
+    "LR",
+    "Bu",
+    "AA",
+    "SSA",
+    "KB"
+  ]
+}

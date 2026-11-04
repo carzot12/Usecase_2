@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "variant_id": "3",
+  "name": "Manuell annotierte Referenzbilder mit Bildbeschreibungen",
+  "enabled": true,
+  "reference_mode": "annotated_reference_images_with_descriptions",
+  "reference_root": ".",
+  "source_variant": "2a",
+  "active_class_codes": ["GSF", "LSF", "KA", "SA", "sp HB", "Spl HB", "RiSch", "LR", "Bu", "AA", "SSA", "KB"],
+  "reference_requirements_by_feature": {
+    "GSF": {"minimum": 1, "target": 20, "maximum": null},
+    "LSF": {"minimum": 1, "target": 20, "maximum": null},
+    "KA": {"minimum": 1, "target": 20, "maximum": null},
+    "SA": {"minimum": 1, "target": 20, "maximum": null},
+    "sp HB": {"minimum": 1, "target": 20, "maximum": null},
+    "Spl HB": {"minimum": 1, "target": 20, "maximum": null},
+    "RiSch": {"minimum": 1, "target": 20, "maximum": null},
+    "LR": {"minimum": 1, "target": 20, "maximum": null},
+    "Bu": {"minimum": 1, "target": null, "maximum": null},
+    "AA": {"minimum": 1, "target": null, "maximum": null},
+    "SSA": {"minimum": 1, "target": null, "maximum": null},
+    "KB": {"minimum": 1, "target": null, "maximum": null}
+  },
+  "min_references_per_class": 1,
+  "target_references_per_class": 20,
+  "descriptions_file": "descriptions.csv",
+  "descriptions_required": true,
+  "annotated_images_required": true,
+  "require_source_reference_link": true,
+  "require_review": false,
+  "preparation_mode": "two_stage_annotated_reference_memory",
+  "version": "2.0",
+  "created": "2026-11-01",
+  "notes": "Verwendet ausschließlich manuell erstellte annotierte Bildkopien. Jedes Bild ist über source_reference_id mit einem unveränderten Original aus Variante 2a verknüpft."
+}
+

@@ -48,7 +48,7 @@ def frontend_url(dev_url: str | None = None) -> str:
 
 
 def splash_html() -> str:
-    logo = base64.b64encode(resource_path("assets/widget.png").read_bytes()).decode()
+    logo = base64.b64encode(resource_path("assets/logo.png").read_bytes()).decode()
     return f"""<!doctype html>
 <html lang="de"><head><meta charset="utf-8"><style>
   :root {{ color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }}
@@ -56,7 +56,7 @@ def splash_html() -> str:
   html, body {{ width: 100%; height: 100%; margin: 0; overflow: hidden; }}
   body {{ display: grid; place-content: center; background: #fff; color: #082f42; text-align: center; }}
   main {{ width: 640px; height: 390px; padding: 48px 72px 42px; border: 1px solid #dbe5ea; }}
-  img {{ display: block; width: 150px; height: auto; margin: 0 auto 24px; }}
+  img {{ display: block; width: 390px; height: auto; margin: 0 auto 24px; }}
   h1 {{ margin: 0; font-size: 27px; line-height: 1.2; letter-spacing: -.3px; }}
   p {{ margin: 6px 0 28px; color: #66808b; font-size: 14px; }}
   span {{ display: block; margin-bottom: 11px; color: #66808b; font-size: 12px; }}
@@ -94,15 +94,15 @@ def launch(dev_url: str | None = None) -> None:
             except Exception:
                 app_ready = False
             if app_ready or time.monotonic() >= deadline:
+                try:
+                    startup_error = main_window.evaluate_js("window.__EKI_ERROR__ || ''")
+                except Exception:
+                    startup_error = ""
+                if startup_error:
+                    print(f"Frontend-Fehler: {startup_error}", file=sys.stderr, flush=True)
                 if not app_ready:
-                    try:
-                        startup_error = main_window.evaluate_js("window.__EKI_ERROR__ || ''")
-                    except Exception:
-                        startup_error = ""
                     print("Warnung: React-Bereitschaft nicht rechtzeitig bestätigt.",
                           file=sys.stderr, flush=True)
-                    if startup_error:
-                        print(f"Frontend-Fehler: {startup_error}", file=sys.stderr, flush=True)
                 break
             time.sleep(0.05)
         time.sleep(max(0, SPLASH_MINIMUM_SECONDS - (time.monotonic() - shown)))

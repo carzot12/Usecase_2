@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "variant_id": "2",
+  "name": "Kleiner allgemeiner Referenzpool",
+  "enabled": true,
+  "reference_mode": "fixed_image_pool",
+  "reference_root": ".",
+  "active_class_codes": ["GSF", "LSF", "KA", "SA", "sp HB", "Spl HB", "RiSch", "LR", "Bu", "AA", "SSA", "KB"],
+  "reference_requirements_by_feature": {
+    "GSF": {"minimum": 1, "target": 2, "maximum": 4},
+    "LSF": {"minimum": 1, "target": 2, "maximum": 4},
+    "KA": {"minimum": 1, "target": 2, "maximum": 4},
+    "SA": {"minimum": 1, "target": 2, "maximum": 4},
+    "sp HB": {"minimum": 1, "target": 2, "maximum": 4},
+    "Spl HB": {"minimum": 1, "target": 2, "maximum": 4},
+    "RiSch": {"minimum": 1, "target": 2, "maximum": 4},
+    "LR": {"minimum": 1, "target": 2, "maximum": 4},
+    "Bu": {"minimum": 1, "target": null, "maximum": 4},
+    "AA": {"minimum": 1, "target": null, "maximum": 4},
+    "SSA": {"minimum": 1, "target": null, "maximum": 4},
+    "KB": {"minimum": 1, "target": null, "maximum": 4}
+  },
+  "min_references_per_class": 1,
+  "max_references_per_class": 4,
+  "target_references_per_class": 2,
+  "target_reference_total": 16,
+  "descriptions_file": null,
+  "descriptions_required": false,
+  "preparation_mode": "two_stage_reference_memory",
+  "version": "1.0",
+  "created": "2026-11-01",
+  "notes": "Kleiner fester, allgemeiner und prüfkörperunabhängiger Referenzpool."
+}
+

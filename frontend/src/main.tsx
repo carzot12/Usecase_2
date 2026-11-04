@@ -4,4 +4,5 @@ import App from "./App";
 import "./styles.css";
 import "./analysis-image.css";
 import "./comparison.css";
+import "./workspace-tabs.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode><App/></React.StrictMode>);

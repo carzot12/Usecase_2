@@ -16,6 +16,8 @@ from Tool.evaluation import (
     build_rule_classification_content,
     build_variant_content,
     compute_metrics,
+    classify_outcome,
+    classify_secure_outcome,
     execute_job,
     load_confirmed_references,
     load_ground_truth,
@@ -97,10 +99,18 @@ class EvaluationDatasetTests(unittest.TestCase):
             )
             destination = run_evaluation(args)
             plan = json.loads((destination / "run_plan.json").read_text(encoding="utf-8"))
-            self.assertEqual(len(plan["jobs"]), 104)
+            self.assertEqual(len(plan["jobs"]), 100)
             self.assertFalse((destination / "evaluation_results.json").exists())
             self.assertFalse(plan["run_config"]["paid_api_request_performed"])
-            self.assertEqual(plan["run_config"]["planned_model_request_count"], 130)
+            self.assertEqual(plan["run_config"]["planned_model_request_count"], 125)
+            self.assertEqual(plan["run_config"]["case_count"], 25)
+            self.assertEqual(plan["run_config"]["full_ground_truth_case_count"], 26)
+            self.assertEqual(
+                plan["run_config"]["active_class_codes"],
+                ["GSF", "LSF", "KA", "SA", "sp HB", "Spl HB", "RiSch", "LR", "Bu", "AA", "SSA", "KB"],
+            )
+            self.assertEqual(plan["run_config"]["ground_truth_classification_rules_version"], "1.0")
+            self.assertFalse(plan["run_config"]["ground_truth_rules_version_matches_active"])
 
     def test_cloud_execution_stays_locked_without_both_live_flags(self) -> None:
         with tempfile.TemporaryDirectory() as output:
@@ -140,10 +150,54 @@ class EvaluationDatasetTests(unittest.TestCase):
         self.assertEqual(mocked.call_count, 2)
         self.assertEqual(record["visible_observations"], stage_1["visible_observations"])
         self.assertEqual(record["total_tokens"], 42)
+        self.assertEqual(record["active_class_set_version"], "klassifikationsregeln/1.4")
+        self.assertEqual(len(record["active_class_descriptions_sha256"]), 64)
         self.assertEqual(record["outcome"], "correct" if self.cases[0].expected_code == "KA" else "wrong_classification")
 
 
 class EvaluationMetricTests(unittest.TestCase):
+    def test_main_evaluation_includes_suspected_and_secure_view_reports_exclusion(self) -> None:
+        suspected = {
+            "status": "KLASSIFIZIERT",
+            "class_suggestions": [{
+                "code": "KA", "evidence_status": "vermutet", "suggestion_role": "primary",
+            }],
+        }
+        self.assertEqual(classify_outcome("KA", suspected), "correct")
+        self.assertEqual(
+            classify_secure_outcome("KA", suspected), "excluded_no_secure_evidence"
+        )
+        records = [{
+            "expected_primary_code": "KA",
+            "evaluation_predicted_code": "KA",
+            "secure_evaluation_predicted_code": "UNKLAR",
+            "outcome": "correct",
+            "secure_outcome": "excluded_no_secure_evidence",
+        }]
+        main = compute_metrics(records)
+        secure = compute_metrics(records, evidence_scope="secure_visible")
+        self.assertEqual(main["coverage_rate"], 1.0)
+        self.assertEqual(main["accuracy"], 1.0)
+        self.assertEqual(secure["coverage_rate"], 0.0)
+        self.assertEqual(secure["excluded_record_count"], 1)
+        self.assertEqual(secure["effective_correct_rate_all_cases"], 0.0)
+
+    def test_kb_is_reported_but_not_silently_scored(self) -> None:
+        kb_only = {"status": "KLASSIFIZIERT", "detected_features": [{"code": "KB"}]}
+        with_expected = {"status": "KLASSIFIZIERT", "detected_features": [{"code": "KA"}, {"code": "KB"}]}
+        self.assertEqual(classify_outcome("KA", kb_only), "unscored_auxiliary_only")
+        self.assertEqual(classify_outcome("KA", with_expected), "correct")
+        metrics = compute_metrics([
+            {"expected_primary_code": "KA", "predicted_primary_code": "KB",
+             "evaluation_predicted_code": "UNSCORED", "outcome": "unscored_auxiliary_only"},
+            {"expected_primary_code": "KA", "predicted_primary_code": "KA",
+             "evaluation_predicted_code": "KA", "outcome": "correct"},
+        ])
+        self.assertEqual(metrics["record_count"], 2)
+        self.assertEqual(metrics["scored_record_count"], 1)
+        self.assertEqual(metrics["unscored_record_count"], 1)
+        self.assertEqual(metrics["accuracy"], 1.0)
+
     def test_metrics_and_error_categories(self) -> None:
         records = [
             {"expected_primary_code": "KA", "predicted_primary_code": "KA", "outcome": "correct", "variant": "A"},

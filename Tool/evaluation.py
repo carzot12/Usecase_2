@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import re
 import sys
@@ -22,6 +23,7 @@ from typing import Any, Mapping, Sequence
 
 from .ki_bildanalyse import (
     DEFAULT_OLLAMA_MAX_IMAGE_EDGE,
+    MAX_MISTRAL_IMAGES_PER_REQUEST,
     DEFAULT_OLLAMA_NUM_CTX,
     PROJECT_ROOT,
     SYSTEM_INSTRUCTIONS,
@@ -56,9 +58,14 @@ VARIANT_DESCRIPTIONS = {
     "D": "Zwei getrennte Modellaufrufe: neutrale Merkmalsextraktion, dann regelgestuetzte Klassifikation.",
 }
 CONFIRMED_VISIBILITY = "SICHTBAR_BESTAETIGT"
+UNSCORED_AUXILIARY_CODES = frozenset({"KB"})
 RESULT_FIELDS = (
     "case_id", "specimen_id", "provider", "model", "model_version",
-    "variant", "expected_primary_code", "predicted_primary_code", "outcome",
+    "variant", "active_class_set_version", "active_class_descriptions_sha256",
+    "expected_primary_code", "predicted_primary_code", "evaluation_predicted_code", "outcome",
+    "expected_codes", "predicted_feature_codes", "matched_codes", "missed_codes", "additional_codes",
+    "secure_visible_feature_codes", "suspected_feature_codes", "undocumented_evidence_feature_codes",
+    "unscored_feature_codes", "secure_evaluation_predicted_code", "secure_outcome",
     "secondary_features", "reasoning", "visible_observations", "confidence",
     "duration_seconds", "input_tokens", "output_tokens", "total_tokens",
     "reported_cost", "cost_currency", "reference_count", "reference_specimens",
@@ -258,15 +265,18 @@ def select_holdout_references(
 
 def _minimal_instructions(catalog: Catalog, *, staged: bool = False) -> dict[str, Any]:
     rules = [
-        "Verwende nur einen der erlaubten Klassencodes oder UNKLAR.",
+        "Verwende nur die erlaubten Klassencodes oder UNKLAR.",
         "Beschreibe nur sichtbare Merkmale und behaupte keine Bruchursache.",
+        "Behandle alle erlaubten Klassen gleichberechtigt und gib alle passenden Klassenvorschläge aus.",
+        "Eine optionale primary-Empfehlung ist nur ein visueller Vorschlag und keine nachgewiesene Bruchursache.",
+        "Kennzeichne jeden Vorschlag als sicher_sichtbar oder vermutet; confidence bleibt davon getrennt.",
         "Nutze UNKLAR, wenn die Bilder keine eindeutige Klassifikation erlauben.",
         "Gib ausschliesslich das vorgegebene JSON aus.",
     ]
     if staged:
         rules = [
             "Stufe 1: Erfasse zuerst neutral sichtbare Geometrie, Lage, Faserverlauf, Bruchtextur und fehlende Ansichten.",
-            "Stufe 2: Vergleiche erst danach diese Beobachtungen mit den Regeln und waehle die Hauptklasse.",
+            "Stufe 2: Vergleiche erst danach diese Beobachtungen mit den Regeln und nenne alle passenden Klassen.",
             "Keine Klassifikation darf ohne einen sichtbaren Beleg aus Stufe 1 erfolgen.",
             *rules,
         ]
@@ -337,8 +347,9 @@ def build_feature_extraction_content(
             "Nenne Geometrie, Lage, Faserverlauf, Bruchtextur, Schaerfe und fehlende Ansichten.",
             "Verwende keine Klassenbezeichnung und keinen Klassencode.",
             "Behaupte keine Bruchursache.",
-            "Setze status und primary_code auf UNKLAR, primary_confidence auf 0 sowie Klassenfelder leer.",
-            "Schreibe die Merkmalsextraktion ausschliesslich nach visible_observations.",
+            "Setze status auf UNKLAR und class_suggestions auf eine leere Liste.",
+            "Schreibe die Merkmalsextraktion ausschließlich nach observations_short und visible_features.",
+            "Nenne in uncertain_points, dass die Klassenzuordnung erst in Stufe 2 erfolgt.",
         ],
         "schema_note": "Die UNKLAR-Felder dienen nur der gemeinsamen strukturierten Ausgabeschnittstelle.",
     }
@@ -449,13 +460,72 @@ def _merge_stage_metadata(stages: Sequence[Mapping[str, Any]]) -> dict[str, Any]
     }
 
 
+def _prediction_items(validated: Mapping[str, Any] | None) -> list[dict[str, Any]]:
+    if not validated:
+        return []
+    suggestions = validated.get("class_suggestions")
+    if isinstance(suggestions, list):
+        return [dict(item) for item in suggestions if isinstance(item, Mapping) and item.get("code")]
+    detected = validated.get("detected_features")
+    if isinstance(detected, list):
+        return [dict(item) for item in detected if isinstance(item, Mapping) and item.get("code")]
+    primary = validated.get("primary_feature")
+    secondary = validated.get("secondary_features")
+    return (
+        ([dict(primary)] if isinstance(primary, Mapping) and primary.get("code") else [])
+        + [dict(item) for item in secondary or [] if isinstance(item, Mapping) and item.get("code")]
+    )
+
+
 def classify_outcome(expected: str, validated: Mapping[str, Any] | None, error_type: str = "") -> str:
     if error_type:
         return error_type
     if not validated or validated.get("status") == "UNKLAR":
         return "unclassifiable"
-    predicted = (validated.get("primary_feature") or {}).get("code")
-    return "correct" if predicted == expected else "wrong_classification"
+    predicted = {str(item.get("code")) for item in _prediction_items(validated)}
+    scored = predicted - UNSCORED_AUXILIARY_CODES
+    if expected in scored:
+        return "correct"
+    if scored:
+        return "wrong_classification"
+    return "unscored_auxiliary_only" if predicted & UNSCORED_AUXILIARY_CODES else "unclassifiable"
+
+
+def classify_secure_outcome(
+    expected: str, validated: Mapping[str, Any] | None, error_type: str = ""
+) -> str:
+    if error_type:
+        return error_type
+    if not validated or validated.get("status") == "UNKLAR":
+        return "unclassifiable"
+    items = _prediction_items(validated)
+    secure = {
+        str(item.get("code")) for item in items
+        if item.get("evidence_status") == "sicher_sichtbar"
+    }
+    scored = secure - UNSCORED_AUXILIARY_CODES
+    if expected in scored:
+        return "correct"
+    if scored:
+        return "wrong_classification"
+    if secure & UNSCORED_AUXILIARY_CODES:
+        return "unscored_auxiliary_only"
+    if any(item.get("evidence_status") in {"vermutet", None} for item in items):
+        return "excluded_no_secure_evidence"
+    return "unclassifiable"
+
+
+def _evaluation_predicted_code(expected: str, feature_codes: Sequence[str], primary_code: str) -> str:
+    scored = [code for code in feature_codes if code not in UNSCORED_AUXILIARY_CODES]
+    if expected in scored:
+        return expected
+    if primary_code and primary_code not in UNSCORED_AUXILIARY_CODES:
+        return primary_code
+    if scored:
+        return scored[0]
+    if any(code in UNSCORED_AUXILIARY_CODES for code in feature_codes) or primary_code in UNSCORED_AUXILIARY_CODES:
+        return "UNSCORED"
+    return "UNKLAR"
 
 
 def _error_type(exc: Exception) -> str:
@@ -509,25 +579,65 @@ def execute_job(
         if variant == "D":
             stage_1_raw, stage_1_metadata = invoke(build_feature_extraction_content(case, catalog))
             stage_1 = validate_and_enrich(stage_1_raw, catalog)
-            if stage_1["status"] != "UNKLAR" or not stage_1["visible_observations"]:
+            stage_1_observations = (
+                stage_1.get("observations_short") or stage_1.get("visible_observations") or []
+            )
+            if stage_1["status"] != "UNKLAR" or not stage_1_observations:
                 raise AnalysisError("Merkmalsextraktion D muss UNKLAR und sichtbare Beobachtungen liefern.")
             raw, stage_2_metadata = invoke(
-                build_rule_classification_content(stage_1["visible_observations"], catalog)
+                build_rule_classification_content(stage_1_observations, catalog)
             )
             metadata = _merge_stage_metadata((stage_1_metadata, stage_2_metadata))
             validated = validate_and_enrich(raw, catalog)
-            validated["visible_observations"] = stage_1["visible_observations"]
+            validated["visible_observations"] = list(stage_1_observations)
         else:
-            content = build_variant_content(case, variant, catalog, references)
+            variant_references = references
+            if provider == "mistral" and variant == "C":
+                available_reference_slots = max(
+                    0,
+                    MAX_MISTRAL_IMAGES_PER_REQUEST - len(case.image_paths),
+                )
+                variant_references = references[:available_reference_slots]
+            content = build_variant_content(case, variant, catalog, variant_references)
             raw, metadata = invoke(content)
             validated = validate_and_enrich(raw, catalog)
     except Exception as exc:  # Ein einzelner Fehler darf den Evaluationslauf nicht abbrechen.
         error_type = _error_type(exc)
         error_message = re.sub(r"\s+", " ", str(exc)).strip()[:1000]
     duration = time.perf_counter() - started
-    primary = (validated or {}).get("primary_feature") or {}
+    prediction_items = _prediction_items(validated)
+    features = prediction_items
+    primary = next(
+        (item for item in prediction_items if item.get("suggestion_role") == "primary"),
+        (validated or {}).get("primary_feature") or {},
+    )
+    feature_codes = [str(item.get("code")) for item in prediction_items if item.get("code")]
+    secure_feature_codes = [
+        str(item.get("code")) for item in prediction_items
+        if item.get("code") and item.get("evidence_status") == "sicher_sichtbar"
+    ]
+    suspected_feature_codes = [
+        str(item.get("code")) for item in prediction_items
+        if item.get("code") and item.get("evidence_status") == "vermutet"
+    ]
+    undocumented_evidence_codes = [
+        str(item.get("code")) for item in prediction_items
+        if item.get("code") and item.get("evidence_status") not in {"sicher_sichtbar", "vermutet"}
+    ]
+    predicted_code = primary.get("code") or (feature_codes[0] if feature_codes else ("UNKLAR" if validated else "ERROR"))
+    scored_feature_codes = [code for code in feature_codes if code not in UNSCORED_AUXILIARY_CODES]
+    unscored_feature_codes = sorted(set(feature_codes) & UNSCORED_AUXILIARY_CODES)
+    evaluation_predicted_code = _evaluation_predicted_code(case.expected_code, feature_codes, str(primary.get("code", "")))
+    secure_primary_code = str(primary.get("code", "")) if primary.get("evidence_status") == "sicher_sichtbar" else ""
+    secure_evaluation_predicted_code = _evaluation_predicted_code(
+        case.expected_code, secure_feature_codes, secure_primary_code
+    )
+    auxiliary_only = evaluation_predicted_code == "UNSCORED"
     input_tokens, output_tokens, total_tokens = _usage_values(metadata)
     cost = metadata.get("cost") if isinstance(metadata.get("cost"), Mapping) else {}
+    class_descriptions_hash = hashlib.sha256(json.dumps(
+        _prompt_catalog(catalog), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")).hexdigest()
     return {
         "case_id": case.case_id,
         "specimen_id": case.specimen_id,
@@ -535,11 +645,27 @@ def execute_job(
         "model": model,
         "model_version": metadata.get("response_model") or model,
         "variant": variant,
+        "active_class_set_version": f"klassifikationsregeln/{catalog.rule_version}",
+        "active_class_descriptions_sha256": class_descriptions_hash,
         "expected_primary_code": case.expected_code,
-        "predicted_primary_code": primary.get("code") or ("UNKLAR" if validated else "ERROR"),
+        "predicted_primary_code": predicted_code,
+        "evaluation_predicted_code": evaluation_predicted_code,
+        "expected_codes": [case.expected_code],
+        "predicted_feature_codes": feature_codes or ([primary.get("code")] if primary.get("code") else []),
+        "secure_visible_feature_codes": secure_feature_codes,
+        "suspected_feature_codes": suspected_feature_codes,
+        "undocumented_evidence_feature_codes": undocumented_evidence_codes,
+        "matched_codes": [case.expected_code] if case.expected_code in scored_feature_codes else [],
+        "missed_codes": [] if case.expected_code in scored_feature_codes or auxiliary_only else [case.expected_code],
+        "additional_codes": sorted(set(scored_feature_codes) - {case.expected_code}),
+        "unscored_feature_codes": unscored_feature_codes,
         "outcome": classify_outcome(case.expected_code, validated, error_type),
+        "secure_evaluation_predicted_code": secure_evaluation_predicted_code,
+        "secure_outcome": classify_secure_outcome(case.expected_code, validated, error_type),
         "secondary_features": (validated or {}).get("secondary_features", []),
-        "reasoning": primary.get("image_based_reasoning", []),
+        "reasoning": primary.get("image_based_reasoning", []) or [
+            reason for item in features for reason in item.get("image_based_reasoning", [])
+        ],
         "visible_observations": (validated or {}).get("visible_observations", []),
         "confidence": primary.get("confidence"),
         "duration_seconds": round(duration, 3),
@@ -557,27 +683,61 @@ def execute_job(
     }
 
 
-def compute_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+def compute_metrics(
+    records: Sequence[Mapping[str, Any]], *, evidence_scope: str = "all"
+) -> dict[str, Any]:
+    if evidence_scope not in {"all", "secure_visible"}:
+        raise ValueError("evidence_scope muss all oder secure_visible sein.")
+    outcome_field = "outcome" if evidence_scope == "all" else "secure_outcome"
+    prediction_field = (
+        "evaluation_predicted_code" if evidence_scope == "all"
+        else "secure_evaluation_predicted_code"
+    )
+    excluded_outcomes = {"unscored_auxiliary_only"}
+    if evidence_scope == "secure_visible":
+        excluded_outcomes.add("excluded_no_secure_evidence")
     if not records:
-        return {"record_count": 0, "accuracy": None, "macro_f1": None}
-    expected_label_set = {str(row["expected_primary_code"]) for row in records}
+        return {"record_count": 0, "scored_record_count": 0, "unscored_record_count": 0,
+                "coverage_rate": None, "excluded_record_count": 0,
+                "accuracy": None, "accuracy_evaluated_only": None,
+                "effective_correct_rate_all_cases": None, "macro_f1": None,
+                "evidence_scope": evidence_scope}
+    scored_records = [row for row in records if row.get(outcome_field) not in excluded_outcomes]
+    excluded_records = [row for row in records if row.get(outcome_field) in excluded_outcomes]
+    coverage_rate = len(scored_records) / len(records)
+    if not scored_records:
+        return {"record_count": len(records), "scored_record_count": 0,
+                "unscored_record_count": len(records), "coverage_rate": 0.0,
+                "excluded_record_count": len(excluded_records),
+                "excluded_outcome_counts": dict(Counter(str(row.get(outcome_field)) for row in excluded_records)),
+                "accuracy": None, "accuracy_evaluated_only": None,
+                "effective_correct_rate_all_cases": 0.0, "macro_f1": None,
+                "outcome_counts": dict(Counter(str(row.get(outcome_field)) for row in records)),
+                "evidence_scope": evidence_scope}
+    expected_label_set = {str(row["expected_primary_code"]) for row in scored_records}
     expected_labels = sorted(expected_label_set)
     matrix_labels = sorted(expected_label_set | {
-        str(row.get("predicted_primary_code", "ERROR")) for row in records
+        str(row.get(prediction_field, row.get("predicted_primary_code", "ERROR")))
+        for row in scored_records
     })
     matrix = {expected: {predicted: 0 for predicted in matrix_labels} for expected in expected_labels}
-    for row in records:
-        matrix[str(row["expected_primary_code"])][str(row.get("predicted_primary_code", "ERROR"))] += 1
+    for row in scored_records:
+        predicted = str(row.get(prediction_field, row.get("predicted_primary_code", "ERROR")))
+        matrix[str(row["expected_primary_code"])][predicted] += 1
     class_metrics: dict[str, Any] = {}
     f1_values: list[float] = []
     correct_total = 0
     for label in expected_labels:
         tp = sum(
-            row.get("expected_primary_code") == label and row.get("predicted_primary_code") == label
-            for row in records
+            row.get("expected_primary_code") == label
+            and row.get(prediction_field, row.get("predicted_primary_code")) == label
+            for row in scored_records
         )
-        support = sum(row.get("expected_primary_code") == label for row in records)
-        predicted = sum(row.get("predicted_primary_code") == label for row in records)
+        support = sum(row.get("expected_primary_code") == label for row in scored_records)
+        predicted = sum(
+            row.get(prediction_field, row.get("predicted_primary_code")) == label
+            for row in scored_records
+        )
         precision = tp / predicted if predicted else 0.0
         recall = tp / support if support else 0.0
         f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
@@ -587,18 +747,33 @@ def compute_metrics(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             "support": support, "correct": tp, "hit_rate": round(recall, 6),
             "precision": round(precision, 6), "recall": round(recall, 6), "f1": round(f1, 6),
         }
-    outcome_counts = Counter(str(row.get("outcome")) for row in records)
+    outcome_counts = Counter(str(row.get(outcome_field)) for row in records)
+    accuracy = correct_total / len(scored_records)
     return {
         "record_count": len(records),
-        "accuracy": round(correct_total / len(records), 6),
+        "scored_record_count": len(scored_records),
+        "unscored_record_count": len(records) - len(scored_records),
+        "coverage_rate": round(coverage_rate, 6),
+        "excluded_record_count": len(excluded_records),
+        "excluded_outcome_counts": dict(Counter(str(row.get(outcome_field)) for row in excluded_records)),
+        "accuracy": round(accuracy, 6),
+        "accuracy_evaluated_only": round(accuracy, 6),
+        "effective_correct_rate_all_cases": round(correct_total / len(records), 6),
         "macro_f1": round(sum(f1_values) / len(f1_values), 6),
+        "evidence_scope": evidence_scope,
         "covered_expected_classes": expected_labels,
         "outcome_counts": dict(sorted(outcome_counts.items())),
         "per_class": class_metrics,
         "confusion_matrix": {"rows_expected": expected_labels, "columns_predicted": matrix_labels, "values": matrix},
         "interpretation_note": (
             "Kennzahlen beziehen sich nur auf die im Ground-Truth-Datensatz vertretenen Klassen; "
-            "UNKLAR und Fehler zaehlen in der Gesamtgenauigkeit als nicht korrekt."
+            "UNKLAR und Fehler zaehlen in der Gesamtgenauigkeit als nicht korrekt. "
+            "Reine KB-Vorschlaege werden als unscored_auxiliary_only separat ausgewiesen und nicht gewertet. "
+            + (
+                "Die Hauptauswertung berücksichtigt sichere und vermutete Vorschläge."
+                if evidence_scope == "all" else
+                "Die Zusatzsicht berücksichtigt nur sicher sichtbare Vorschläge. Coverage, ausgeschlossene Fälle und effective_correct_rate_all_cases müssen gemeinsam mit accuracy_evaluated_only berichtet werden, damit der Ausschluss vermuteter Vorschläge die Güte nicht künstlich verbessert erscheinen lässt."
+            )
         ),
     }
 
@@ -620,7 +795,18 @@ def write_run_artifacts(
         variant: compute_metrics([row for row in records if row.get("variant") == variant])
         for variant in VARIANTS
     }
-    document = {"schema_version": "1.0", "run_config": dict(run_config), "records": list(records), "metrics_by_variant": metrics_by_variant}
+    secure_visible_metrics_by_variant = {
+        variant: compute_metrics(
+            [row for row in records if row.get("variant") == variant],
+            evidence_scope="secure_visible",
+        )
+        for variant in VARIANTS
+    }
+    document = {
+        "schema_version": "1.1", "run_config": dict(run_config),
+        "records": list(records), "metrics_by_variant": metrics_by_variant,
+        "secure_visible_metrics_by_variant": secure_visible_metrics_by_variant,
+    }
     (destination / "evaluation_results.json").write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8",
     )
@@ -634,12 +820,16 @@ def write_run_artifacts(
             })
     with (destination / "confusion_matrices.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
-        writer.writerow(["variant", "expected", "predicted", "count"])
-        for variant, metrics in metrics_by_variant.items():
-            matrix = metrics.get("confusion_matrix", {})
-            for expected, values in matrix.get("values", {}).items():
-                for predicted, count in values.items():
-                    writer.writerow([variant, expected, predicted, count])
+        writer.writerow(["evidence_scope", "variant", "expected", "predicted", "count"])
+        for evidence_scope, grouped_metrics in (
+            ("all", metrics_by_variant),
+            ("secure_visible", secure_visible_metrics_by_variant),
+        ):
+            for variant, metrics in grouped_metrics.items():
+                matrix = metrics.get("confusion_matrix", {})
+                for expected, values in matrix.get("values", {}).items():
+                    for predicted, count in values.items():
+                        writer.writerow([evidence_scope, variant, expected, predicted, count])
 
 
 def build_plan(
@@ -667,9 +857,18 @@ def build_plan(
 
 
 def run_evaluation(args: argparse.Namespace) -> Path:
-    catalog = load_catalog()
-    cases = load_ground_truth(args.ground_truth)
-    references = load_confirmed_references()
+    complete_catalog = load_catalog(include_references=False)
+    active_codes = tuple(code for code, definition in sorted(
+        complete_catalog.definitions.items(),
+        key=lambda item: item[1].get("validated_classification_rule_order", 10**9),
+    ) if "validated_classification_rule" in definition)
+    catalog = load_catalog(allowed_codes=active_codes)
+    all_cases = load_ground_truth(args.ground_truth)
+    cases = [case for case in all_cases if case.expected_code in catalog.definitions]
+    references = tuple(
+        reference for reference in load_confirmed_references()
+        if reference.code in catalog.definitions
+    )
     destination = _run_directory(args.output_dir, args.provider, args.model)
     request_parameters: dict[str, Any]
     if args.provider == "ollama":
@@ -685,6 +884,8 @@ def run_evaluation(args: argparse.Namespace) -> Path:
         "prompt_protocol_version": "1.0",
         "created_at": _utc_now(), "provider": args.provider, "model": args.model,
         "variants": list(VARIANTS), "case_count": len(cases),
+        "full_ground_truth_case_count": len(all_cases),
+        "active_class_codes": list(catalog.codes),
         "planned_model_request_count": len(cases) * 5,
         "max_references_per_class": args.max_references_per_class,
         "ollama_num_ctx": args.ollama_num_ctx,
@@ -699,6 +900,12 @@ def run_evaluation(args: argparse.Namespace) -> Path:
             PROJECT_ROOT / "Datenbank" / "Referenzbilder" / "referenzbilder_manifest.json"
         ),
         "classification_rules_version": catalog.rule_version,
+        "ground_truth_classification_rules_version": str(
+            _read_json(args.ground_truth).get("classification_rules_version", "unbekannt")
+        ),
+        "ground_truth_rules_version_matches_active": str(
+            _read_json(args.ground_truth).get("classification_rules_version", "unbekannt")
+        ) == catalog.rule_version,
         "execution_requested": args.execute,
         "paid_api_request_performed": False,
     }
