@@ -18,6 +18,7 @@ from Tool.ki_bildanalyse import (
     AnalysisError,
     DEFAULT_OLLAMA_NUM_CTX,
     DEFAULT_OLLAMA_NUM_PREDICT,
+    PROMPT_VERSION,
     OllamaOutputError,
     MAX_MISTRAL_IMAGES_PER_REQUEST,
     _parser,
@@ -28,6 +29,7 @@ from Tool.ki_bildanalyse import (
     collect_test_images,
     call_mistral,
     call_ollama,
+    direct_variant_references,
     load_catalog,
     merge_partial_classifications,
     response_schema,
@@ -42,12 +44,36 @@ from Tool.mistral_config import (
     resolve_mistral_api_key,
 )
 from Tool.openai_config import resolve_api_key
-from Tool.evaluation_variants import ACTIVE_CLASS_CODES
+from Tool.evaluation_variants import ACTIVE_CLASS_CODES, inspect_variant
 
 
 TINY_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 )
+
+
+def direct_reference_report(root: Path, variant_id: str, per_code: int = 1) -> dict[str, object]:
+    references = []
+    for code in ACTIVE_CLASS_CODES:
+        for index in range(per_code):
+            path = root / code.replace(" ", "_") / f"ref-{index}.png"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            Image.new("RGB", (20, 12), (index * 30, 40, 60)).save(path)
+            references.append({
+                "reference_id": f"{code}:{path.relative_to(root).as_posix()}",
+                "code": code,
+                "relative_path": path.relative_to(root).as_posix(),
+                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "confirmed": True,
+                "specimen": f"REF-{code}-{index}",
+                "description": (
+                    f"Annotierte Markierung für {code}." if variant_id == "3" else ""
+                ),
+            })
+    return {
+        "variantId": variant_id, "ready": True, "referenceRoot": str(root),
+        "manifestHash": f"mock-{variant_id}", "references": references,
+    }
 
 
 class OpenAIConfigTests(unittest.TestCase):
@@ -281,8 +307,19 @@ class CatalogTests(unittest.TestCase):
              )
         )
         self.assertEqual(example["prompt"], instructions)
+        self.assertEqual(example["prompt_version"], PROMPT_VERSION)
         self.assertEqual(example["reference_images"], 0)
         self.assertFalse(example["ground_truth_included"])
+        archived = json.loads(
+            (Path(__file__).resolve().parents[1]
+             / "Datenbank/Archiv/klassifikationsprompt_v1.4_prompt_5.4.json").read_text(
+                 encoding="utf-8"
+             )
+        )
+        self.assertEqual(
+            archived["prompt_version"],
+            "5.4-scientific-multilabel-no-ranking",
+        )
 
     def test_prompt_requires_visible_observations_before_candidates(self) -> None:
         content = build_request_content([], self.catalog, [])
@@ -295,6 +332,14 @@ class CatalogTests(unittest.TestCase):
         self.assertIn("vollständig und gleichberechtigt", serialized)
         self.assertIn("keine Rangfolge", serialized)
         self.assertIn("keine Hauptversagensursache", serialized)
+        self.assertIn("charakteristische Struktur tatsächlich sichtbar", serialized)
+        self.assertIn("konkrete Bildstelle eindeutig benennbar", serialized)
+        self.assertIn("Bloße visuelle Ähnlichkeit mit bereitgestellten Referenzen", serialized)
+        self.assertIn("Begleiterscheinung eines anderen Merkmals", serialized)
+        self.assertIn("nicht als sicher_sichtbar", serialized)
+        self.assertIn("keine Bildkoordinaten", serialized)
+        self.assertNotIn("3,5", serialized)
+        self.assertNotIn("3.5", serialized)
 
     def test_compact_response_schema_has_equal_weight_suggestions_without_ranking(self) -> None:
         schema = response_schema(self.catalog.codes)
@@ -448,6 +493,38 @@ class CatalogTests(unittest.TestCase):
                 **base, "observations_short": ["Der Ast verursachte den Bruch"]
             }, self.catalog)
 
+    def test_causal_filter_rejects_claims_but_allows_negated_or_open_statements(self) -> None:
+        forbidden = (
+            "Der Ast verursachte den Bruch.",
+            "Die Bruchursache ist der Kantenast.",
+            "Der Ast ist ursächlich für das Versagen.",
+            "Der Ast führte zum Bruch.",
+            "Der Ast ist nicht nur sichtbar, sondern verursachte den Bruch.",
+        )
+        allowed = (
+            "Bruchursache nicht nachweisbar",
+            "Bruchursache nicht beurteilbar",
+            "Die Ursache ist aus den Bildern nicht erkennbar",
+            "Ein ursächlicher Zusammenhang kann nicht belegt werden",
+        )
+        base = {
+            "status": "UNKLAR", "observations_short": ["Bruchzone sichtbar"],
+            "visible_features": [], "class_suggestions": [],
+        }
+        for sentence in forbidden:
+            with self.subTest(sentence=sentence), self.assertRaisesRegex(
+                AnalysisError, "Ursachenaussage"
+            ):
+                validate_and_enrich({
+                    **base, "uncertain_points": [sentence],
+                }, self.catalog)
+        for sentence in allowed:
+            with self.subTest(sentence=sentence):
+                result = validate_and_enrich({
+                    **base, "uncertain_points": [sentence],
+                }, self.catalog)
+                self.assertEqual(result["uncertain_points"], [sentence])
+
     def test_unknown_class_is_rejected(self) -> None:
         raw = {
             "status": "KLASSIFIZIERT",
@@ -530,6 +607,245 @@ class CatalogTests(unittest.TestCase):
         openai_content = build_request_content([], self.catalog, [])
         ollama_messages = build_ollama_messages([], self.catalog, [])
         self.assertEqual(openai_content[0]["text"], ollama_messages[1]["content"])
+
+    def test_variant_2a_builders_send_all_twelve_direct_references(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            references = direct_variant_references(
+                direct_reference_report(Path(temp), "2A")
+            )
+            self.assertEqual([item.code for item in references], list(ACTIVE_CLASS_CODES))
+            self.assertEqual(len(references), 12)
+
+            openai_content = build_request_content([], self.catalog, references)
+            ollama_messages = build_ollama_messages([], self.catalog, references)
+            self.assertEqual(sum(item["type"] == "input_image" for item in openai_content), 12)
+            self.assertEqual(sum("images" in item for item in ollama_messages), 12)
+            self.assertFalse(any("reference_memory" in str(item) for item in openai_content))
+
+    def test_variant_2a_mock_records_direct_references_without_model_call(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as temp, tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            report = direct_reference_report(Path(references_temp), "2A")
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                destination = run_analysis(
+                    input_dir, provider="openai", evaluation_variant="2A",
+                    output_dir=Path(output), allowed_input_root=ALLOWED_INPUT_ROOT,
+                )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        settings = document["execution"]["settings"]
+        self.assertEqual(settings["reference_delivery_mode"], "direct_images_per_analysis")
+        self.assertIsNone(settings["reference_memory_path"])
+        self.assertEqual(len(document["classification_basis"]["references"]), 12)
+        self.assertEqual(document["execution"]["mode"], "mock")
+
+    def test_variant_2b_mock_sends_every_confirmed_reference_directly(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as input_temp, tempfile.TemporaryDirectory() as output_temp:
+            reference_root = Path(references_temp)
+            report = direct_reference_report(reference_root, "2B", per_code=2)
+            input_dir = Path(input_temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                destination = run_analysis(
+                    input_dir, provider="openai", evaluation_variant="2B",
+                    output_dir=Path(output_temp), allowed_input_root=ALLOWED_INPUT_ROOT,
+                )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        settings = document["execution"]["settings"]
+        self.assertEqual(settings["reference_delivery_mode"], "direct_images_per_analysis")
+        self.assertIsNone(settings["reference_memory_path"])
+        self.assertEqual(len(document["classification_basis"]["references"]), 24)
+        self.assertEqual(
+            {item["code"] for item in document["classification_basis"]["references"]},
+            set(ACTIVE_CLASS_CODES),
+        )
+        self.assertEqual(document["execution"]["mode"], "mock")
+
+    def test_variant_three_mock_sends_all_annotations_directly(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as input_temp, tempfile.TemporaryDirectory() as output_temp:
+            report = direct_reference_report(Path(references_temp), "3", per_code=2)
+            references = direct_variant_references(report)
+            content = build_request_content([], self.catalog, references)
+            self.assertEqual(sum(item["type"] == "input_image" for item in content), 24)
+            self.assertTrue(any("Sichtbare Annotation" in str(item.get("text", "")) for item in content))
+            input_dir = Path(input_temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                destination = run_analysis(
+                    input_dir, provider="openai", evaluation_variant="3",
+                    output_dir=Path(output_temp), allowed_input_root=ALLOWED_INPUT_ROOT,
+                )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        settings = document["execution"]["settings"]
+        self.assertEqual(settings["reference_delivery_mode"], "direct_images_per_analysis")
+        self.assertIsNone(settings["reference_memory_path"])
+        self.assertEqual(len(document["classification_basis"]["references"]), 24)
+        self.assertTrue(all(item["description"] for item in document["classification_basis"]["references"]))
+
+    def test_variant_three_rejects_non_openai_provider_without_transport(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as input_temp, tempfile.TemporaryDirectory() as output_temp:
+            input_dir = Path(input_temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            report = direct_reference_report(Path(references_temp), "3", per_code=2)
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                with self.assertRaisesRegex(AnalysisError, "ausschließlich für OpenAI"):
+                    run_analysis(
+                        input_dir, provider="ollama", model="qwen3-vl:4b-instruct",
+                        evaluation_variant="3", output_dir=Path(output_temp),
+                        allowed_input_root=ALLOWED_INPUT_ROOT,
+                    )
+
+    def test_variant_2a_mistral_is_blocked_without_transport_or_reduction(self) -> None:
+        def forbidden(*_args, **_kwargs):
+            raise AssertionError("Mistral-Transport darf nicht aufgerufen werden")
+
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as temp:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            report = direct_reference_report(Path(references_temp), "2A")
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                with self.assertRaisesRegex(AnalysisError, "12 Referenzbilder"):
+                    run_analysis(
+                        input_dir, provider="mistral", evaluation_variant="2A",
+                        allowed_input_root=ALLOWED_INPUT_ROOT,
+                        mistral_opener=forbidden, mistral_key_resolver=forbidden,
+                    )
+
+    def test_variant_2a_qwen_request_contains_twelve_references_and_test_images(self) -> None:
+        captured: list[dict[str, object]] = []
+        raw = json.loads(
+            (Path(__file__).resolve().parents[1] / "Tool/mock_response.json").read_text(encoding="utf-8")
+        )
+
+        class FakeResponse:
+            def __enter__(self): return self
+            def __exit__(self, *_args): return False
+            def read(self):
+                return json.dumps({
+                    "message": {"content": json.dumps(raw), "thinking": ""},
+                    "done_reason": "stop", "model": "qwen3-vl:4b-instruct",
+                }).encode("utf-8")
+
+        def fake_opener(request, timeout):
+            captured.append(json.loads(request.data.decode("utf-8")))
+            return FakeResponse()
+
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as temp, tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            report = direct_reference_report(Path(references_temp), "2A")
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                run_analysis(
+                    input_dir, provider="ollama", evaluation_variant="2A",
+                    output_dir=Path(output), allowed_input_root=ALLOWED_INPUT_ROOT,
+                    ollama_opener=fake_opener,
+                )
+
+        image_messages = [item for item in captured[0]["messages"] if "images" in item]
+        self.assertEqual(len(image_messages), 13)
+        self.assertEqual(sum("Referenzbild" in item["content"] for item in image_messages), 12)
+        self.assertEqual(sum("Testbild" in item["content"] for item in image_messages), 1)
+
+    def test_variant_2a_openai_request_contains_twelve_references_and_test_images(self) -> None:
+        raw = {
+            "status": "UNKLAR", "observations_short": ["Mock"],
+            "visible_features": [], "class_suggestions": [],
+            "uncertain_points": ["Nur Transporttest"],
+        }
+        captured: dict[str, object] = {}
+
+        class FakeResponses:
+            def create(self, **kwargs):
+                captured.update(kwargs)
+                return SimpleNamespace(
+                    output_text=json.dumps(raw), id="mock", model="gpt-6.1-sol",
+                    usage={"input_tokens": 1, "output_tokens": 1, "total_tokens": 2},
+                )
+
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as temp, tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            report = direct_reference_report(Path(references_temp), "2A")
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                run_analysis(
+                    input_dir, provider="openai", evaluation_variant="2A", live=True,
+                    confirm_paid_request=True, client=SimpleNamespace(responses=FakeResponses()),
+                    output_dir=Path(output), allowed_input_root=ALLOWED_INPUT_ROOT,
+                )
+
+        content = captured["input"][0]["content"]
+        image_items = [item for item in content if item["type"] == "input_image"]
+        labels = [item["text"] for item in content if item["type"] == "input_text"]
+        self.assertEqual(len(image_items), 13)
+        self.assertEqual(sum("Referenzbild" in text for text in labels), 12)
+        self.assertEqual(sum(text.startswith("Unbekanntes Testbild") for text in labels), 1)
+        self.assertEqual(
+            captured["prompt_cache_options"],
+            {"mode": "explicit", "ttl": "30m"},
+        )
+        breakpoint_indexes = [
+            index for index, item in enumerate(content)
+            if item.get("prompt_cache_breakpoint") == {"mode": "explicit"}
+        ]
+        self.assertEqual(len(breakpoint_indexes), 1)
+        breakpoint_index = breakpoint_indexes[0]
+        self.assertEqual(
+            content[breakpoint_index]["text"],
+            "Ab hier folgen ausschliesslich ausgewaehlte Bilder des unbekannten Testpruefkoerpers.",
+        )
+        reference_indexes = [
+            index for index, item in enumerate(content)
+            if item["type"] == "input_text" and "Referenzbild" in item["text"]
+        ]
+        test_indexes = [
+            index for index, item in enumerate(content)
+            if item["type"] == "input_text" and item["text"].startswith("Unbekanntes Testbild")
+        ]
+        self.assertTrue(reference_indexes)
+        self.assertTrue(test_indexes)
+        self.assertLess(max(reference_indexes), breakpoint_index)
+        self.assertGreater(min(test_indexes), breakpoint_index)
+
+    def test_variant_2a_blocks_same_specimen_before_model_call(self) -> None:
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as references_temp, tempfile.TemporaryDirectory(
+            dir=ALLOWED_INPUT_ROOT
+        ) as temp:
+            report = direct_reference_report(Path(references_temp), "2A")
+            specimen = str(report["references"][0]["specimen"])
+            input_dir = Path(temp) / specimen
+            input_dir.mkdir()
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            with patch("Tool.ki_bildanalyse.inspect_variant", return_value=report):
+                with self.assertRaisesRegex(AnalysisError, "gleicher Prüfkörper"):
+                    run_analysis(
+                        input_dir, provider="openai", evaluation_variant="2A",
+                        allowed_input_root=ALLOWED_INPUT_ROOT,
+                    )
 
     def test_mistral_uses_the_same_factual_prompt_and_content_order(self) -> None:
         references = select_references(self.catalog, 1)[:MAX_MISTRAL_IMAGES_PER_REQUEST]
@@ -645,6 +961,68 @@ class CatalogTests(unittest.TestCase):
         )
         self.assertTrue(document["execution"]["paid_api_request_performed"])
         self.assertTrue(document["execution"]["images_transmitted_to_mistral"])
+        self.assertEqual(
+            document["model_output"]["original_response_text"],
+            json.dumps(raw_result),
+        )
+        self.assertEqual(document["model_output"]["parsed_response"], raw_result)
+        self.assertNotIn("fake-secret", json.dumps(document))
+
+    def test_openai_raw_response_is_recorded_without_api_key_or_temperature(self) -> None:
+        raw_result = {
+            "status": "KLASSIFIZIERT",
+            "observations_short": ["Astanschnitt sichtbar"],
+            "visible_features": ["Kantenast"],
+            "class_suggestions": [{
+                "code": "KA", "confidence": "mittel",
+                "evidence_status": "sicher_sichtbar",
+            }],
+            "uncertain_points": [],
+        }
+        original_response_text = json.dumps(raw_result, ensure_ascii=False)
+        captured: dict[str, object] = {}
+
+        class FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                captured.update(kwargs)
+                return SimpleNamespace(
+                    output_text=original_response_text,
+                    id="fake-openai-response", model="gpt-6.1-sol",
+                    usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15},
+                )
+
+        fake_client = SimpleNamespace(responses=FakeResponses(), api_key="fake-secret")
+        ALLOWED_INPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ALLOWED_INPUT_ROOT) as temp, \
+                tempfile.TemporaryDirectory() as output:
+            input_dir = Path(temp)
+            (input_dir / "test.png").write_bytes(TINY_PNG)
+            destination = run_analysis(
+                input_dir, provider="openai", live=True, confirm_paid_request=True,
+                output_dir=Path(output), client=fake_client,
+            )
+            document = json.loads(destination.read_text(encoding="utf-8"))
+
+        self.assertNotIn("temperature", captured)
+        self.assertIs(captured["store"], False)
+        self.assertEqual(
+            captured["prompt_cache_options"],
+            {"mode": "explicit", "ttl": "30m"},
+        )
+        self.assertEqual(
+            document["execution"]["provider_metadata"]["prompt_cache"],
+            {
+                "mode": "explicit",
+                "ttl": "30m",
+                "breakpoint": "after_rules_and_variant_references_before_test_images",
+            },
+        )
+        self.assertEqual(
+            document["model_output"]["original_response_text"],
+            original_response_text,
+        )
+        self.assertEqual(document["model_output"]["parsed_response"], raw_result)
+        self.assertNotIn("fake-secret", json.dumps(document))
 
     def test_mistral_fake_transport_processes_all_selected_images_in_batches(self) -> None:
         captured_batches = []

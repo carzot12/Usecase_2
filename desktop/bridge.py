@@ -5,6 +5,7 @@ import csv
 import hashlib
 import io
 import json
+import mimetypes
 import os
 import re
 import shutil
@@ -23,8 +24,10 @@ from PIL import Image, ImageOps
 
 from desktop.reference_store import ReferenceStore
 from Tool.ki_bildanalyse import (
-    PROMPT_VERSION, PROVIDER_MAX_TEST_IMAGES_PER_REQUEST, SUPPORTED_SUFFIXES,
-    load_catalog, merge_partial_classifications, run_analysis,
+    DEFAULT_OLLAMA_MAX_IMAGE_EDGE, MAX_MISTRAL_IMAGES_PER_REQUEST,
+    MAX_TRANSMITTED_LONG_EDGE, PROMPT_VERSION,
+    PROVIDER_MAX_TEST_IMAGES_PER_REQUEST, SUPPORTED_SUFFIXES,
+    _jpeg_base64, load_catalog, merge_partial_classifications, run_analysis,
 )
 from Tool.evaluation_variants import (
     ACTIVE_CLASS_CODES, CLASS_DIRECTORIES, VARIANT_IDS, control_token, inspect_variant, memory_status,
@@ -62,6 +65,37 @@ MODEL_CONFIGS: dict[tuple[str, str], tuple[int, int]] = {
     ("openai", "gpt-6.1-sol"): (16384, 4096),
     ("mistral", "ministral-3b-2512"): (16384, 4096),
 }
+
+
+def _documented_model_parameters(
+    provider: str, context: int, prediction_budget: int,
+) -> tuple[dict[str, Any], dict[str, int]]:
+    """Return only request parameters actually sent plus image preprocessing."""
+
+    if provider == "ollama":
+        request_parameters: dict[str, Any] = {
+            "temperature": 0,
+            "num_ctx": context,
+            "num_predict": prediction_budget,
+            "think": False,
+            "stream": False,
+        }
+        max_long_edge = DEFAULT_OLLAMA_MAX_IMAGE_EDGE
+    elif provider == "mistral":
+        request_parameters = {
+            "temperature": 0,
+            "max_tokens": prediction_budget,
+            "stream": False,
+        }
+        max_long_edge = MAX_TRANSMITTED_LONG_EDGE
+    elif provider == "openai":
+        request_parameters = {"store": False}
+        max_long_edge = MAX_TRANSMITTED_LONG_EDGE
+    else:
+        raise ValueError(f"Unbekannter Provider: {provider}")
+    return request_parameters, {"maxLongEdgePx": max_long_edge}
+
+
 DEFAULT_SELECTED_IMAGE_COUNT = 3
 TERMINAL_BATCH_JOB_STATUSES = frozenset({
     "succeeded", "partially_succeeded", "failed", "cancelled",
@@ -131,6 +165,46 @@ def _partition_provider_images(image_names: list[str], provider: str) -> list[li
     chunk_size = limit or len(image_names)
     return [image_names[offset:offset + chunk_size]
             for offset in range(0, len(image_names), chunk_size)]
+
+
+def _variant_provider_compatibility(
+    variant_id: str, provider: str, reference_count: int = 0
+) -> dict[str, Any]:
+    """Describe hard provider limits without silently reducing references."""
+
+    direct_reference_count = reference_count if variant_id in {"2A", "2B", "3"} else 0
+    if variant_id == "3" and provider != "openai":
+        return {
+            "compatible": False,
+            "requiredImagesPerRequest": direct_reference_count + 1,
+            "providerImageLimit": PROVIDER_MAX_TEST_IMAGES_PER_REQUEST[provider],
+            "message": (
+                "Variante 3 ist wissenschaftlich ausschließlich für OpenAI mit "
+                "dem Modell gpt-6.1-sol freigegeben."
+            ),
+        }
+    if direct_reference_count and provider == "mistral" and direct_reference_count + 1 > MAX_MISTRAL_IMAGES_PER_REQUEST:
+        return {
+            "compatible": False,
+            "requiredImagesPerRequest": direct_reference_count + 1,
+            "providerImageLimit": MAX_MISTRAL_IMAGES_PER_REQUEST,
+            "message": (
+                f"Mistral ist für Variante {variant_id} derzeit gesperrt: Jede Anfrage muss "
+                f"{direct_reference_count} Referenzbilder und mindestens ein Prüfkörperbild "
+                "enthalten, die vorhandene "
+                f"Provider-Implementierung erlaubt jedoch höchstens {MAX_MISTRAL_IMAGES_PER_REQUEST} Bilder."
+            ),
+        }
+    limit = PROVIDER_MAX_TEST_IMAGES_PER_REQUEST[provider]
+    return {
+        "compatible": True,
+        "requiredImagesPerRequest": direct_reference_count + 1 if direct_reference_count else None,
+        "providerImageLimit": limit,
+        "message": (
+            "Keine feste Bildanzahlgrenze in der vorhandenen Provider-Implementierung."
+            if limit is None else f"Maximal {limit} Bilder pro Anfrage."
+        ),
+    }
 
 
 def _result_features(result: dict[str, Any]) -> list[dict[str, Any]]:
@@ -299,6 +373,14 @@ class DesktopBridge:
         selection_path = self._selection_path(specimen)
         if selection_path.is_file():
             saved = json.loads(selection_path.read_text(encoding="utf-8"))
+            if not bool(saved.get("selectionCustomized", False)):
+                legacy_folder = folder / "Analyseauswahl"
+                legacy_selected = {
+                    path.name for path in legacy_folder.iterdir()
+                    if (path.is_file() or path.is_symlink()) and path.name in available
+                } if legacy_folder.is_dir() else set()
+                if legacy_selected:
+                    return legacy_selected, "bestehende_analyseauswahl"
             selected = set(saved.get("selectedImages", []))
             unknown = selected - available
             new_images = available - set(saved.get("knownImages", []))
@@ -492,6 +574,7 @@ class DesktopBridge:
                     "evaluationVariant": document.get("classification_basis", {}).get("evaluation_variant"),
                     "seriesId": series.get("series_id"),
                     "seriesName": series.get("name"),
+                    "seriesDisplayName": self._series_display_name(series.get("name")),
                     "resultGroup": "scientific" if series.get("series_id") else "historical",
                     "hidden": run_id in hidden_runs,
                     "hiddenAt": visibility.get("hiddenAt"),
@@ -543,13 +626,27 @@ class DesktopBridge:
         return {"ok": True, "project": self._snapshot()}
 
     @staticmethod
-    def _image_data(path: Path, edge: int = 720) -> str:
+    def _image_data(path: Path, edge: int = 720, quality: int = 84) -> str:
         with Image.open(path) as source:
             image = ImageOps.exif_transpose(source).convert("RGB")
             image.thumbnail((edge, edge))
             buffer = io.BytesIO()
-            image.save(buffer, "JPEG", quality=84)
+            image.save(buffer, "JPEG", quality=quality)
         return "data:image/jpeg;base64," + base64.b64encode(buffer.getvalue()).decode()
+
+    @staticmethod
+    def _series_display_name(name: Any) -> str | None:
+        """Blendet automatisch angehängte Laufmetadaten aus, ohne sie zu verändern."""
+        if not isinstance(name, str) or not name.strip():
+            return None
+        parts = [part.strip() for part in name.split(" · ")]
+        if (
+            len(parts) >= 3
+            and "/" in parts[-2]
+            and re.fullmatch(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}", parts[-1])
+        ):
+            return " · ".join(parts[:-2])
+        return name.strip()
 
     def specimen_detail(self, payload: dict[str, Any]) -> dict[str, Any]:
         specimen = _safe_name(str(payload.get("specimen", "")))
@@ -874,7 +971,7 @@ class DesktopBridge:
         provider = str(payload.get("provider", "ollama"))
         model = str(payload.get("model", "qwen3-vl:4b-instruct"))
         if variant_id not in VARIANT_IDS:
-            return {"ok": False, "error": "Variante muss 1, 2, 2a oder 3 sein."}
+            return {"ok": False, "error": "Variante muss 1, 2A, 2B oder 3 sein."}
         if (provider, model) not in MODEL_CONFIGS:
             return {"ok": False, "error": "Unbekannte Provider-/Modellkombination."}
         try:
@@ -885,6 +982,10 @@ class DesktopBridge:
             variant = inspect_variant(EVALUATION_VARIANTS_DIR, variant_id)
         except Exception as exc:
             return {"ok": False, "error": str(exc)}
+        reference_memory = (
+            {"prepared": True, "status": "NICHT ERFORDERLICH", "path": None, "key": None}
+            if variant_id in VARIANT_IDS else {}
+        )
         folders = {path.name: path for path in self._specimens()}
         requested = payload.get("specimenIds")
         if requested is None:
@@ -961,6 +1062,10 @@ class DesktopBridge:
             item for item in variant.get("references", [])
             if isinstance(item, dict) and item.get("sha256") in selected_hashes
         ]
+        same_specimen_references = [
+            item for item in variant.get("references", [])
+            if isinstance(item, dict) and str(item.get("specimen", "")) in specimen_ids
+        ]
         self.list_batches()
         active_conflicts = []
         with self._lock:
@@ -980,26 +1085,57 @@ class DesktopBridge:
                         })
         catalog = load_catalog(include_references=False)
         context, prediction_budget = MODEL_CONFIGS[(provider, model)]
+        model_parameters, image_preprocessing = _documented_model_parameters(
+            provider, context, prediction_budget
+        )
         provider_image_limit = PROVIDER_MAX_TEST_IMAGES_PER_REQUEST[provider]
+        provider_compatibility = _variant_provider_compatibility(
+            variant_id, provider, int(variant.get("referenceCount", 0))
+        )
         rules_path = WORKSPACE_ROOT / "Datenbank/klassifikationsregeln.json"
+        reference_snapshot = [
+            {
+                "referenceId": item.get("reference_id"),
+                "sourceReferenceId": item.get("source_reference_id"),
+                "classCode": item.get("code"),
+                "relativePath": item.get("relative_path"),
+                "sha256": item.get("sha256"),
+                "sourceSha256": item.get("source_sha256"),
+                "description": item.get("description", ""),
+                "confirmed": bool(item.get("confirmed")),
+            }
+            for item in variant.get("references", [])
+            if isinstance(item, dict)
+        ]
+        reference_snapshot_sha256 = hashlib.sha256(
+            json.dumps(
+                reference_snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
         immutable = {
             "seriesId": active_series["seriesId"],
             "variant": variant_id,
             "provider": provider,
             "model": model,
-            "modelParameters": {
-                "temperature": 0,
-                "num_ctx": context,
-                "num_predict": prediction_budget,
-                "think": False,
-                "stream": False,
-            },
+            "modelParameters": model_parameters,
+            "imagePreprocessing": image_preprocessing,
             "providerImageLimit": provider_image_limit,
             "promptVersion": PROMPT_VERSION,
             "classificationRulesVersion": catalog.rule_version,
             "classificationRulesSha256": hashlib.sha256(rules_path.read_bytes()).hexdigest(),
             "variantManifestSha256": variant.get("manifestHash"),
+            "referenceRevision": variant.get("revisionId"),
+            "referenceSnapshot": reference_snapshot,
+            "referenceSnapshotSha256": reference_snapshot_sha256,
             "activeClassCodes": list(ACTIVE_CLASS_CODES),
+            "referenceMemoryKey": reference_memory.get("key"),
+            "referenceMemoryPath": (
+                reference_memory.get("path") if reference_memory.get("prepared") else None
+            ),
+            "referenceDeliveryMode": (
+                "direct_images_per_analysis" if variant_id in {"2A", "2B", "3"}
+                else "none"
+            ),
             "specimens": selections,
             "groundTruthIncluded": False,
             "protocolsIncluded": False,
@@ -1014,8 +1150,11 @@ class DesktopBridge:
             "planToken": plan_token,
             "readyToStart": bool(
                 variant.get("ready")
+                and reference_memory.get("prepared")
+                and provider_compatibility["compatible"]
                 and not selection_errors
                 and not overlapping_references
+                and not same_specimen_references
                 and not active_conflicts
             ),
             "variantReady": bool(variant.get("ready")),
@@ -1032,8 +1171,16 @@ class DesktopBridge:
                 for item in selections
             ),
             "referenceImageCount": 0 if variant_id == "1" else variant.get("referenceCount", 0),
+            "referencesByClass": dict(variant.get("countsByClass", {})),
+            "referenceMemory": reference_memory,
+            "unconfirmedReferences": list(variant.get("unreviewedReferenceIds", [])),
+            "referenceReviewComplete": bool(
+                variant_id == "1" or variant.get("reviewComplete", False)
+            ),
             "missingConfirmations": selection_errors,
             "overlappingReferences": overlapping_references,
+            "sameSpecimenReferences": same_specimen_references,
+            "providerCompatibility": provider_compatibility,
             "activeConflicts": active_conflicts,
             "possibleCosts": provider in {"openai", "mistral"},
             "createdAt": datetime.now(timezone.utc).isoformat(),
@@ -1118,12 +1265,18 @@ class DesktopBridge:
             "provider": plan["provider"],
             "model": plan["model"],
             "modelParameters": plan["modelParameters"],
+            "imagePreprocessing": plan["imagePreprocessing"],
             "providerImageLimit": request_limit,
             "maxAutomaticPartRetries": MAX_AUTOMATIC_PART_RETRIES,
             "promptVersion": plan["promptVersion"],
             "classificationRulesVersion": plan["classificationRulesVersion"],
             "classificationRulesSha256": plan["classificationRulesSha256"],
             "variantManifestSha256": plan["variantManifestSha256"],
+            "referenceRevision": plan.get("referenceRevision"),
+            "referenceSnapshot": plan.get("referenceSnapshot", []),
+            "referenceSnapshotSha256": plan.get("referenceSnapshotSha256"),
+            "referenceMemoryKey": plan.get("referenceMemoryKey"),
+            "referenceMemoryPath": plan.get("referenceMemoryPath"),
             "activeClassCodes": plan["activeClassCodes"],
             "groundTruthIncluded": False,
             "protocolsIncluded": False,
@@ -1152,7 +1305,7 @@ class DesktopBridge:
         series["frozenImageSelection"] = frozen_selection
         series["frozenConfiguration"] = {
             key: plan[key] for key in (
-                "provider", "model", "modelParameters", "promptVersion",
+                "provider", "model", "modelParameters", "imagePreprocessing", "promptVersion",
                 "classificationRulesVersion", "classificationRulesSha256",
             )
         }
@@ -1263,7 +1416,7 @@ class DesktopBridge:
         provider = str(payload.get("provider", "ollama"))
         model = str(payload.get("model", "qwen3-vl:4b-instruct"))
         if variant_id not in VARIANT_IDS:
-            return {"ok": False, "error": "Variante muss 1, 2, 2a oder 3 sein."}
+            return {"ok": False, "error": "Variante muss 1, 2A, 2B oder 3 sein."}
         if (provider, model) not in MODEL_CONFIGS:
             return {"ok": False, "error": "Unbekannte Provider-/Modellkombination."}
         try:
@@ -1293,9 +1446,10 @@ class DesktopBridge:
                                    provider=provider, model=model,
                                    test_series_id=active_series["seriesId"])
         memory = ({"prepared": True, "status": "NICHT ERFORDERLICH", "path": None}
-                  if variant_id == "1" else memory_status(
-                      EVALUATION_MEMORY_DIR, report=variant, provider=provider, model=model,
-                      prompt_version=EVALUATION_PROMPT_VERSION))
+                  if variant_id in VARIANT_IDS else {})
+        provider_compatibility = _variant_provider_compatibility(
+            variant_id, provider, int(variant.get("referenceCount", 0))
+        )
         plan = {
             "variant": variant_id,
             "specimen": specimen,
@@ -1314,11 +1468,16 @@ class DesktopBridge:
             "reviewRequired": variant.get("reviewRequired", False),
             "reviewComplete": variant.get("reviewComplete", True),
             "annotatedImages": variant.get("referenceCount", 0) if variant_id == "3" else 0,
-            "structureReady": variant.get("ready", False),
+            "structureReady": bool(variant.get("ready", False) and provider_compatibility["compatible"]),
             "readiness": variant.get("readiness"),
             "errors": variant.get("errors", []),
             "referenceRoot": variant.get("referenceRoot"),
             "memory": memory,
+            "referenceDeliveryMode": (
+                "direct_images_per_analysis" if variant_id in {"2A", "2B", "3"}
+                else "none"
+            ),
+            "providerCompatibility": provider_compatibility,
             "expectedModelCalls": variant.get("modelCallCount", 1),
             "expectedCloudCalls": variant.get("cloudCallCount", 1) if provider in {"openai", "mistral"} else 0,
             "groundTruthIncluded": False,
@@ -1345,10 +1504,18 @@ class DesktopBridge:
         """Start the explicitly requested local preparation without blocking pywebview."""
 
         variant_id = str(payload.get("variant", ""))
+        if variant_id in VARIANT_IDS:
+            return {"ok": False, "error": (
+                f"Variante {variant_id} verwendet kein Referenzgedächtnis. "
+                "Vorgesehene Referenzbilder werden bei jeder Analyse direkt übertragen."
+            )}
         provider = str(payload.get("provider", "ollama"))
         model = str(payload.get("model", "qwen3-vl:4b-instruct"))
-        if variant_id not in {"2", "2a", "3"}:
-            return {"ok": False, "error": "Nur Variante 2, 2a und 3 benötigen ein Referenzgedächtnis."}
+        if variant_id != "3":
+            return {"ok": False, "error": (
+                "Nur Variante 3 benötigt ein Referenzgedächtnis. "
+                "Variante 2A und 2B übertragen ihre bestätigten Referenzbilder direkt bei jeder Analyse."
+            )}
         if (provider, model) not in MODEL_CONFIGS:
             return {"ok": False, "error": "Unbekannte Provider-/Modellkombination."}
         if provider != "ollama":
@@ -1384,7 +1551,9 @@ class DesktopBridge:
                 if item.get("description"):
                     text += f" Fachlich geprüfte Beschreibung: {item['description']}"
                 messages.append({"role": "user", "content": text,
-                                 "images": [base64.b64encode(path.read_bytes()).decode("ascii")]})
+                                 "images": [_jpeg_base64(
+                                     path, max_long_edge=DEFAULT_OLLAMA_MAX_IMAGE_EDGE
+                                 )]})
             messages.append({"role": "user", "content": (
                 "Fasse nur klassenbezogene sichtbare Muster dieses Batches als JSON mit den "
                 "Feldern batch, classes und visual_patterns zusammen."
@@ -1429,8 +1598,8 @@ class DesktopBridge:
     def reference_catalog(self, _payload: Any = None) -> dict[str, Any]:
         try:
             catalog = load_catalog(include_references=False)
-            variant2 = inspect_variant(EVALUATION_VARIANTS_DIR, "2")
-            variant2a = inspect_variant(EVALUATION_VARIANTS_DIR, "2a")
+            variant2 = inspect_variant(EVALUATION_VARIANTS_DIR, "2A")
+            variant2a = inspect_variant(EVALUATION_VARIANTS_DIR, "2B")
             variant3 = inspect_variant(EVALUATION_VARIANTS_DIR, "3")
             inventory = reference_inventory_preview(EVALUATION_VARIANTS_DIR)
             def images_for(report: dict[str, Any], variant_id: str) -> list[dict[str, Any]]:
@@ -1451,24 +1620,38 @@ class DesktopBridge:
                     metadata = stored.get(str(item["reference_id"]), {})
                     result.append({
                         **item, "variant": variant_id, "name": path.name,
-                        "src": self._image_data(path, edge=720), "absolutePath": str(path),
+                        # Ausreichend große Retina-Vorschau für die 230-px-Karte. Sie bleibt
+                        # deutlich kleiner als das Original und hält den Katalog flüssig.
+                        # Analysebilder und Originaldateien bleiben davon unberührt.
+                        "src": self._image_data(path, edge=640, quality=90),
+                        "absolutePath": str(path),
                         "confirmed": bool(item.get("confirmed", metadata.get("confirmed", False))),
                         "description": str(item.get("description", metadata.get("description", ""))),
                         "duplicateOf": duplicate_lookup.get(str(item["reference_id"])),
                     })
                 return result
 
-            images2 = images_for(variant2, "2")
-            images2a = images_for(variant2a, "2a")
+            images2 = images_for(variant2, "2A")
+            images2a = images_for(variant2a, "2B")
             images3 = images_for(variant3, "3")
-            source_images = {str(item["reference_id"]): item for item in images2a}
-            for annotation in images3:
-                source = source_images.get(str(annotation.get("source_reference_id", "")))
-                annotation["sourceImage"] = ({
-                    "name": source["name"], "src": source["src"],
-                    "reference_id": source["reference_id"], "sha256": source["sha256"],
-                    "relative_path": source["relative_path"],
-                } if source else None)
+            variant3_root = Path(str(variant3["referenceRoot"])).resolve()
+            directory_codes = {directory: code for code, directory in CLASS_DIRECTORIES.items()}
+            for relative in variant3.get("imagesWithoutCsv", []):
+                path = (variant3_root / str(relative)).resolve()
+                if not path.is_file() or not path.is_relative_to(variant3_root):
+                    continue
+                code = directory_codes.get(Path(str(relative)).parts[0])
+                if code not in ACTIVE_CLASS_CODES:
+                    continue
+                images3.append({
+                    "reference_id": f"UNREGISTERED:{relative}", "code": code,
+                    "relative_path": str(relative), "variant": "3", "name": path.name,
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                    "src": self._image_data(path, edge=640, quality=90),
+                    "absolutePath": str(path),
+                    "confirmed": False, "description": "", "source_reference_id": "",
+                    "description_status": "manual_review_required", "unregistered": True,
+                })
             missing_descriptions = set(variant3.get("missingDescriptions", []))
             unknown_sources = set(variant3.get("unknownSourceReferenceIds", []))
             unreviewed = set(variant3.get("unreviewedReferenceIds", []))
@@ -1484,10 +1667,16 @@ class DesktopBridge:
                     minimum = requirement.get("minimum") or 0
                     maximum = requirement.get("maximum")
                     return count >= minimum and (maximum is None or count <= maximum)
-                ready2 = quantity_ready(variant2, len(class2))
-                ready2a = quantity_ready(variant2a, len(class2a))
+                ready2 = quantity_ready(variant2, len(class2)) and all(
+                    bool(item.get("confirmed")) for item in class2
+                )
+                ready2a = quantity_ready(variant2a, len(class2a)) and all(
+                    item.get("confirmed") is True for item in class2a
+                )
                 ready3 = quantity_ready(variant3, len(class3)) and not any(
-                    item["reference_id"] in missing_descriptions
+                    item.get("unregistered")
+                    or not item.get("description")
+                    or item["reference_id"] in missing_descriptions
                     or item.get("source_reference_id") in unknown_sources
                     or (variant3.get("reviewRequired") and item["reference_id"] in unreviewed)
                     for item in class3
@@ -1496,50 +1685,105 @@ class DesktopBridge:
                     "code": code, "name": definition.get("name", ""),
                     "definition": rule.get("klassifikationsziel") or definition.get("definition", ""),
                     "reviewRequired": code in {"Bu", "AA", "SSA", "KB"},
-                    "folderVariant2": str(Path(str(variant2["referenceRoot"])) / CLASS_DIRECTORIES[code]),
-                    "folderVariant2a": str(Path(str(variant2a["referenceRoot"])) / CLASS_DIRECTORIES[code]),
+                    "folderVariant2A": str(Path(str(variant2["referenceRoot"])) / CLASS_DIRECTORIES[code]),
+                    "folderVariant2B": str(Path(str(variant2a["referenceRoot"])) / CLASS_DIRECTORIES[code]),
                     "folderVariant3": str(Path(str(variant3["referenceRoot"])) / CLASS_DIRECTORIES[code]),
-                    "countVariant2": len(class2), "countVariant2a": len(class2a),
+                    "countVariant2A": len(class2), "countVariant2B": len(class2a),
                     "countVariant3": len(class3),
                     "requirements": {
-                        "2": variant2["featureRequirements"][code],
-                        "2a": variant2a["featureRequirements"][code],
+                        "2A": variant2["featureRequirements"][code],
+                        "2B": variant2a["featureRequirements"][code],
                         "3": variant3["featureRequirements"][code],
                     },
-                    "readiness": {"2": ready2, "2a": ready2a, "3": ready3},
+                    "readiness": {"2A": ready2, "2B": ready2a, "3": ready3},
                     "variant3DescriptionStatus": {
-                        "complete": bool(class3) and not any(item["reference_id"] in missing_descriptions for item in class3),
-                        "missingCount": sum(item["reference_id"] in missing_descriptions for item in class3),
+                        "complete": bool(class3) and not any(
+                            not item.get("description") or item["reference_id"] in missing_descriptions
+                            for item in class3
+                        ),
+                        "missingCount": sum(
+                            not item.get("description") or item["reference_id"] in missing_descriptions
+                            for item in class3
+                        ),
                         "totalCount": len(class3),
                     },
                     "variant3SourceStatus": {
-                        "complete": bool(class3) and not any(item.get("source_reference_id") in unknown_sources for item in class3),
+                        "complete": bool(class3) and not any(
+                            not item.get("source_reference_id")
+                            or item.get("source_reference_id") in unknown_sources
+                            for item in class3
+                        ),
                     },
                     "variant3ReviewStatus": {
                         "required": bool(variant3.get("reviewRequired")),
                         "complete": bool(class3) and not any(item["reference_id"] in unreviewed for item in class3),
                     },
                     "ready": ready2 and ready2a and ready3,
-                    "imagesVariant2": class2, "imagesVariant2a": class2a, "imagesVariant3": class3,
+                    "imagesVariant2A": class2, "imagesVariant2B": class2a, "imagesVariant3": class3,
                 })
             return {
                 "ok": True, "configured": True, "activeCodes": list(ACTIVE_CLASS_CODES),
                 "classes": classes,
-                "variantStatus": {"2": variant2, "2a": variant2a, "3": variant3},
+                "variantStatus": {"2A": variant2, "2B": variant2a, "3": variant3},
                 "refreshPreview": inventory, "storageRoot": str(EVALUATION_VARIANTS_DIR),
                 "note": (
-                    "Variante 3 verwendet ausschließlich manuell annotierte Kopien und verknüpft "
-                    "sie über source_reference_id mit unveränderten Originalen aus Variante 2a."
+                "Variante 3 lädt ausschließlich ihre eigenen annotierten Kopien und Beschreibungen; "
+                "2B-Pfad und -Hash bleiben nur als Herkunftsnachweis in Variante 3 gespeichert."
                 ),
             }
         except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as exc:
             return {"ok": False, "error": f"Referenzdatenbank kann nicht gelesen werden: {exc}"}
 
+    def reference_image_full(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Load one allow-listed reference image for the UI without recompression."""
+
+        variant_id = str(payload.get("variant", ""))
+        relative_path = str(payload.get("relativePath", ""))
+        if variant_id not in {"2A", "2B", "3"} or not relative_path:
+            return {"ok": False, "error": "Ungültige Referenzbildanfrage."}
+        try:
+            report = inspect_variant(EVALUATION_VARIANTS_DIR, variant_id)
+            root = Path(str(report["referenceRoot"])).resolve()
+            allowed_paths = {
+                str(item.get("relative_path", ""))
+                for item in report.get("references", [])
+                if isinstance(item, dict)
+            }
+            if variant_id == "3":
+                allowed_paths.update(str(item) for item in report.get("imagesWithoutCsv", []))
+            if relative_path not in allowed_paths:
+                return {"ok": False, "error": "Das Bild gehört nicht zum aktiven Referenzbestand."}
+            path = (root / relative_path).resolve()
+            if (
+                not path.is_relative_to(root)
+                or not path.is_file()
+                or path.suffix.lower() not in SUPPORTED_SUFFIXES
+            ):
+                return {"ok": False, "error": "Referenzbild wurde nicht gefunden."}
+            raw = path.read_bytes()
+            with Image.open(io.BytesIO(raw)) as image:
+                width, height = image.size
+                detected_format = str(image.format or "").upper()
+            mime_type = Image.MIME.get(detected_format)
+            if not mime_type:
+                mime_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+            return {
+                "ok": True,
+                "src": f"data:{mime_type};base64,{base64.b64encode(raw).decode()}",
+                "name": path.name,
+                "width": width,
+                "height": height,
+                "byteSize": len(raw),
+                "originalBytes": True,
+            }
+        except (OSError, ValueError, RuntimeError) as exc:
+            return {"ok": False, "error": f"Referenzbild kann nicht geladen werden: {exc}"}
+
     def open_evaluation_reference_folder(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Open an existing allow-listed folder without modifying its contents."""
         variant = str(payload.get("variant", ""))
         code = str(payload.get("code", ""))
-        if variant not in {"2", "2a", "3"} or code not in ACTIVE_CLASS_CODES:
+        if variant not in {"2A", "2B", "3"} or code not in ACTIVE_CLASS_CODES:
             return {"ok": False, "error": "Referenzordner ist nicht freigegeben."}
         root = (EVALUATION_VARIANTS_DIR / f"Variante_{variant}").resolve()
         folder = (root / CLASS_DIRECTORIES[code]).resolve()
@@ -1825,10 +2069,11 @@ class DesktopBridge:
                         "Kontrollübersicht erstellen und prüfen."
                     ),
                 }
-            if evaluation_variant != "1":
-                if not planned.get("memoryPath"):
-                    return {"ok": False, "error": "Bitte zuerst das Referenzgedächtnis vorbereiten."}
-                evaluation_memory_path = Path(planned["memoryPath"])
+            compatibility = _variant_provider_compatibility(
+                evaluation_variant, provider, int(variant_report.get("referenceCount", 0))
+            )
+            if not compatibility["compatible"]:
+                return {"ok": False, "error": compatibility["message"]}
             with self._lock:
                 self.evaluation_plans.pop(plan_token, None)
         if provider in {"openai", "mistral"} and not confirm:
@@ -2140,6 +2385,10 @@ class DesktopBridge:
                         run_id=part["runId"], project_id=batch["projectId"],
                         allowed_class_codes=list(ACTIVE_CLASS_CODES),
                         evaluation_variant=batch.get("evaluationVariant"),
+                        evaluation_memory_path=(
+                            Path(batch["referenceMemoryPath"])
+                            if batch.get("referenceMemoryPath") else None
+                        ),
                         test_series={
                             "series_id": batch.get("testSeries", {}).get("seriesId"),
                             "name": batch.get("testSeries", {}).get("name"),
@@ -2212,12 +2461,27 @@ class DesktopBridge:
             return "cancelled"
         successful_count = sum(part.get("status") == "succeeded" for part in job.get("parts", []))
         result_path = self._merge_scientific_job(batch, job) if successful_count else None
+        failure_types = list(dict.fromkeys(
+            str(part.get("failureType", "technical_execution"))
+            for part in job.get("parts", [])
+            if part.get("status") == "failed"
+        ))
+        failure_text = ", ".join(failure_types)
         if successful_count == len(job.get("parts", [])):
-            job.update(status="succeeded", stage="complete", resultPath=str(result_path))
+            job.update(
+                status="succeeded", stage="complete", resultPath=str(result_path),
+                statusText="Abgeschlossen",
+            )
         elif successful_count:
-            job.update(status="partially_succeeded", stage="partial", resultPath=None)
+            job.update(
+                status="partially_succeeded", stage="partial", resultPath=None,
+                statusText=f"Teilweise erfolgreich; Fehlerart: {failure_text}",
+            )
         else:
-            job.update(status="failed", stage="error", mergeStatus="fehlgeschlagen")
+            job.update(
+                status="failed", stage="error", mergeStatus="fehlgeschlagen",
+                statusText=f"Fehlgeschlagen; Fehlerart: {failure_text}",
+            )
         job["successfulPartialRequestCount"] = successful_count
         job["finishedAt"] = datetime.now(timezone.utc).isoformat()
         with self._lock:
@@ -2589,7 +2853,10 @@ class DesktopBridge:
         export_folder.mkdir(parents=True, exist_ok=True)
         wide_rows: list[list[Any]] = []
         detail_rows: list[list[Any]] = []
-        counts = {"succeeded": 0, "failed": 0, "notEvaluated": 0, "secureSuggestions": 0}
+        counts = {
+            "succeeded": 0, "failed": 0, "notEvaluated": 0,
+            "secureSuggestions": 0, "suspectedSuggestions": 0,
+        }
         for job in batch["jobs"]:
             result: dict[str, Any] = {}
             document: dict[str, Any] = {}
@@ -2601,6 +2868,14 @@ class DesktopBridge:
                 result = document.get("result", {})
             features = _result_features(result)
             by_code = {str(item.get("code")): item for item in features}
+            secure_by_code = {
+                code: item for code, item in by_code.items()
+                if item.get("evidence_status") == "sicher_sichtbar"
+            }
+            suspected_by_code = {
+                code: item for code, item in by_code.items()
+                if item.get("evidence_status") == "vermutet"
+            }
             analysis_status = str(result.get("status", ""))
             if job.get("status") == "failed":
                 export_status = "fehlgeschlagen"
@@ -2616,7 +2891,7 @@ class DesktopBridge:
                 counts["notEvaluated"] += 1
             elif analysis_status == "KLASSIFIZIERT":
                 export_status = "erfolgreich_klassifiziert"
-                feature_values = [1 if code in by_code else 0 for code in ACTIVE_CLASS_CODES]
+                feature_values = [1 if code in secure_by_code else 0 for code in ACTIVE_CLASS_CODES]
                 counts["succeeded"] += 1
             elif analysis_status == "KEINE_MERKMALE":
                 export_status = "keine_merkmale_erkannt"
@@ -2626,9 +2901,10 @@ class DesktopBridge:
                 export_status = "unklar"
                 feature_values = [""] * len(ACTIVE_CLASS_CODES)
                 counts["notEvaluated"] += 1
-            secure = [code for code, item in by_code.items() if item.get("evidence_status") == "sicher_sichtbar"]
-            suspected = [code for code, item in by_code.items() if item.get("evidence_status") == "vermutet"]
+            secure = list(secure_by_code)
+            suspected = list(suspected_by_code)
             counts["secureSuggestions"] += len(secure)
+            counts["suspectedSuggestions"] += len(suspected)
             execution = document.get("execution", {})
             basis = document.get("classification_basis", {})
             wide_rows.append([
@@ -2650,7 +2926,11 @@ class DesktopBridge:
                 feature = by_code.get(code, {})
                 detail_rows.append([
                     job["specimen"], job["normalizedSpecimenId"], code,
-                    ("Ja" if code in by_code else "Nein") if evaluable else "",
+                    (
+                        "Ja" if code in secure_by_code
+                        else "Vermutet" if code in suspected_by_code
+                        else "Nein"
+                    ) if evaluable else "",
                     feature.get("confidence_label", ""), feature.get("evidence_status", ""),
                     execution.get("provider", batch["provider"]),
                     execution.get("actual_model", batch["model"]),
@@ -2696,8 +2976,9 @@ class DesktopBridge:
             "schemaVersion": "1.0",
             "seriesRunId": series_run_id,
             "exportedAt": datetime.now(timezone.utc).isoformat(),
-            "mainEvaluationPolicy": "Alle Vorschläge einschließlich evidence_status=vermutet und confidence=unsicher zählen als erkannt.",
-            "secureOnlyPolicy": "Nur evidence_status=sicher_sichtbar; ausgeschlossene Vorschläge und Abdeckung müssen separat berichtet werden.",
+            "mainEvaluationPolicy": "Nur evidence_status=sicher_sichtbar zählt als bestätigte Erkennung.",
+            "suspectedPolicy": "evidence_status=vermutet wird separat dokumentiert und nicht als bestätigte Erkennung gezählt.",
+            "secureOnlyPolicy": "Nur evidence_status=sicher_sichtbar; vermutete Vorschläge, ausgeschlossene Vorschläge und Abdeckung werden separat berichtet.",
             "evaluableSpecimenCount": counts["succeeded"],
             "excludedOrNotEvaluatedSpecimenCount": len(batch["jobs"]) - counts["succeeded"],
             "specimenCoverageRate": coverage,

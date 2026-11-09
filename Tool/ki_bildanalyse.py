@@ -75,7 +75,7 @@ DEFAULT_OLLAMA_NUM_PREDICT = 4096
 DEFAULT_MISTRAL_MODEL = "ministral-3b-2512"
 DEFAULT_MISTRAL_URL = "https://api.mistral.ai/v1/chat/completions"
 DEFAULT_MISTRAL_TIMEOUT_SECONDS = 900
-PROMPT_VERSION = "5.4-scientific-multilabel-no-ranking"
+PROMPT_VERSION = "5.5-scientific-evidence-gated-multilabel"
 SYSTEM_INSTRUCTIONS = (
     "Du klassifizierst sichtbare Versagensmerkmale von Holz-Zugproben anhand aller "
     "gemeinsam bereitgestellten Bilder. Ein Klassenvorschlag ist keine nachgewiesene "
@@ -83,8 +83,21 @@ SYSTEM_INSTRUCTIONS = (
     "leere Sichtauswertung zurück."
 )
 CAUSAL_CLAIM = re.compile(
-    r"\b(?:verursacht(?:e|en)?|ursächlich|bruchursache|führte\s+zum|löste\s+den\s+bruch\s+aus)\b",
-    re.IGNORECASE,
+    r"""
+    \b(?:
+        verursacht(?:e|en)?\s+(?!nicht\s+)
+            (?:(?:den|die|das|einen|eine|ein)\s+)?(?:bruch|versagen)(?!\s+nicht\b)
+        |(?:bruchursache|versagensursache|ursache\s+des\s+(?:bruchs|versagens))
+            \s+(?:ist|war|:|=)\s+
+            (?!nicht\b|unklar\b|offen\b|unbekannt\b|aus\b)
+        |(?:ist|war)\s+(?!nicht\s+)(?:die\s+)?(?:bruchursache|versagensursache)
+        |(?:ist|war)\s+(?!nicht\s+)ursächlich(?:\s+für)?
+        |führte\s+(?!nicht\s+)(?:zum|zu\s+dem)\s+(?:bruch|versagen)(?!\s+nicht\b)
+        |löste\s+(?!nicht\s+)(?:den|einen)\s+bruch\s+aus
+        |hat\s+(?:den|einen)\s+bruch\s+(?!nicht\s+)ausgelöst
+    )
+    """,
+    re.IGNORECASE | re.VERBOSE,
 )
 
 
@@ -92,8 +105,8 @@ class AnalysisError(RuntimeError):
     """Eine Eingabe, Datenbasis oder Modellantwort verletzt die Anforderungen."""
 
 
-class OllamaOutputError(AnalysisError):
-    """Technischer Modellfehler, der nicht als Analyseergebnis gespeichert werden darf."""
+class ModelOutputError(AnalysisError):
+    """Provider response that cannot be stored as a scientific result."""
 
     failure_type = "technical_model_output"
 
@@ -102,10 +115,16 @@ class OllamaOutputError(AnalysisError):
         self.diagnostics = dict(diagnostics)
 
 
+class OllamaOutputError(ModelOutputError):
+    """Technischer Ollama-Fehler mit rückwärtskompatiblem Fehlertyp."""
+
+
 @dataclass(frozen=True)
 class ReferenceImage:
     code: str
     path: Path
+    specimen_id: str = ""
+    description: str = ""
 
 
 @dataclass(frozen=True)
@@ -410,6 +429,8 @@ def _data_url(path: Path) -> str:
 def _reference_specimen_id(reference: ReferenceImage) -> str:
     """Return the specimen folder used by the confirmed reference manifest layout."""
 
+    if reference.specimen_id:
+        return reference.specimen_id
     return reference.path.parents[1].name if len(reference.path.parents) > 1 else ""
 
 
@@ -435,6 +456,44 @@ def select_references(
         selected.append(reference)
         counts[reference.code] += 1
     return tuple(selected)
+
+
+def direct_variant_references(report: Mapping[str, Any]) -> tuple[ReferenceImage, ...]:
+    """Load every confirmed file declared by a direct-reference variant."""
+
+    variant_id = str(report.get("variantId", ""))
+    if variant_id not in {"2A", "2B", "3"}:
+        raise AnalysisError("Direkte Evaluationsreferenzen sind nur für Variante 2A, 2B und 3 vorgesehen.")
+    root = Path(str(report.get("referenceRoot", ""))).resolve()
+    by_code: dict[str, list[ReferenceImage]] = {code: [] for code in ACTIVE_CLASS_CODES}
+    for item in report.get("references", []):
+        if not isinstance(item, Mapping):
+            raise AnalysisError(f"Variante {variant_id} enthält einen ungültigen Referenzeintrag.")
+        code = str(item.get("code", ""))
+        relative = str(item.get("relative_path", ""))
+        path = (root / relative).resolve()
+        if code not in ACTIVE_CLASS_CODES:
+            raise AnalysisError(f"Variante {variant_id} enthält den unbekannten Merkmalscode {code!r}.")
+        if not bool(item.get("confirmed")):
+            raise AnalysisError(f"Referenzbild für {code} ist nicht fachlich bestätigt.")
+        if not path.is_relative_to(root) or not path.is_file():
+            raise AnalysisError(
+                f"Referenzbild für {code} fehlt oder liegt außerhalb von Variante {variant_id}."
+            )
+        if str(item.get("sha256", "")) != _sha256(path):
+            raise AnalysisError(f"Referenzbild für {code} wurde seit der Strukturprüfung verändert.")
+        by_code[code].append(ReferenceImage(
+            code, path, str(item.get("specimen", "")), str(item.get("description", "")),
+        ))
+    missing = [code for code in ACTIVE_CLASS_CODES if not by_code[code]]
+    if missing:
+        raise AnalysisError(
+            f"Variante {variant_id} benötigt bestätigte Referenzbilder für alle zwölf Merkmale: "
+            + ", ".join(missing)
+        )
+    if variant_id == "2A" and any(len(by_code[code]) != 1 for code in ACTIVE_CLASS_CODES):
+        raise AnalysisError(f"Variante {variant_id} benötigt genau ein bestätigtes Referenzbild je Merkmal.")
+    return tuple(reference for code in ACTIVE_CLASS_CODES for reference in by_code[code])
 
 
 def limit_mistral_references(
@@ -497,11 +556,16 @@ def _analysis_instructions(catalog: Catalog) -> dict[str, Any]:
         f"Verwende ausschliesslich die bereitgestellten {len(catalog.codes)} Klassencodes oder UNKLAR.",
         "Alle bereitgestellten Klassen sind gleichberechtigt. Erzwinge insbesondere weder sp HB noch Spl HB.",
         "Werte alle ausgewählten Testbilder gemeinsam als verschiedene Ansichten desselben Prüfkörpers aus; entscheide nicht bildweise.",
-        "Liste alle regelkonform erkennbaren Merkmale vollständig und gleichberechtigt auf; Mehrfachklassifikationen sind normal.",
+        "Liste alle ausreichend visuell belegten, regelkonformen Merkmale vollständig und gleichberechtigt auf; mehrere Merkmale sind erlaubt, sofern jedes einzeln belegt ist.",
         "Vergib keine Rangfolge, keine Rollen wie primary oder secondary und keine Hauptversagensursache.",
         "Ordne jedem Klassenvorschlag nur eine knappe Sicherheitsstufe hoch, mittel oder unsicher zu; schreibe dazu keine Begründung.",
         "Kennzeichne jeden Klassenvorschlag zusätzlich mit evidence_status sicher_sichtbar oder vermutet. sicher_sichtbar verlangt direkt erkennbare Klassenmerkmale; vermutet ist nur bei einer in der jeweiligen Klassenregel ausdrücklich zugelassenen indirekten Evidenz zulässig.",
+        "Prüfe vor jedem Klassenvorschlag einzeln: Ist die charakteristische Struktur tatsächlich sichtbar, ist ihre konkrete Bildstelle eindeutig benennbar, entspricht sie der Definition aus Regelwerk v1.4 und ist eine andere Klasse oder uneindeutige Bildstruktur ausreichend ausgeschlossen?",
+        "Gib kein Merkmal vorsorglich aus. Bloße visuelle Ähnlichkeit mit bereitgestellten Referenzen oder eine typische Begleiterscheinung eines anderen Merkmals reichen nicht als Evidenz.",
+        "Setze sicher_sichtbar nur, wenn die passende sichtbare Struktur und ihre Lage in visible_features konkret benannt werden können; erfinde keine Bildkoordinaten, Bildstellen oder Begründungen.",
+        "Ist eine Zuordnung nicht eindeutig, nimm sie nicht als sicher_sichtbar auf. Nutze vermutet nur bei ausdrücklich regelkonformer indirekter Evidenz; dokumentiere sonst die Unsicherheit ausschließlich in uncertain_points.",
         "Nutze vermutet nicht als Ersatz für eine nicht beurteilbare Ansicht. Insbesondere darf SSA ohne tatsächlich sichtbare Schmalseite nicht vermutet werden.",
+        "Erfinde bei unzureichender Bildqualität oder fehlender Sichtbarkeit keine Merkmale.",
         "Behaupte niemals, ein Holzmerkmal sei die nachgewiesene Versagens- oder Bruchursache.",
         "Gib UNKLAR aus, wenn Bildausschnitt, Perspektive oder Schärfe keine verlässliche Beurteilung erlauben; nenne die konkrete Einschränkung in uncertain_points.",
         "Gib KEINE_MERKMALE aus, wenn die Bilder beurteilbar sind, aber keines der definierten Merkmale sichtbar ist.",
@@ -562,13 +626,20 @@ def build_request_content(
     if memory_text:
         content.append({"type": "input_text", "text": memory_text})
     for reference in references:
+        label = f"Bestaetigtes Referenzbild fuer Klasse {reference.code}."
+        if reference.description:
+            label += f" Sichtbare Annotation: {reference.description}"
         content.extend((
-            {"type": "input_text", "text": f"Bestaetigtes Hauptreferenzbild fuer Klasse {reference.code}."},
+            {"type": "input_text", "text": label},
             {"type": "input_image", "image_url": _data_url(reference.path), "detail": "high"},
         ))
     content.append({
         "type": "input_text",
         "text": "Ab hier folgen ausschliesslich ausgewaehlte Bilder des unbekannten Testpruefkoerpers.",
+        # OpenAI kann damit den unveraenderten Praefix aus Regeln und
+        # Variantenreferenzen wiederverwenden. Andere Provider ignorieren das
+        # reine Transport-Metadatum; der fachliche Inhalt bleibt identisch.
+        "prompt_cache_breakpoint": {"mode": "explicit"},
     })
     for index, path in enumerate(test_images, start=1):
         content.extend((
@@ -673,6 +744,7 @@ def call_openai_with_metadata(
             model=model,
             instructions=SYSTEM_INSTRUCTIONS,
             input=[{"role": "user", "content": content}],
+            prompt_cache_options={"mode": "explicit", "ttl": "30m"},
             text={
                 "format": {
                     "type": "json_schema",
@@ -683,7 +755,8 @@ def call_openai_with_metadata(
             },
             store=False,
         )
-        raw = json.loads(response.output_text)
+        original_response_text = response.output_text
+        raw = json.loads(original_response_text)
         usage = getattr(response, "usage", None)
         if usage is None:
             usage_data: dict[str, Any] = {}
@@ -701,15 +774,30 @@ def call_openai_with_metadata(
             "response_id": getattr(response, "id", None),
             "response_model": getattr(response, "model", None),
             "usage": usage_data,
+            "prompt_cache": {
+                "mode": "explicit",
+                "ttl": "30m",
+                "breakpoint": "after_rules_and_variant_references_before_test_images",
+            },
             "cost": {
                 "currency": "USD",
                 "reported_amount": None,
                 "note": "Die Responses-API meldet Tokenverbrauch, aber keinen Rechnungsbetrag.",
             },
+            "original_response_text": original_response_text,
         }
         return raw, metadata
     except (json.JSONDecodeError, AttributeError) as exc:
-        raise AnalysisError("OpenAI-Antwort enthaelt kein lesbares strukturiertes JSON.") from exc
+        response_text = getattr(locals().get("response"), "output_text", None)
+        raise ModelOutputError(
+            "OpenAI-Antwort enthaelt kein lesbares strukturiertes JSON.",
+            diagnostics={
+                "reason": "invalid_structured_json",
+                "original_response_text": response_text,
+            },
+        ) from exc
+    except ModelOutputError:
+        raise
     except Exception as exc:
         raise safe_request_error(exc, model=model) from exc
 
@@ -821,9 +909,16 @@ def call_mistral(
 
     try:
         choice = envelope["choices"][0]
-        raw = json.loads(_mistral_message_text(choice["message"]["content"]))
+        original_response_text = _mistral_message_text(choice["message"]["content"])
+        raw = json.loads(original_response_text)
     except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-        raise AnalysisError("Mistral-Antwort enthält kein lesbares strukturiertes JSON.") from exc
+        raise ModelOutputError(
+            "Mistral-Antwort enthält kein lesbares strukturiertes JSON.",
+            diagnostics={
+                "reason": "invalid_structured_json",
+                "original_response_text": locals().get("original_response_text"),
+            },
+        ) from exc
     if not isinstance(raw, dict):
         raise AnalysisError("Mistral-Antwort muss ein JSON-Objekt enthalten.")
 
@@ -846,6 +941,7 @@ def call_mistral(
             "image_count": image_count,
             "max_images_per_request": MAX_MISTRAL_IMAGES_PER_REQUEST,
         },
+        "original_response_text": original_response_text,
     }
     return raw, metadata
 
@@ -874,9 +970,12 @@ def build_ollama_messages(
     if memory_text:
         messages.append({"role": "user", "content": memory_text})
     for reference in references:
+        label = f"Bestaetigtes Referenzbild fuer Klasse {reference.code}."
+        if reference.description:
+            label += f" Sichtbare Annotation: {reference.description}"
         messages.append({
             "role": "user",
-            "content": f"Bestaetigtes Hauptreferenzbild fuer Klasse {reference.code}.",
+            "content": label,
             "images": [_jpeg_base64(reference.path, max_long_edge=max_image_edge)],
         })
     messages.append({
@@ -1568,7 +1667,7 @@ def run_analysis(
 ) -> Path:
     started_at = time.perf_counter()
     if evaluation_variant not in {None, *VARIANT_IDS}:
-        raise AnalysisError("Evaluationsvariante muss 1, 2, 2a oder 3 sein.")
+        raise AnalysisError("Evaluationsvariante muss 1, 2A, 2B oder 3 sein.")
     documented_catalog = load_catalog(include_references=False)
     documented_codes = ACTIVE_CLASS_CODES
     missing_definitions = [code for code in documented_codes if code not in documented_catalog.definitions]
@@ -1582,6 +1681,8 @@ def run_analysis(
             + ", ".join(documented_codes)
         )
     reference_memory: dict[str, Any] | None = None
+    direct_references: tuple[ReferenceImage, ...] = ()
+    variant_report: dict[str, Any] | None = None
     if evaluation_variant in VARIANT_IDS:
         variant_report = inspect_variant(evaluation_variants_dir, evaluation_variant)
         if not variant_report["ready"]:
@@ -1589,17 +1690,12 @@ def run_analysis(
     if evaluation_variant == "1":
         catalog = load_catalog(include_references=False, allowed_codes=documented_codes)
         max_references_per_class = 0
-    elif evaluation_variant in {"2", "2a", "3"}:
+    elif evaluation_variant in {"2A", "2B", "3"}:
         catalog = load_catalog(include_references=False, allowed_codes=documented_codes)
         max_references_per_class = 0
-        if evaluation_memory_path is None:
-            raise AnalysisError("Für diese Variante muss zuerst das Referenzgedächtnis vorbereitet werden.")
-        try:
-            reference_memory = json.loads(evaluation_memory_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise AnalysisError("Das vorbereitete Referenzgedächtnis kann nicht gelesen werden.") from exc
-        if reference_memory.get("status") != "prepared" or reference_memory.get("variant_id") != evaluation_variant:
-            raise AnalysisError("Das Referenzgedächtnis gehört nicht zur gewählten Variante.")
+        if evaluation_memory_path is not None:
+            raise AnalysisError(f"Variante {evaluation_variant} verwendet kein Referenzgedächtnis.")
+        direct_references = direct_variant_references(variant_report)
     else:
         catalog = load_catalog(allowed_codes=documented_codes)
     test_images = collect_test_images(
@@ -1618,7 +1714,30 @@ def run_analysis(
     excluded_image_names = sorted(available_image_names - {path.name for path in test_images})
     test_image_hashes = {_sha256(path) for path in test_images}
 
+    if direct_references:
+        specimen_id = input_dir.resolve().name
+        same_specimen = [
+            reference.code for reference in direct_references
+            if _reference_specimen_id(reference) == specimen_id
+        ]
+        duplicate_images = [
+            reference.code for reference in direct_references
+            if _sha256(reference.path) in test_image_hashes
+        ]
+        if same_specimen or duplicate_images:
+            details = []
+            if same_specimen:
+                details.append("gleicher Prüfkörper: " + ", ".join(same_specimen))
+            if duplicate_images:
+                details.append("bytegleiches Testbild: " + ", ".join(duplicate_images))
+            raise AnalysisError(
+                f"Variante {evaluation_variant} wurde wegen möglicher Datenleckage gesperrt ("
+                + "; ".join(details) + ")."
+            )
+
     def eligible_references() -> tuple[ReferenceImage, ...]:
+        if direct_references:
+            return direct_references
         return select_references(
             catalog,
             max_references_per_class,
@@ -1636,6 +1755,22 @@ def run_analysis(
     selected_model = (model or default_model).strip()
     if not selected_model:
         raise AnalysisError(f"Keine Modellkennung fuer Provider {provider!r} konfiguriert.")
+    if evaluation_variant == "3" and (provider != "openai" or selected_model != "gpt-6.1-sol"):
+        raise AnalysisError(
+            "Variante 3 ist wissenschaftlich ausschließlich für OpenAI mit "
+            "dem Modell gpt-6.1-sol freigegeben."
+        )
+    if (
+        bool(direct_references)
+        and provider == "mistral"
+        and len(direct_references) + 1 > MAX_MISTRAL_IMAGES_PER_REQUEST
+    ):
+        raise AnalysisError(
+            f"Variante {evaluation_variant} ist mit Mistral derzeit nicht startbereit: Die vorhandene "
+            f"Provider-Implementierung erlaubt höchstens {MAX_MISTRAL_IMAGES_PER_REQUEST} "
+            f"Bilder pro Anfrage, benötigt werden {len(direct_references)} Referenzbilder "
+            "plus mindestens ein Testbild."
+        )
 
     def report_progress(status: str) -> None:
         if progress_callback is not None:
@@ -1672,9 +1807,7 @@ def run_analysis(
                 "Live-Aufruf gesperrt: Zusätzlich zu --live ist --confirm-paid-request erforderlich."
             )
         verification = load_verified_mistral_model(selected_model)
-        selected_references = limit_mistral_references(
-            test_images, eligible_references()
-        )
+        selected_references = limit_mistral_references(test_images, eligible_references())
         resolution = mistral_key_resolver()
         batch_size = MAX_MISTRAL_IMAGES_PER_REQUEST - len(selected_references)
         result_batches: list[dict[str, Any]] = []
@@ -1728,10 +1861,7 @@ def run_analysis(
         result_provider = "openai"
     elif provider == "mistral":
         verification = load_verified_mistral_model(selected_model)
-        selected_references = limit_mistral_references(
-            test_images,
-            eligible_references(),
-        )
+        selected_references = limit_mistral_references(test_images, eligible_references())
         raw = _read_json(mock_response_path)
         provider_metadata = {
             "network_request_performed": False,
@@ -1747,7 +1877,7 @@ def run_analysis(
         result_provider = "mistral"
     else:
         verification = None
-        selected_references = ()
+        selected_references = eligible_references() if direct_references else ()
         raw = _read_json(mock_response_path)
         mode = "mock"
         result_provider = "mock"
@@ -1757,15 +1887,15 @@ def run_analysis(
     try:
         validated = validated_result or validate_and_enrich(raw, catalog)
     except AnalysisError as exc:
-        if provider != "ollama":
-            raise
-        raise OllamaOutputError(
-            "Technischer Fehlversuch: Die Qwen-Antwort war lesbares JSON, entsprach aber "
-            f"nicht dem vereinbarten Schema 4.2 ({exc}). Es wurde kein fachliches "
-            "UNKLAR-Ergebnis gespeichert.",
+        error_class = OllamaOutputError if provider == "ollama" else ModelOutputError
+        provider_name = "Qwen" if provider == "ollama" else provider.capitalize()
+        raise error_class(
+            f"Technischer Fehlversuch: Die {provider_name}-Antwort war lesbares JSON, "
+            f"entsprach aber nicht dem vereinbarten Schema 4.2 ({exc}). Es wurde kein "
+            "fachliches UNKLAR-Ergebnis gespeichert.",
             diagnostics={
                 "reason": "schema_validation_error",
-                "think_requested": False,
+                "think_requested": False if provider == "ollama" else None,
                 "original_response_text": original_response_text,
                 "validation_error": str(exc),
             },
@@ -1777,6 +1907,7 @@ def run_analysis(
             "code": reference.code,
             "filename": reference.path.name,
             "specimen_id": _reference_specimen_id(reference),
+            "description": reference.description,
             "path": str(reference.path.resolve()),
             "sha256": _sha256(reference.path),
         }
@@ -1792,6 +1923,10 @@ def run_analysis(
         ],
         "references": reference_records,
         "reference_memory_key": reference_memory.get("memory_key") if reference_memory else None,
+        "reference_delivery_mode": (
+            "direct_images_per_analysis" if direct_references
+            else "reference_memory" if reference_memory else "none"
+        ),
     }
     prompt_hash = hashlib.sha256(
         json.dumps(
@@ -1802,6 +1937,10 @@ def run_analysis(
         "evaluation_variant": evaluation_variant,
         "reference_memory_key": reference_memory.get("memory_key") if reference_memory else None,
         "reference_memory_path": str(evaluation_memory_path) if evaluation_memory_path else None,
+        "reference_delivery_mode": (
+            "direct_images_per_analysis" if direct_references
+            else "reference_memory" if reference_memory else "none"
+        ),
         "evaluation_manifest_hash": reference_memory.get("manifest_hash") if reference_memory else (
             variant_report.get("manifestHash") if evaluation_variant in VARIANT_IDS else None
         ),
@@ -1846,7 +1985,7 @@ def run_analysis(
             "original_response_text": original_response_text,
             "parsed_response": raw,
             "validation_status": "valid",
-        } if provider == "ollama" else {},
+        } if original_response_text is not None else {},
     )
     return save_result(document, output_dir)
 
@@ -1877,7 +2016,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--evaluation-variant",
         choices=VARIANT_IDS,
-        help="Wissenschaftliche Evaluationsvariante 1, 2, 2a oder 3",
+        help="Wissenschaftliche Evaluationsvariante 1, 2A, 2B oder 3",
     )
     parser.add_argument("--prepare-reference-memory", action="store_true",
                         help="Referenzgedächtnis vorbereiten (mit --dry-run nur planen)")
@@ -1885,7 +2024,7 @@ def _parser() -> argparse.ArgumentParser:
                         help="Nur Struktur und Aufrufplan prüfen; kein Provider-Aufruf")
     parser.add_argument("--test-series-id", help="Eindeutige ID der wissenschaftlichen Testreihe")
     parser.add_argument("--evaluation-memory", type=Path,
-                        help="Vorbereitetes Referenzgedächtnis für Variante 2, 2a oder 3")
+                        help="Vorbereitetes Referenzgedächtnis für Variante 3")
     parser.add_argument(
         "--allowed-class-code",
         dest="allowed_class_codes",
@@ -1936,10 +2075,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "ollama": DEFAULT_OLLAMA_MODEL, "openai": "gpt-6.1-sol",
                 "mistral": DEFAULT_MISTRAL_MODEL,
             }[args.provider]
-            report["memory"] = memory_status(
-                REFERENCE_MEMORY_DIR, report=report, provider=args.provider,
-                model=selected_model, prompt_version=PROMPT_VERSION,
-            ) if args.evaluation_variant != "1" else {
+            report["memory"] = {
                 "status": "NICHT ERFORDERLICH", "prepared": True,
             }
             report["dryRun"] = True

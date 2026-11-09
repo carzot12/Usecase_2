@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-11-08T20:24:01+01:00",
+  "status": "prepared_not_started",
+  "prompt_version": "5.5-scientific-evidence-gated-multilabel",
+  "prompt_artifact": "Datenbank/klassifikationsprompt_v1.4_beispiel.json",
+  "prompt_artifact_sha256": "25946e4f0373f09acce80ef7ed1f822bad0d7531cb3abc99687dc0186b1eee1c",
+  "comparison_prompt_version": "5.4-scientific-multilabel-no-ranking",
+  "comparison_prompt_archive": "Datenbank/Archiv/klassifikationsprompt_v1.4_prompt_5.4.json",
+  "comparison_prompt_archive_sha256": "a11c54e5419a7f07dac3efa5c232f80ffa99bd6e0525ef66bd4c1a7c592a12db",
+  "classification_rules_version": "1.4",
+  "classification_definitions_changed": false,
+  "json_output_schema_changed": false,
+  "active_class_codes": [
+    "GSF",
+    "LSF",
+    "KA",
+    "SA",
+    "sp HB",
+    "Spl HB",
+    "RiSch",
+    "LR",
+    "Bu",
+    "AA",
+    "SSA",
+    "KB"
+  ],
+  "changes": [
+    "Jeder Klassenvorschlag wird einzeln auf sichtbare Struktur, benennbare Bildstelle, Regelkonformität und Alternativerklärung geprüft.",
+    "Bloße Referenzbildähnlichkeit, Vorsorgeklassifikation und typische Begleiterscheinungen reichen nicht als Evidenz.",
+    "sicher_sichtbar verlangt eine konkret benennbare sichtbare Struktur und Lage.",
+    "Uneindeutige Beobachtungen werden nicht als sicher_sichtbar ausgegeben; vermutet bleibt auf ausdrücklich erlaubte indirekte Evidenz begrenzt.",
+    "Bei fehlender Sichtbarkeit oder unzureichender Bildqualität werden keine Merkmale, Bildstellen, Koordinaten oder Begründungen erfunden."
+  ],
+  "fixed_feature_limit": false,
+  "target_average_feature_count": null,
+  "evaluation_run": {
+    "evaluation_id": "v3-openai-49-prompt-5.5-prepared-20261108",
+    "variant": "3",
+    "variant_reference_revision": "v3-annotated-complete-2026-11-08-r4",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "specimen_count": 49,
+    "reference_image_count": 104,
+    "individual_description_count": 103,
+    "rule_fallback_description_count": 1,
+    "prompt_caching": "existing_optimization",
+    "separate_new_evaluation_run": true,
+    "ground_truth_transmitted": false,
+    "previous_results_transmitted": false,
+    "started": false
+  },
+  "evaluation_policy": {
+    "confirmed_detection": "evidence_status=sicher_sichtbar",
+    "suspected_detection": "separately_reported_not_counted_as_confirmed",
+    "metrics": [
+      "average_confirmed_features_per_specimen",
+      "additional_confirmed_detections_vs_protocol",
+      "precision",
+      "recall",
+      "f1_score",
+      "per_class_results"
+    ],
+    "interpretation": "Eine geringere Merkmalsanzahl allein gilt nicht als Verbesserung; zusätzliche Erkennungen und übersehene tatsächlich vorhandene Merkmale werden gemeinsam bewertet."
+  }
+}

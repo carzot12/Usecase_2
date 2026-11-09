@@ -1,0 +1,14 @@
+reference_id,source_reference_id,class_code,annotated_path,description,reviewed_by,reviewed_at
+V3-GSF-001,GSF:GSF/DSC01765.JPG,GSF,GSF/DSC01765_annotiert.jpg,Blaues Rechteck markiert die globale Schrägfaser (GSF).,CZ,2026-11-07
+V3-LSF-001,LSF:LSF/DSC01463.JPG,LSF,LSF/DSC01463_annotiert.jpg,Blaues Rechteck markiert die lokale Schrägfaser (LSF).,CZ,2026-11-07
+V3-KA-001,KA:KA/DSC01486.JPG,KA,KA/DSC01486_annotiert.jpg,Roter Kreis markiert den Kantenast (KA).,CZ,2026-11-07
+V3-SA-001,SA:SA/DSC01439.JPG,SA,SA/DSC01439_annotiert.jpg,Rote Kreise markieren die Seitenäste (SA).,CZ,2026-11-07
+V3-sp-HB-001,sp HB:sp_HB/DSC01487.JPG,sp HB,sp_HB/DSC01487_annotiert.jpg,Rote Rechtecke markieren den spröden Holzbruch (sp HB).,CZ,2026-11-07
+V3-Spl-HB-001,Spl HB:Spl_HB/DSC01436.JPG,Spl HB,Spl_HB/DSC01436_annotiert.jpg,Rote Rechtecke markieren den Splitterholzbruch (Spl HB).,CZ,2026-11-07
+V3-RiSch-001,RiSch:RiSch/DSC01251.JPG,RiSch,RiSch/DSC01251_annotiert.jpg,Grünes Rechteck markiert den Riss entlang des Jahrrings (RiSch).,CZ,2026-11-07
+V3-LR-001,LR:LR/DSC01070.JPG,LR,LR/DSC01070_annotiert.jpg,Blaues Rechteck markiert den Längsriss (LR).,CZ,2026-11-07
+V3-Bu-001,Bu:Bu/DSC01900.JPG,Bu,Bu/DSC01900_annotiert.jpg,Lila Rechteck markiert das Druckholzmerkmal Bu.,CZ,2026-11-07
+V3-AA-001,AA:AA/DSC01920.JPG,AA,AA/DSC01920_annotiert.jpg,Rote Kreise markieren die Astansammlung (AA).,CZ,2026-11-07
+V3-SSA-001,SSA:SSA/DSC01039.JPG,SSA,SSA/DSC01039_annotiert.jpg,Roter Kreis markiert den Schmalseitenast (SSA).,CZ,2026-11-07
+V3-KB-001,KB:KB/DSC01099.JPG,KB,KB/DSC01099_annotiert.jpg,Grünes Rechteck markiert die sichtbare Prüf- oder Einspannspur (KB).,CZ,2026-11-07
+

@@ -20,13 +20,13 @@ def resource_path(relative: str | Path) -> Path:
     relative = Path(relative)
     bases: list[Path] = []
     if getattr(sys, "frozen", False):
-        bundle = getattr(sys, "_MEIPASS", None)
-        if bundle:
-            bases.append(Path(bundle))
         executable = Path(sys.executable).resolve()
         if executable.parent.name == "MacOS":
             contents = executable.parent.parent
             bases.extend((contents / "Resources", contents / "Frameworks"))
+        bundle = getattr(sys, "_MEIPASS", None)
+        if bundle:
+            bases.append(Path(bundle))
     bases.append(PROJECT_ROOT)
     for base in bases:
         candidate = base / relative

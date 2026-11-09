@@ -7,9 +7,11 @@ never reads protocols, ground truth, previous model results, or expert reviews.
 from __future__ import annotations
 
 import csv
+import functools
 import hashlib
 import json
 import os
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -38,7 +40,7 @@ ACTIVE_CLASS_CODES = load_active_class_codes()
 # Compatibility export for older callers. These codes are no longer secondary;
 # all twelve entries above are equal reference features.
 ADDITIONAL_VISIBLE_CODES: tuple[str, ...] = ()
-VARIANT_IDS = ("1", "2", "2a", "3")
+VARIANT_IDS = ("1", "2A", "2B", "3")
 MAX_REFERENCE_BATCH_SIZE = 8
 SUPPORTED_IMAGE_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".webp", ".gif"})
 CLASS_DIRECTORIES = {
@@ -46,6 +48,7 @@ CLASS_DIRECTORIES = {
     "sp HB": "sp_HB", "Spl HB": "Spl_HB", "RiSch": "RiSch", "LR": "LR",
     "Bu": "Bu", "AA": "AA", "SSA": "SSA", "KB": "KB",
 }
+Z30_NAME_PATTERN = re.compile(r"(?i)(?:^|[^a-z0-9])z[-_ ]?30(?:[^0-9]|$)")
 
 
 class VariantConfigurationError(RuntimeError):
@@ -63,6 +66,37 @@ def _file_hash(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+@functools.lru_cache(maxsize=1)
+def _z30_test_image_hashes() -> frozenset[str]:
+    """Hashes of the 49 scientific Z-30 test specimens (30 has no folder)."""
+
+    test_root = _RULES_PATH.parents[1] / "Pruefdaten"
+    hashes: set[str] = set()
+    valid_names = {f"Z-30-{number:02d}" for number in (*range(1, 30), *range(31, 51))}
+    for folder in test_root.rglob("Z-30-*"):
+        if not folder.is_dir() or folder.name not in valid_names:
+            continue
+        for path in folder.rglob("*"):
+            if path.is_file() and path.suffix.lower() in SUPPORTED_IMAGE_SUFFIXES:
+                hashes.add(_file_hash(path))
+    return frozenset(hashes)
+
+
+def _test_data_conflicts(records: Sequence[Mapping[str, Any]]) -> list[dict[str, str]]:
+    test_hashes = _z30_test_image_hashes()
+    conflicts: list[dict[str, str]] = []
+    for item in records:
+        relative_path = str(item.get("relative_path", ""))
+        reasons: list[str] = []
+        if Z30_NAME_PATTERN.search(Path(relative_path).name):
+            reasons.append("Dateiname verweist auf Z-30")
+        if str(item.get("sha256", "")) in test_hashes:
+            reasons.append("SHA-256 entspricht einem Bild der 49 Z-30-Testprüfkörper")
+        if reasons:
+            conflicts.append({"relative_path": relative_path, "reason": "; ".join(reasons)})
+    return conflicts
 
 
 def _read_manifest(root: Path, variant_id: str) -> tuple[Path, dict[str, Any]]:
@@ -100,10 +134,7 @@ def feature_requirements(manifest: Mapping[str, Any]) -> dict[str, dict[str, int
             ("target", "target_references_per_class"),
             ("maximum", "max_references_per_class"),
         ):
-            if key == "target" and code in ACTIVE_CLASS_CODES[8:] and code not in configured:
-                value = 0 if manifest.get("variant_id") == "1" else None
-            else:
-                value = raw.get(key, manifest.get(legacy_key))
+            value = raw.get(key, manifest.get(legacy_key))
             if value is None:
                 values[key] = None
             elif isinstance(value, bool) or not isinstance(value, int) or value < 0:
@@ -140,19 +171,61 @@ class ReferenceRecord:
     relative_path: str
     sha256: str
     description: str = ""
+    series: str = ""
+    specimen: str = ""
+    original_path: str = ""
+    confirmed: bool = False
+    reviewed_by: str = ""
+    reviewed_at: str = ""
 
     def public(self) -> dict[str, Any]:
         return {
             "reference_id": self.reference_id, "code": self.code,
             "relative_path": self.relative_path, "sha256": self.sha256,
-            "description": self.description,
+            "description": self.description, "series": self.series,
+            "specimen": self.specimen, "original_path": self.original_path,
+            "confirmed": self.confirmed, "reviewed_by": self.reviewed_by,
+            "reviewed_at": self.reviewed_at,
         }
 
 
 ANNOTATION_CSV_FIELDS = (
-    "reference_id", "source_reference_id", "class_code", "annotated_path",
-    "description", "reviewed_by", "reviewed_at",
+    "reference_id", "source_reference_id", "source_relative_path", "source_sha256",
+    "class_code", "annotated_path", "description", "description_source",
+    "description_status", "reviewed_by", "reviewed_at",
 )
+
+REFERENCE_CSV_FIELDS = (
+    "merkmal", "dateiname", "versuchsserie", "pruefkoerper", "originalpfad",
+    "begruendung", "geprueft_von", "geprueft_am",
+)
+
+
+def _reference_rows(path: Path) -> tuple[list[dict[str, str]], list[str]]:
+    """Read the semicolon separated provenance and review ledger."""
+
+    if not path.is_file():
+        return [], [f"Referenznachweis fehlt: {path}"]
+    result: list[dict[str, str]] = []
+    errors: list[str] = []
+    try:
+        with path.open(encoding="utf-8-sig", newline="") as handle:
+            reader = csv.DictReader(handle, delimiter=";")
+            if tuple(reader.fieldnames or ()) != REFERENCE_CSV_FIELDS:
+                errors.append(
+                    "referenzen.csv muss exakt diese Spalten besitzen: "
+                    + ";".join(REFERENCE_CSV_FIELDS)
+                )
+            for line, row in enumerate(reader, start=2):
+                normalized = {
+                    field: str(row.get(field, "") or "").strip()
+                    for field in REFERENCE_CSV_FIELDS
+                }
+                normalized["csv_line"] = str(line)
+                result.append(normalized)
+    except (OSError, csv.Error) as exc:
+        errors.append(f"Referenznachweis kann nicht gelesen werden: {exc}")
+    return result, errors
 
 
 def _annotation_rows(path: Path) -> tuple[list[dict[str, str]], list[str]]:
@@ -190,13 +263,14 @@ def _inspect_annotated_variant(
     report["descriptionsFile"] = str(description_path)
     report["descriptionsCsvSha256"] = _file_hash(description_path) if description_path.is_file() else None
 
-    try:
-        source = inspect_variant(base_root, "2a")
-    except VariantConfigurationError as exc:
-        source = {"references": [], "referenceRoot": None}
-        report["errors"].append(f"Quellvariante 2a kann nicht gelesen werden: {exc}")
-    source_by_id = {str(item["reference_id"]): dict(item) for item in source.get("references", [])}
-    source_root = Path(str(source["referenceRoot"])) if source.get("referenceRoot") else None
+    expected_source_ids_raw = manifest.get("expected_source_reference_ids", [])
+    expected_source_ids = {
+        str(item) for item in expected_source_ids_raw if isinstance(item, str) and item.strip()
+    }
+    if bool(manifest.get("require_source_reference_link")) and not expected_source_ids:
+        report["errors"].append(
+            "expected_source_reference_ids fehlt; Variante 3 benötigt einen eigenen Herkunftsnachweis."
+        )
 
     actual_files: dict[str, Path] = {}
     for code in ACTIVE_CLASS_CODES:
@@ -214,12 +288,15 @@ def _inspect_annotated_variant(
                 actual_files[relative] = path
 
     seen_ids: set[str] = set()
+    used_source_ids: set[str] = set()
     seen_paths: set[str] = set()
     seen_hashes: dict[str, str] = {}
     csv_paths: set[str] = set()
     records: list[dict[str, Any]] = []
     missing_descriptions: list[str] = []
     unknown_sources: list[str] = []
+    missing_source_provenance: list[str] = []
+    descriptions_for_review: list[str] = []
     unreviewed: list[str] = []
     csv_without_images: list[str] = []
     require_review = bool(manifest.get("require_review", False))
@@ -239,8 +316,18 @@ def _inspect_annotated_variant(
             report["errors"].append(f"CSV-Zeile {line}: unbekannter class_code {code!r}.")
         if not row["description"]:
             missing_descriptions.append(reference_id or f"Zeile {line}")
-        if source_id not in source_by_id:
+        if row["description_status"] not in {
+            "pocket_verified", "user_verified", "rule_v1.4_fallback",
+        }:
+            descriptions_for_review.append(reference_id or f"Zeile {line}")
+        if source_id not in expected_source_ids:
             unknown_sources.append(source_id or f"Zeile {line}")
+        elif source_id in used_source_ids:
+            report["errors"].append(f"CSV-Zeile {line}: source_reference_id ist doppelt: {source_id}")
+        else:
+            used_source_ids.add(source_id)
+        if not row["source_relative_path"] or not re.fullmatch(r"[0-9a-f]{64}", row["source_sha256"]):
+            missing_source_provenance.append(reference_id or f"Zeile {line}")
         if require_review and (not row["reviewed_by"] or not row["reviewed_at"]):
             unreviewed.append(reference_id or f"Zeile {line}")
         if not relative or Path(relative).is_absolute() or ".." in Path(relative).parts:
@@ -266,18 +353,18 @@ def _inspect_annotated_variant(
             })
         else:
             seen_hashes[annotated_sha] = reference_id
-        source_item = source_by_id.get(source_id)
-        source_path = ((source_root / str(source_item["relative_path"])).resolve()
-                       if source_item and source_root else None)
-        if source_path and annotated == source_path:
-            report["errors"].append(f"{reference_id}: Annotation und Original sind dieselbe Datei.")
+        if row["source_sha256"] and annotated_sha == row["source_sha256"]:
+            report["errors"].append(f"{reference_id}: Annotation und dokumentiertes Original sind bytegleich.")
         records.append({
             "reference_id": reference_id, "source_reference_id": source_id,
             "code": code, "class_code": code, "relative_path": relative,
             "annotated_path": relative, "sha256": annotated_sha,
-            "source_relative_path": source_item.get("relative_path") if source_item else None,
-            "source_sha256": source_item.get("sha256") if source_item else None,
-            "description": row["description"], "reviewed_by": row["reviewed_by"],
+            "source_relative_path": row["source_relative_path"],
+            "source_sha256": row["source_sha256"],
+            "description": row["description"],
+            "description_source": row["description_source"],
+            "description_status": row["description_status"],
+            "reviewed_by": row["reviewed_by"],
             "reviewed_at": row["reviewed_at"], "confirmed": bool(row["reviewed_by"] and row["reviewed_at"]),
         })
         if code in report["countsByClass"]:
@@ -288,24 +375,55 @@ def _inspect_annotated_variant(
     report["referenceCount"] = len(records)
     report["missingDescriptions"] = missing_descriptions
     report["unknownSourceReferenceIds"] = unknown_sources
+    report["missingSourceProvenance"] = missing_source_provenance
+    report["descriptionReviewRequiredIds"] = descriptions_for_review
     report["imagesWithoutCsv"] = images_without_csv
     report["csvWithoutImages"] = csv_without_images
     report["unreviewedReferenceIds"] = unreviewed
     report["descriptionsComplete"] = not missing_descriptions and bool(records)
-    report["sourceLinksComplete"] = not unknown_sources and bool(records)
+    report["sourceLinksComplete"] = (
+        not unknown_sources and not missing_source_provenance and bool(records)
+    )
+    missing_source_annotations = sorted(expected_source_ids - used_source_ids)
+    report["missingSourceAnnotations"] = missing_source_annotations
+    report["testDataConflicts"] = _test_data_conflicts(records)
     report["reviewRequired"] = require_review
     report["reviewComplete"] = not unreviewed and bool(records)
     requirements = feature_requirements(manifest)
     for code, count in report["countsByClass"].items():
         minimum = requirements[code]["minimum"] or 0
+        maximum = requirements[code]["maximum"]
+        target = requirements[code]["target"]
         if count < minimum:
             report["missingByClass"][code] = minimum - count
+        if maximum is not None and count > maximum:
+            report["errors"].append(f"{code}: {count} Annotationen überschreiten das Maximum {maximum}.")
+        if target is not None and count < target:
+            report["warnings"].append(f"{code}: Zielbestand noch nicht erreicht: {count} von {target}.")
     if missing_descriptions:
         report["errors"].append(f"Für {len(missing_descriptions)} Annotationen fehlt die Bildbeschreibung.")
+    if descriptions_for_review:
+        report["errors"].append(
+            f"Für {len(descriptions_for_review)} Annotationen ist die Beschreibungsquelle noch manuell zu prüfen."
+        )
     if unknown_sources:
-        report["errors"].append(f"{len(unknown_sources)} source_reference_id-Werte existieren nicht in Variante 2a.")
+        report["errors"].append(
+            f"{len(unknown_sources)} source_reference_id-Werte gehören nicht zum dokumentierten 2B-Herkunftsbestand."
+        )
+    if missing_source_provenance:
+        report["errors"].append(
+            f"Für {len(missing_source_provenance)} Annotationen fehlt der eigenständige Herkunftshash oder -pfad."
+        )
+    if missing_source_annotations:
+        report["warnings"].append(
+            f"{len(missing_source_annotations)} Bilder aus Variante 2B werden in Variante 3 nicht verwendet."
+        )
+    if report["testDataConflicts"]:
+        report["errors"].append("Referenzbilder aus der Z-30-Testserie sind ausgeschlossen.")
     if images_without_csv:
-        report["errors"].append(f"{len(images_without_csv)} annotierte Bilder besitzen keinen CSV-Eintrag.")
+        report["warnings"].append(
+            f"{len(images_without_csv)} Bilddateien ohne CSV-Eintrag werden nicht als Referenz verwendet."
+        )
     if csv_without_images:
         report["errors"].append(f"{len(csv_without_images)} CSV-Einträge besitzen keine Bilddatei.")
     if unreviewed:
@@ -314,8 +432,9 @@ def _inspect_annotated_variant(
         report["errors"].append("Nicht unterstützte Dateien in Variante 3 gefunden.")
     if report["duplicateHashes"]:
         report["errors"].append("Doppelte SHA-256-Hashes bei annotierten Bildern gefunden.")
-    report["referenceBatchCount"] = (len(records) + MAX_REFERENCE_BATCH_SIZE - 1) // MAX_REFERENCE_BATCH_SIZE
-    report["modelCallCount"] = report["referenceBatchCount"] + 1
+    report["referenceBatchCount"] = 0
+    report["directReferenceImageCount"] = len(records)
+    report["modelCallCount"] = 1
     report["cloudCallCount"] = report["modelCallCount"]
     ready = bool(manifest.get("enabled")) and not report["errors"] and not report["missingByClass"]
     report["ready"] = ready
@@ -331,11 +450,18 @@ def inspect_variant(base_root: Path, variant_id: str) -> dict[str, Any]:
         "variantId": variant_id, "name": manifest.get("name", f"Variante {variant_id}"),
         "description": manifest.get("notes", ""), "manifestPath": str(manifest_path),
         "manifestHash": _canonical_hash(manifest), "enabled": bool(manifest.get("enabled")),
+        "revisionId": manifest.get("revision_id"),
+        "revisionStatus": manifest.get("revision_status"),
+        "requiredProvider": manifest.get("provider"),
+        "requiredModel": manifest.get("model"),
+        "promptVersion": manifest.get("prompt_version"),
+        "classificationRulesVersion": manifest.get("classification_rules_version"),
         "referenceMode": manifest.get("reference_mode"), "referenceRoot": None,
         "activeClassCodes": list(ACTIVE_CLASS_CODES), "countsByClass": {c: 0 for c in ACTIVE_CLASS_CODES},
         "referenceCount": 0, "references": [], "unsupportedFiles": [], "duplicateHashes": [],
         "missingByClass": {}, "descriptionsRequired": bool(manifest.get("descriptions_required")),
         "descriptionsComplete": variant_id != "3", "errors": [], "warnings": [],
+        "testDataConflicts": [],
         "featureRequirements": feature_requirements(manifest),
     }
     if variant_id == "1":
@@ -354,8 +480,45 @@ def inspect_variant(base_root: Path, variant_id: str) -> dict[str, Any]:
     else:
         reference_root = (manifest_path.parent / reference_root_value).resolve()
     report["referenceRoot"] = str(reference_root)
+    reference_csv = manifest_path.parent / "referenzen.csv"
+    rows, csv_errors = _reference_rows(reference_csv)
+    report["referenceEvidenceFile"] = str(reference_csv)
+    report["referenceEvidenceSha256"] = (
+        _file_hash(reference_csv) if reference_csv.is_file() else None
+    )
+    report["errors"].extend(csv_errors)
+    metadata_by_key: dict[tuple[str, str], dict[str, str]] = {}
+    for row in rows:
+        line = row["csv_line"]
+        code = row["merkmal"]
+        filename = row["dateiname"]
+        key = (code, filename)
+        if code not in ACTIVE_CLASS_CODES:
+            report["errors"].append(
+                f"referenzen.csv Zeile {line}: unbekanntes Merkmal {code!r}."
+            )
+        if not filename or Path(filename).name != filename:
+            report["errors"].append(
+                f"referenzen.csv Zeile {line}: dateiname muss ein einfacher Dateiname sein."
+            )
+        if key in metadata_by_key:
+            report["errors"].append(
+                f"referenzen.csv Zeile {line}: Zuordnung ist doppelt: {code}/{filename}"
+            )
+        metadata_by_key[key] = row
+        if bool(row["geprueft_von"]) != bool(row["geprueft_am"]):
+            report["errors"].append(
+                f"referenzen.csv Zeile {line}: geprueft_von und geprueft_am müssen gemeinsam gesetzt sein."
+            )
+        for field in ("versuchsserie", "pruefkoerper", "originalpfad"):
+            if not row[field]:
+                report["errors"].append(
+                    f"referenzen.csv Zeile {line}: {field} fehlt."
+                )
     records: list[ReferenceRecord] = []
     seen_hashes: dict[str, str] = {}
+    image_keys: set[tuple[str, str]] = set()
+    unreviewed: list[str] = []
     for code in ACTIVE_CLASS_CODES:
         folder = reference_root / CLASS_DIRECTORIES[code]
         if not folder.is_dir():
@@ -370,15 +533,58 @@ def inspect_variant(base_root: Path, variant_id: str) -> dict[str, Any]:
             relative = path.relative_to(reference_root).as_posix()
             reference_id = f"{code}:{relative}"
             sha256 = _file_hash(path)
+            key = (code, path.name)
+            image_keys.add(key)
+            metadata = metadata_by_key.get(key, {})
+            confirmed = bool(metadata.get("geprueft_von") and metadata.get("geprueft_am"))
+            if not confirmed:
+                unreviewed.append(reference_id)
+            original_path = str(metadata.get("originalpfad", ""))
+            if original_path:
+                project_root = base_root.parents[1].resolve()
+                candidate = (project_root / original_path).resolve()
+                if not candidate.is_relative_to(project_root) or not candidate.is_file():
+                    report["errors"].append(
+                        f"{reference_id}: originalpfad ist nicht lesbar oder liegt außerhalb des Projekts."
+                    )
+                elif _file_hash(candidate) != sha256:
+                    report["warnings"].append(
+                        f"{reference_id}: Referenz ist eine abweichende Fassung der dokumentierten Originaldatei."
+                    )
             if sha256 in seen_hashes:
-                report["duplicateHashes"].append({"sha256": sha256, "first": seen_hashes[sha256], "duplicate": reference_id})
+                first_reference_id = seen_hashes[sha256]
+                report["duplicateHashes"].append({
+                    "sha256": sha256,
+                    "first": first_reference_id,
+                    "duplicate": reference_id,
+                    "sameClass": first_reference_id.split(":", 1)[0] == code,
+                })
             else:
                 seen_hashes[sha256] = reference_id
-            records.append(ReferenceRecord(reference_id, code, path, relative, sha256))
+            records.append(ReferenceRecord(
+                reference_id, code, path, relative, sha256,
+                "",
+                str(metadata.get("versuchsserie", "")),
+                str(metadata.get("pruefkoerper", "")), original_path, confirmed,
+                str(metadata.get("geprueft_von", "")),
+                str(metadata.get("geprueft_am", "")),
+            ))
             report["countsByClass"][code] += 1
 
+    csv_without_images = sorted(
+        f"{code}/{filename}" for code, filename in set(metadata_by_key) - image_keys
+    )
+    images_without_csv = sorted(
+        f"{code}/{filename}" for code, filename in image_keys - set(metadata_by_key)
+    )
     report["references"] = [record.public() for record in records]
+    report["testDataConflicts"] = _test_data_conflicts(report["references"])
     report["referenceCount"] = len(records)
+    report["unreviewedReferenceIds"] = unreviewed
+    report["reviewRequired"] = bool(manifest.get("require_review", False))
+    report["reviewComplete"] = not unreviewed and bool(records)
+    report["imagesWithoutCsv"] = images_without_csv
+    report["csvWithoutImages"] = csv_without_images
     requirements = feature_requirements(manifest)
     for code, count in report["countsByClass"].items():
         minimum = requirements[code]["minimum"] or 0
@@ -397,10 +603,51 @@ def inspect_variant(base_root: Path, variant_id: str) -> dict[str, Any]:
         report["warnings"].append(f"Zielgesamtzahl noch nicht erreicht: {len(records)} von {target_total}.")
     if report["unsupportedFiles"]:
         report["errors"].append("Nicht unterstützte Dateien in Referenzordnern gefunden.")
-    if report["duplicateHashes"]:
+    same_class_duplicates = [
+        item for item in report["duplicateHashes"] if item.get("sameClass")
+    ]
+    cross_class_duplicates = [
+        item for item in report["duplicateHashes"] if not item.get("sameClass")
+    ]
+    if same_class_duplicates:
         report["errors"].append("Doppelte Bild-Hashes im Referenzpool gefunden.")
-    report["referenceBatchCount"] = (len(records) + MAX_REFERENCE_BATCH_SIZE - 1) // MAX_REFERENCE_BATCH_SIZE
-    report["modelCallCount"] = report["referenceBatchCount"] + 1
+    if cross_class_duplicates:
+        report["warnings"].append(
+            f"{len(cross_class_duplicates)} bytegleiche Referenzzuordnungen werden bewusst "
+            "für mehrere Merkmale verwendet."
+        )
+    if report["testDataConflicts"]:
+        report["errors"].append("Referenzbilder aus der Z-30-Testserie sind ausgeschlossen.")
+    if images_without_csv:
+        report["errors"].append(
+            f"{len(images_without_csv)} Referenzbilder besitzen keinen Eintrag in referenzen.csv."
+        )
+    if csv_without_images:
+        report["errors"].append(
+            f"{len(csv_without_images)} CSV-Einträge besitzen keine Bilddatei."
+        )
+    if report["reviewRequired"] and unreviewed:
+        report["errors"].append(
+            f"{len(unreviewed)} Referenzbilder sind noch nicht fachlich bestätigt."
+        )
+    if variant_id == "2A":
+        variant_2b = inspect_variant(base_root, "2B")
+        hashes_2b = {str(item["sha256"]) for item in variant_2b.get("references", [])}
+        missing_in_2b = [item["relative_path"] for item in report["references"]
+                         if str(item["sha256"]) not in hashes_2b]
+        report["missingInVariant2B"] = missing_in_2b
+        if missing_in_2b:
+            report["errors"].append(
+                f"{len(missing_in_2b)} Bilder aus Variante 2A sind nicht bytegleich in Variante 2B enthalten."
+            )
+    if variant_id in {"2A", "2B"}:
+        report["referenceBatchCount"] = 0
+        report["directReferenceImageCount"] = len(records)
+        report["modelCallCount"] = 1
+    else:
+        report["referenceBatchCount"] = (len(records) + MAX_REFERENCE_BATCH_SIZE - 1) // MAX_REFERENCE_BATCH_SIZE
+        report["directReferenceImageCount"] = 0
+        report["modelCallCount"] = report["referenceBatchCount"] + 1
     report["cloudCallCount"] = report["modelCallCount"]
     ready = bool(manifest.get("enabled")) and not report["errors"] and not report["missingByClass"]
     report["ready"] = ready
@@ -413,7 +660,7 @@ def reference_inventory_preview(base_root: Path) -> dict[str, Any]:
 
     variants: dict[str, Any] = {}
     total_new = total_missing = 0
-    for variant_id in ("2", "2a", "3"):
+    for variant_id in ("2A", "2B", "3"):
         manifest_path, manifest = _read_manifest(base_root, variant_id)
         report = inspect_variant(base_root, variant_id)
         inventory_key = "annotation_inventory" if variant_id == "3" else "reference_inventory"
@@ -428,7 +675,11 @@ def reference_inventory_preview(base_root: Path) -> dict[str, Any]:
         new_ids = sorted(set(current) - set(stored))
         missing_ids = sorted(set(stored) - set(current))
         compared_fields = (
-            ("sha256", "source_reference_id", "source_sha256", "description", "reviewed_by", "reviewed_at")
+            (
+                "sha256", "source_reference_id", "source_relative_path", "source_sha256",
+                "description", "description_source", "description_status",
+                "reviewed_by", "reviewed_at",
+            )
             if variant_id == "3" else ("sha256",)
         )
         changed_ids = sorted(
@@ -443,11 +694,11 @@ def reference_inventory_preview(base_root: Path) -> dict[str, Any]:
                 **item,
                 "confirmed": (
                     bool(item.get("confirmed")) if variant_id == "3"
-                    else bool(previous.get("confirmed", False))
+                    else bool(item.get("confirmed", False))
                 ),
                 "description": (
                     str(item.get("description", "")) if variant_id == "3"
-                    else str(previous.get("description", ""))
+                    else str(item.get("description", previous.get("description", "")))
                 ),
             })
         total_new += len(new_ids)
@@ -530,8 +781,10 @@ def prepare_reference_memory(memory_root: Path, *, report: Mapping[str, Any], pr
                              model_version: str = "") -> Path:
     """Prepare memory with an injected transport; tests can prove behavior without network calls."""
 
-    if report.get("variantId") == "1":
-        raise VariantConfigurationError("Variante 1 besitzt und benötigt kein Referenzgedächtnis.")
+    if report.get("variantId") in {"1", "2A", "2B", "3"}:
+        raise VariantConfigurationError(
+            f"Variante {report.get('variantId')} besitzt und benötigt kein Referenzgedächtnis."
+        )
     if not report.get("ready"):
         raise VariantConfigurationError("Die Variante ist strukturell nicht bereit.")
     batches = deterministic_batches(report)

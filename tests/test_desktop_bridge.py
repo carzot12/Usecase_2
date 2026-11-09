@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import base64
 import json
 import tempfile
 import threading
@@ -20,6 +21,42 @@ from Tool.evaluation_variants import ACTIVE_CLASS_CODES
 
 
 class DesktopBridgeTests(unittest.TestCase):
+    def test_reference_full_image_returns_original_bytes_without_recompression(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "Variante_3"
+            image_path = root / "GSF" / "DSC00001_annotiert.jpg"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (123, 87), "navy").save(image_path, quality=97)
+            original = image_path.read_bytes()
+            report = {
+                "referenceRoot": str(root),
+                "references": [{"relative_path": "GSF/DSC00001_annotiert.jpg"}],
+                "imagesWithoutCsv": [],
+            }
+            with patch.object(bridge_module, "inspect_variant", return_value=report):
+                response = DesktopBridge().reference_image_full({
+                    "variant": "3",
+                    "relativePath": "GSF/DSC00001_annotiert.jpg",
+                })
+
+            self.assertTrue(response["ok"])
+            self.assertTrue(response["originalBytes"])
+            self.assertEqual((response["width"], response["height"]), (123, 87))
+            encoded = response["src"].split(",", 1)[1]
+            self.assertEqual(base64.b64decode(encoded), original)
+
+    def test_reference_full_image_rejects_paths_outside_active_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "Variante_2A"
+            root.mkdir()
+            report = {"referenceRoot": str(root), "references": [], "imagesWithoutCsv": []}
+            with patch.object(bridge_module, "inspect_variant", return_value=report):
+                response = DesktopBridge().reference_image_full({
+                    "variant": "2A", "relativePath": "../fremd.jpg",
+                })
+            self.assertFalse(response["ok"])
+            self.assertIn("aktiven Referenzbestand", response["error"])
+
     def test_provider_failure_policy_retries_temporarily_and_pauses_on_billing(self) -> None:
         timeout = _provider_failure_policy(TimeoutError("timed out"))
         self.assertEqual(timeout["action"], "retry")
@@ -118,6 +155,67 @@ class DesktopBridgeTests(unittest.TestCase):
                 for item in plan["specimens"]
             ))
 
+    def test_scientific_manifest_documents_only_sent_provider_parameters(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
+            root = Path(temp) / "Demo" / "Sortiert" / "Probe-01"
+            root.mkdir(parents=True)
+            Image.new("RGB", (12, 8), "white").save(root / "bruch.jpg")
+            with patch.object(bridge_module, "APP_DATA", Path(data)):
+                bridge = DesktopBridge()
+                bridge.open_project_path(str(root.parent))
+                bridge.save_image_selection({
+                    "specimen": "Probe-01", "selectedImages": ["bruch.jpg"],
+                })
+                plans = {
+                    provider: bridge.scientific_series_plan({
+                        "specimenIds": ["Probe-01"], "variant": "1",
+                        "provider": provider, "model": model,
+                    })["plan"]
+                    for provider, model in (
+                        ("ollama", "qwen3-vl:4b-instruct"),
+                        ("openai", "gpt-6.1-sol"),
+                        ("mistral", "ministral-3b-2512"),
+                    )
+                }
+
+            self.assertEqual(plans["ollama"]["modelParameters"], {
+                "temperature": 0, "num_ctx": 24576, "num_predict": 4096,
+                "think": False, "stream": False,
+            })
+            self.assertEqual(
+                plans["ollama"]["imagePreprocessing"], {"maxLongEdgePx": 768}
+            )
+            self.assertEqual(plans["openai"]["modelParameters"], {"store": False})
+            self.assertNotIn("temperature", plans["openai"]["modelParameters"])
+            self.assertEqual(
+                plans["openai"]["imagePreprocessing"], {"maxLongEdgePx": 2048}
+            )
+            self.assertEqual(plans["mistral"]["modelParameters"], {
+                "temperature": 0, "max_tokens": 4096, "stream": False,
+            })
+            self.assertEqual(
+                plans["mistral"]["imagePreprocessing"], {"maxLongEdgePx": 2048}
+            )
+
+    def test_unconfirmed_cache_does_not_hide_existing_legacy_analysis_selection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
+            root = Path(temp) / "Demo" / "Sortiert" / "Z-30-02"
+            legacy = root / "Analyseauswahl"
+            legacy.mkdir(parents=True)
+            for name in ("a.jpg", "b.jpg"):
+                Image.new("RGB", (12, 8), "white").save(root / name)
+                (legacy / name).write_bytes((root / name).read_bytes())
+            with patch.object(bridge_module, "APP_DATA", Path(data)):
+                bridge = DesktopBridge()
+                bridge.open_project_path(str(root.parent))
+                bridge._write_image_selection(
+                    "Z-30-02", {"a.jpg"}, {"a.jpg", "b.jpg"}, customized=False,
+                )
+                selected, source = bridge._confirmed_image_selection("Z-30-02", root)
+
+            self.assertEqual(selected, {"a.jpg", "b.jpg"})
+            self.assertEqual(source, "bestehende_analyseauswahl")
+
     def test_scientific_csv_export_keeps_technical_errors_distinct_from_negative_features(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
             root = Path(temp) / "Demo" / "Sortiert"
@@ -159,7 +257,7 @@ class DesktopBridgeTests(unittest.TestCase):
             self.assertTrue(exported["ok"])
             with Path(exported["wideCsvPath"]).open(encoding="utf-8-sig", newline="") as handle:
                 rows = list(csv.DictReader(handle, delimiter=";"))
-            self.assertEqual(rows[0]["KA"], "1")
+            self.assertEqual(rows[0]["KA"], "0")
             self.assertEqual(rows[0]["Vermutete_Merkmale"], "KA")
             self.assertEqual(rows[1]["KA"], "0")
             self.assertEqual(rows[2]["Status"], "fehlgeschlagen")
@@ -168,7 +266,10 @@ class DesktopBridgeTests(unittest.TestCase):
                 detail_rows = list(csv.DictReader(handle, delimiter=";"))
             self.assertEqual(len(detail_rows), 3 * len(ACTIVE_CLASS_CODES))
             ka = next(row for row in detail_rows if row["Pruefkoerper_ID"] == "Z-30-01" and row["Merkmalscode"] == "KA")
-            self.assertEqual((ka["Vorgeschlagen"], ka["Confidence"], ka["Evidence_Status"]), ("Ja", "unsicher", "vermutet"))
+            self.assertEqual((ka["Vorgeschlagen"], ka["Confidence"], ka["Evidence_Status"]), ("Vermutet", "unsicher", "vermutet"))
+            manifest = json.loads(Path(exported["manifestPath"]).read_text(encoding="utf-8"))
+            self.assertIn("sicher_sichtbar", manifest["mainEvaluationPolicy"])
+            self.assertIn("nicht als bestätigte Erkennung", manifest["suspectedPolicy"])
 
     def test_scientific_parts_retry_persist_and_resume_without_repeating_success(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
@@ -236,6 +337,11 @@ class DesktopBridgeTests(unittest.TestCase):
                 }
                 first_outcome = bridge._run_scientific_job(batch, job)
                 self.assertEqual(first_outcome, "partially_succeeded")
+                self.assertEqual(
+                    job["statusText"],
+                    "Teilweise erfolgreich; Fehlerart: technical_execution",
+                )
+                self.assertNotIn("wird analysiert", job["statusText"])
                 self.assertEqual(job["parts"][0]["status"], "succeeded")
                 self.assertEqual(job["parts"][0]["attemptCount"], 2)
                 self.assertTrue(Path(job["parts"][0]["resultPath"]).is_file())
@@ -249,6 +355,7 @@ class DesktopBridgeTests(unittest.TestCase):
                 second_outcome = bridge._run_scientific_job(batch, job)
 
             self.assertEqual(second_outcome, "succeeded")
+            self.assertEqual(job["statusText"], "Abgeschlossen")
             self.assertEqual(calls.count(tuple(image_names[:8])), first_part_call_count)
             self.assertEqual(job["successfulPartialRequestCount"], 2)
             self.assertEqual(job["mergeStatus"], "vollstaendig")
@@ -256,6 +363,57 @@ class DesktopBridgeTests(unittest.TestCase):
             merged = json.loads(Path(job["resultPath"]).read_text(encoding="utf-8"))
             self.assertEqual({item["code"] for item in merged["result"]["class_suggestions"]}, {"KA", "LSF"})
             self.assertEqual(merged["series_processing"]["partial_request_count"], 2)
+
+    def test_failed_scientific_job_replaces_running_text_with_failure_type(self) -> None:
+        class MockModelOutputError(ValueError):
+            failure_type = "technical_model_output"
+
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
+            root = Path(temp) / "Demo" / "Sortiert"
+            specimen_folder = root / "Z-30-08"
+            specimen_folder.mkdir(parents=True)
+            Image.new("RGB", (12, 8), "white").save(specimen_folder / "bild.jpg")
+            with patch.object(bridge_module, "APP_DATA", Path(data)), \
+                    patch.object(
+                        bridge_module, "run_analysis",
+                        side_effect=MockModelOutputError("dauerhafter Mock-Fehler"),
+                    ):
+                bridge = DesktopBridge()
+                bridge.open_project_path(str(root))
+                run_folder = bridge._project_data() / "Wissenschaftliche_Laeufe/series-failed"
+                job = {
+                    "jobId": "job-failed", "runId": "parent-failed",
+                    "specimen": "Z-30-08", "normalizedSpecimenId": "Z-30-01-08",
+                    "provider": "ollama", "model": "qwen3-vl:4b-instruct",
+                    "selectedImages": ["bild.jpg"],
+                    "selectedImageRecords": [{"filename": "bild.jpg", "sha256": "mock"}],
+                    "selectedImageCount": 1, "providerImageLimit": None,
+                    "partialRequestCount": 1, "status": "running",
+                    "stage": "analyzing_images", "mergeStatus": "ausstehend",
+                    "parts": [{
+                        "partId": "teil-01", "runId": "part-failed",
+                        "images": ["bild.jpg"], "imageCount": 1,
+                        "status": "queued", "attemptCount": 0,
+                    }],
+                }
+                batch = {
+                    "kind": "scientific_evaluation_series", "batchId": "series-failed",
+                    "seriesRunId": "series-failed", "runFolder": str(run_folder),
+                    "projectData": str(bridge._project_data()), "projectPath": str(root),
+                    "projectId": "Demo", "evaluationVariant": "1",
+                    "classificationRulesVersion": "1.4", "confirmCloud": False,
+                    "testSeries": {"seriesId": "test-series", "name": "Mock"},
+                    "jobs": [job],
+                }
+                outcome = bridge._run_scientific_job(batch, job)
+
+            self.assertEqual(outcome, "failed")
+            self.assertEqual(job["parts"][0]["status"], "failed")
+            self.assertEqual(
+                job["statusText"],
+                "Fehlgeschlagen; Fehlerart: technical_model_output",
+            )
+            self.assertNotIn("wird analysiert", job["statusText"])
 
     def test_bootstrap_does_not_read_or_rewrite_desktop_reference_configuration(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
@@ -680,10 +838,10 @@ class DesktopBridgeTests(unittest.TestCase):
                 }), patch.object(bridge_module.threading, "Thread") as worker:
                     result = bridge.start_analysis({
                         "specimen": "Z-1", "provider": "ollama",
-                        "model": "qwen3-vl:4b-instruct", "evaluationVariant": "2",
+                        "model": "qwen3-vl:4b-instruct", "evaluationVariant": "2A",
                     })
             self.assertFalse(result["ok"])
-            self.assertIn("Variante 2 ist noch nicht bereit", result["error"])
+            self.assertIn("Variante 2A ist noch nicht bereit", result["error"])
             self.assertIn("Bu, AA, SSA", result["error"])
             self.assertIn("kein Modellaufruf", result["error"])
             worker.assert_not_called()
@@ -1264,16 +1422,31 @@ class DesktopBridgeTests(unittest.TestCase):
         self.assertNotIn('>Unterbrochene fortsetzen</button>', source)
         self.assertIn('Batch starten</button>', source)
 
+    def test_result_history_separates_series_name_from_model_metadata(self) -> None:
+        raw = "Wissenschaftliche Testreihe v1.4 · mistral/ministral-3b-2512 · 2026-11-05 17:47"
+        self.assertEqual(
+            DesktopBridge._series_display_name(raw),
+            "Wissenschaftliche Testreihe v1.4",
+        )
+        self.assertEqual(DesktopBridge._series_display_name("Eigene Testreihe"), "Eigene Testreihe")
+        source = (Path(__file__).resolve().parents[1] / "frontend/src/App.tsx").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            'run.seriesDisplayName||run.seriesName||"Historischer Entwicklungstest"',
+            source,
+        )
+
     def test_reference_folder_open_is_allow_listed_and_read_only(self) -> None:
         bridge = DesktopBridge()
         with patch.object(bridge_module.subprocess, "run") as opened:
-            response = bridge.open_evaluation_reference_folder({"variant": "2a", "code": "sp HB"})
+            response = bridge.open_evaluation_reference_folder({"variant": "2B", "code": "sp HB"})
         self.assertTrue(response["ok"])
         opened.assert_called_once_with(["open", response["path"]], check=True)
         self.assertFalse(bridge.open_evaluation_reference_folder(
             {"variant": "1", "code": "GSF"}
         )["ok"])
-        for variant in ("2", "2a", "3"):
+        for variant in ("2A", "2B", "3"):
             for code in ("Bu", "AA", "SSA"):
                 with self.subTest(variant=variant, code=code), patch.object(
                     bridge_module.subprocess, "run"
@@ -1329,6 +1502,132 @@ class DesktopBridgeTests(unittest.TestCase):
             self.assertEqual(
                 [item["specimen"] for item in plans[-1]["plan"]["specimens"]], specimen_ids
             )
+
+    def test_variant_2a_series_plan_uses_direct_references_without_memory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
+            root = Path(temp) / "Demo" / "Sortiert" / "Probe-01"
+            root.mkdir(parents=True)
+            Image.new("RGB", (12, 8), "white").save(root / "bruch.jpg")
+            report = {
+                "ready": True, "readiness": "BEREIT", "errors": [],
+                "manifestHash": "manifest", "referenceCount": 12,
+                "countsByClass": {code: 1 for code in ACTIVE_CLASS_CODES},
+                "references": [], "unreviewedReferenceIds": [],
+            }
+            with patch.object(bridge_module, "APP_DATA", Path(data)), patch.object(
+                bridge_module, "inspect_variant", return_value=report,
+            ), patch.object(bridge_module, "memory_status") as memory_status_mock:
+                bridge = DesktopBridge()
+                bridge.open_project_path(str(root.parent))
+                bridge.save_image_selection({
+                    "specimen": "Probe-01", "selectedImages": ["bruch.jpg"],
+                })
+                first = bridge.scientific_series_plan({
+                    "specimenIds": ["Probe-01"], "variant": "2A", "provider": "ollama",
+                    "model": "qwen3-vl:4b-instruct",
+                })["plan"]
+                second = bridge.scientific_series_plan({
+                    "specimenIds": ["Probe-01"], "variant": "2A", "provider": "ollama",
+                    "model": "qwen3-vl:4b-instruct",
+                })["plan"]
+
+            self.assertTrue(first["readyToStart"])
+            self.assertTrue(second["readyToStart"])
+            self.assertEqual(second["referenceImageCount"], 12)
+            self.assertIsNone(second["referenceMemoryPath"])
+            self.assertEqual(second["referenceDeliveryMode"], "direct_images_per_analysis")
+            self.assertEqual(second["referenceMemory"]["status"], "NICHT ERFORDERLICH")
+            memory_status_mock.assert_not_called()
+            self.assertTrue(all(value == 1 for value in second["referencesByClass"].values()))
+
+    def test_variant_2b_series_plan_uses_direct_references_without_memory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:
+            root = Path(temp) / "Demo" / "Sortiert" / "Probe-01"
+            root.mkdir(parents=True)
+            Image.new("RGB", (12, 8), "white").save(root / "bruch.jpg")
+            report = {
+                "ready": True, "readiness": "BEREIT", "errors": [],
+                "manifestHash": "manifest-2b", "referenceCount": 24,
+                "countsByClass": {code: 2 for code in ACTIVE_CLASS_CODES},
+                "references": [], "unreviewedReferenceIds": [], "reviewComplete": True,
+            }
+            with patch.object(bridge_module, "APP_DATA", Path(data)), patch.object(
+                bridge_module, "inspect_variant", return_value=report,
+            ), patch.object(bridge_module, "memory_status") as memory_status_mock:
+                bridge = DesktopBridge()
+                bridge.open_project_path(str(root.parent))
+                bridge.save_image_selection({
+                    "specimen": "Probe-01", "selectedImages": ["bruch.jpg"],
+                })
+                plan = bridge.scientific_series_plan({
+                    "specimenIds": ["Probe-01"], "variant": "2B", "provider": "openai",
+                    "model": "gpt-6.1-sol",
+                })["plan"]
+
+            self.assertTrue(plan["readyToStart"])
+            self.assertEqual(plan["referenceImageCount"], 24)
+            self.assertIsNone(plan["referenceMemoryPath"])
+            self.assertEqual(plan["referenceDeliveryMode"], "direct_images_per_analysis")
+            self.assertEqual(plan["referenceMemory"]["status"], "NICHT ERFORDERLICH")
+            memory_status_mock.assert_not_called()
+
+    def test_variant_2a_reference_preparation_is_disabled_without_model_call(self) -> None:
+        class ImmediateThread:
+            def __init__(self, target, daemon=True):
+                self.target = target
+
+            def start(self):
+                self.target()
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            @staticmethod
+            def read() -> bytes:
+                return json.dumps({
+                    "message": {"content": "{}"}, "done_reason": "stop", "model": "mock",
+                }).encode("utf-8")
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / "references"
+            memory = Path(temp) / "memory"
+            references = []
+            for code in ACTIVE_CLASS_CODES:
+                path = root / code.replace(" ", "_") / f"{code.replace(' ', '_')}.jpg"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                Image.new("RGB", (12, 8), "white").save(path)
+                references.append({
+                    "reference_id": f"{code}:{path.name}", "code": code,
+                    "relative_path": path.relative_to(root).as_posix(),
+                    "sha256": "mock", "confirmed": True, "description": "",
+                })
+            report = {
+                "variantId": "2A", "ready": True, "referenceRoot": str(root),
+                "manifestHash": "manifest", "references": references,
+            }
+            requests = []
+
+            def fake_urlopen(request, timeout):
+                requests.append(json.loads(request.data.decode("utf-8")))
+                return FakeResponse()
+
+            with patch.object(bridge_module, "inspect_variant", return_value=report), \
+                    patch.object(bridge_module, "EVALUATION_MEMORY_DIR", memory), \
+                    patch.object(bridge_module.threading, "Thread", ImmediateThread), \
+                    patch.object(bridge_module, "urlopen", side_effect=fake_urlopen):
+                bridge = DesktopBridge()
+                result = bridge.prepare_evaluation_memory({
+                    "variant": "2A", "provider": "ollama",
+                    "model": "qwen3-vl:4b-instruct",
+                })
+
+            self.assertFalse(result["ok"])
+            self.assertIn("bei jeder Analyse direkt", result["error"])
+            self.assertEqual(requests, [])
 
     def test_plan_reports_unconfirmed_selection_without_model_call(self) -> None:
         with tempfile.TemporaryDirectory() as temp, tempfile.TemporaryDirectory() as data:

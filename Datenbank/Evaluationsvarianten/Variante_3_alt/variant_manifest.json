@@ -1,0 +1,305 @@
+{
+  "schema_version": "1.0",
+  "variant_id": "3",
+  "name": "Annotierte Referenzbilder",
+  "enabled": true,
+  "reference_mode": "annotated_reference_images_with_descriptions",
+  "reference_root": ".",
+  "source_variant": "2B",
+  "active_class_codes": [
+    "GSF",
+    "LSF",
+    "KA",
+    "SA",
+    "sp HB",
+    "Spl HB",
+    "RiSch",
+    "LR",
+    "Bu",
+    "AA",
+    "SSA",
+    "KB"
+  ],
+  "reference_requirements_by_feature": {
+    "GSF": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "LSF": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "KA": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "SA": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "sp HB": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "Spl HB": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "RiSch": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "LR": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "Bu": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "AA": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "SSA": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    },
+    "KB": {
+      "minimum": 1,
+      "target": 1,
+      "maximum": 1
+    }
+  },
+  "min_references_per_class": 1,
+  "max_references_per_class": 1,
+  "target_references_per_class": 1,
+  "target_reference_total": 12,
+  "descriptions_file": "descriptions.csv",
+  "descriptions_required": true,
+  "annotated_images_required": true,
+  "require_source_reference_link": true,
+  "require_review": true,
+  "preparation_mode": "direct_annotated_images_per_analysis",
+  "version": "3.1",
+  "created": "2026-11-05",
+  "annotation_legend": {
+    "red_circle": [
+      "KA",
+      "SA",
+      "SSA",
+      "AA"
+    ],
+    "blue_rectangle": [
+      "GSF",
+      "LSF",
+      "LR"
+    ],
+    "red_rectangle": [
+      "sp HB",
+      "Spl HB"
+    ],
+    "purple_rectangle": [
+      "Bu"
+    ],
+    "green_rectangle": [
+      "RiSch",
+      "KB"
+    ]
+  },
+  "annotation_inventory": [
+    {
+      "reference_id": "V3-GSF-001",
+      "source_reference_id": "GSF:GSF/DSC01765.JPG",
+      "code": "GSF",
+      "class_code": "GSF",
+      "relative_path": "GSF/DSC01765_annotiert.jpg",
+      "annotated_path": "GSF/DSC01765_annotiert.jpg",
+      "sha256": "1fd722b7e25efb84126331c9f9dab78fb14970e382237e3de1df48908ead3762",
+      "source_relative_path": "GSF/DSC01765.JPG",
+      "source_sha256": "5d3cc8083fadd0562a4c195d073c8860bd55f7f43066ea5ac970de39807052d9",
+      "description": "Blaues Rechteck markiert die globale Schrägfaser (GSF).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-LSF-001",
+      "source_reference_id": "LSF:LSF/DSC01463.JPG",
+      "code": "LSF",
+      "class_code": "LSF",
+      "relative_path": "LSF/DSC01463_annotiert.jpg",
+      "annotated_path": "LSF/DSC01463_annotiert.jpg",
+      "sha256": "63e99a701550ab644fdc04e219ecbe9c58b8dc19231f3f6fb0cd0fc2aa80072e",
+      "source_relative_path": "LSF/DSC01463.JPG",
+      "source_sha256": "e93ae76e7bd940a3030bfde28bc6fff4f92ae8592d1fca14d0996226103b6e7e",
+      "description": "Blaues Rechteck markiert die lokale Schrägfaser (LSF).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-KA-001",
+      "source_reference_id": "KA:KA/DSC01486.JPG",
+      "code": "KA",
+      "class_code": "KA",
+      "relative_path": "KA/DSC01486_annotiert.jpg",
+      "annotated_path": "KA/DSC01486_annotiert.jpg",
+      "sha256": "f1383a472e45d4ca7f02a5b46790268974bf4dd8a049dbaf3f4f9de4ad2ee747",
+      "source_relative_path": "KA/DSC01486.JPG",
+      "source_sha256": "7944a63cc58b4c0ee38e8491c2cf8aa02bb3d81cf6fe27f4082ea6ad5ff44502",
+      "description": "Roter Kreis markiert den Kantenast (KA).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-SA-001",
+      "source_reference_id": "SA:SA/DSC01439.JPG",
+      "code": "SA",
+      "class_code": "SA",
+      "relative_path": "SA/DSC01439_annotiert.jpg",
+      "annotated_path": "SA/DSC01439_annotiert.jpg",
+      "sha256": "0a43b88b28c891ec3b1807dd42720b87d7a7d6783394349dacb9a5422992076f",
+      "source_relative_path": "SA/DSC01439.JPG",
+      "source_sha256": "be18fd451b5111dee34a29b58324dc6e8a8a021dc5a97c1ce0e63f29c494a529",
+      "description": "Rote Kreise markieren die Seitenäste (SA).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-sp-HB-001",
+      "source_reference_id": "sp HB:sp_HB/DSC01487.JPG",
+      "code": "sp HB",
+      "class_code": "sp HB",
+      "relative_path": "sp_HB/DSC01487_annotiert.jpg",
+      "annotated_path": "sp_HB/DSC01487_annotiert.jpg",
+      "sha256": "618dd6b85b716100632779b8f0fa7932eeebad3eb645070908b1440020761960",
+      "source_relative_path": "sp_HB/DSC01487.JPG",
+      "source_sha256": "60a0e7d2e25165fc9f370d2accd45c69171ec9ba92bb41aaa807834684dc7bb5",
+      "description": "Rote Rechtecke markieren den spröden Holzbruch (sp HB).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-Spl-HB-001",
+      "source_reference_id": "Spl HB:Spl_HB/DSC01436.JPG",
+      "code": "Spl HB",
+      "class_code": "Spl HB",
+      "relative_path": "Spl_HB/DSC01436_annotiert.jpg",
+      "annotated_path": "Spl_HB/DSC01436_annotiert.jpg",
+      "sha256": "95d6f01a5ada26bc1c4af19636c694ea9148f47d67b4646023279cd5b163b948",
+      "source_relative_path": "Spl_HB/DSC01436.JPG",
+      "source_sha256": "8913b7d3bc78b6fea14754cff3b8f763f289d8a7f94b4e170831ebc748dd63c9",
+      "description": "Rote Rechtecke markieren den Splitterholzbruch (Spl HB).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-RiSch-001",
+      "source_reference_id": "RiSch:RiSch/DSC01251.JPG",
+      "code": "RiSch",
+      "class_code": "RiSch",
+      "relative_path": "RiSch/DSC01251_annotiert.jpg",
+      "annotated_path": "RiSch/DSC01251_annotiert.jpg",
+      "sha256": "4cbe31e93819288d055415af4eae233b54d3b9f247ec2e3109ef133334ad24f1",
+      "source_relative_path": "RiSch/DSC01251.JPG",
+      "source_sha256": "a9079a7d0dd1d17ff4a420e41d5c863306e3d24853bac986e3a49a1a81b30a29",
+      "description": "Grünes Rechteck markiert den Riss entlang des Jahrrings (RiSch).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-LR-001",
+      "source_reference_id": "LR:LR/DSC01070.JPG",
+      "code": "LR",
+      "class_code": "LR",
+      "relative_path": "LR/DSC01070_annotiert.jpg",
+      "annotated_path": "LR/DSC01070_annotiert.jpg",
+      "sha256": "b3e580e4e6f251bdb3276baca9b18b5a1bfea11ab0691a9bf3f633bd8b6dedc2",
+      "source_relative_path": "LR/DSC01070.JPG",
+      "source_sha256": "8bb1a77387d046b02147de0307dcce184f4175b3de330c208dbde75c7ea81727",
+      "description": "Blaues Rechteck markiert den Längsriss (LR).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-Bu-001",
+      "source_reference_id": "Bu:Bu/DSC01900.JPG",
+      "code": "Bu",
+      "class_code": "Bu",
+      "relative_path": "Bu/DSC01900_annotiert.jpg",
+      "annotated_path": "Bu/DSC01900_annotiert.jpg",
+      "sha256": "2f48336f88ac4fb010af18f57bb849088fcc6bee1f513c526983cc08962df616",
+      "source_relative_path": "Bu/DSC01900.JPG",
+      "source_sha256": "bc6dbcce1f3e66dd4391f7fb75d4e73ffd0b16f713fe69adfe2fceb336dd9653",
+      "description": "Lila Rechteck markiert das Druckholzmerkmal Bu.",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-AA-001",
+      "source_reference_id": "AA:AA/DSC01920.JPG",
+      "code": "AA",
+      "class_code": "AA",
+      "relative_path": "AA/DSC01920_annotiert.jpg",
+      "annotated_path": "AA/DSC01920_annotiert.jpg",
+      "sha256": "3d316872c34f7ea03cc632df6b9bee3c8ebb34ba7b55e74375bb609542817ffc",
+      "source_relative_path": "AA/DSC01920.JPG",
+      "source_sha256": "8deaf1e70f9d50ff7a06f21fd138e5b3dcf522429bbef24051c376bf6469d4a8",
+      "description": "Rote Kreise markieren die Astansammlung (AA).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-SSA-001",
+      "source_reference_id": "SSA:SSA/DSC01039.JPG",
+      "code": "SSA",
+      "class_code": "SSA",
+      "relative_path": "SSA/DSC01039_annotiert.jpg",
+      "annotated_path": "SSA/DSC01039_annotiert.jpg",
+      "sha256": "b5fff26ba234452dfc25212904686dcd1ba2b1ac0a84a6622d9d89ba66481497",
+      "source_relative_path": "SSA/DSC01039.JPG",
+      "source_sha256": "c1ea2ab720cea4ac5f892d5d6747307db5f637134593a809ec385bc4020949a7",
+      "description": "Roter Kreis markiert den Schmalseitenast (SSA).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    },
+    {
+      "reference_id": "V3-KB-001",
+      "source_reference_id": "KB:KB/DSC01099.JPG",
+      "code": "KB",
+      "class_code": "KB",
+      "relative_path": "KB/DSC01099_annotiert.jpg",
+      "annotated_path": "KB/DSC01099_annotiert.jpg",
+      "sha256": "326b6501eff8c3a8572aadb5a80fa02937011600ff62df3253f8c6fe078d7d86",
+      "source_relative_path": "KB/DSC01099.JPG",
+      "source_sha256": "714b019c34438cd6ff46b1703bb100b9ac414adbbab2b94e0a02293869973d66",
+      "description": "Grünes Rechteck markiert die sichtbare Prüf- oder Einspannspur (KB).",
+      "reviewed_by": "CZ",
+      "reviewed_at": "2026-11-07",
+      "confirmed": true
+    }
+  ],
+  "notes": "Je Merkmal wird genau eine fachlich bestätigte annotierte Kopie eines Referenzbilds aus Variante 2B direkt an das Modell übertragen.",
+  "inventory_updated_at": "2026-11-07T10:28:30.731758+00:00"
+}
